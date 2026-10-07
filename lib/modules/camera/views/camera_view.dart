@@ -99,9 +99,7 @@ class _CameraPreview extends StatelessWidget {
             alignment: Alignment.topRight,
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Obx(
-                () => _LocationStatus(service: locationService),
-              ),
+              child: _LocationStatus(service: locationService),
             ),
           ),
         ),
@@ -128,7 +126,8 @@ class _LocationStatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final position = service.position.value;
+    return Obx(() {
+      final position = service.position.value;
     final hasPosition = position != null;
     final isEnabled = service.isServiceEnabled.value;
     final error = service.errorMessage.value;
@@ -209,6 +208,7 @@ class _LocationStatus extends StatelessWidget {
         ),
       ),
     );
+  });
   }
 }
 
