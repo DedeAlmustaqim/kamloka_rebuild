@@ -63,6 +63,7 @@ class WatermarkService {
   Future<camera.XFile> apply(
     camera.XFile source, {
     required WatermarkData data,
+    bool showBranding = true,
   }) async {
     final inputFile = File(source.path);
     final bytes = await inputFile.readAsBytes();
@@ -128,7 +129,7 @@ class WatermarkService {
     }
 
     // Kolom kanan khusus branding KAMLOKA.
-    final logo = await _loadLogo();
+    final logo = showBranding ? await _loadLogo() : null;
     if (logo != null) {
       final logoAreaX = panelX + infoColumnWidth + panelGap;
       final logoAreaWidth = logoColumnWidth - panelGap - horizontalPadding;
