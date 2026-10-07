@@ -89,9 +89,9 @@ class CameraController extends GetxController {
     }
   }
 
-  Future<void> capturePhoto() async {
+  Future<String?> capturePhoto() async {
     if (!isReady.value || isCapturing.value) {
-      return;
+      return null;
     }
 
     captureErrorMessage.value = '';
@@ -101,10 +101,11 @@ class CameraController extends GetxController {
       final file = await _captureService.capture(cameraController);
 
       if (file == null) {
-        return;
+        return null;
       }
 
       lastCapturePath.value = file.path;
+      return file.path;
     } on camera.CameraException catch (error) {
       captureErrorMessage.value =
           error.description ?? 'Gagal mengambil foto.';
@@ -114,6 +115,11 @@ class CameraController extends GetxController {
     } finally {
       isCapturing.value = false;
     }
+  }
+
+  void clearCapture() {
+    lastCapturePath.value = '';
+    captureErrorMessage.value = '';
   }
 
   Future<void> retry() => initialize();
