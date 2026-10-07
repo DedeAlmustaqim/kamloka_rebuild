@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:camera/camera.dart' as camera;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -72,30 +74,70 @@ class WatermarkService {
 
     final scale = image.width / 1080.0;
 
-    // Layout mengacu pada referensi 1080x720 dan diskalakan proporsional.
+    // Lebar panel mengikuti referensi, tetapi tinggi panel mengikuti tinggi
+    // foto agar landscape tidak menghasilkan box yang terlalu tinggi.
     final panelWidth = (image.width * 0.867).round();
     final panelX = ((image.width - panelWidth) / 2).round();
     final bottomMargin = (image.height * 0.055).round();
     final radius = (image.width * 0.032).round().clamp(18, 180).toInt();
-
-    // Tinggi watermark mengikuti TINGGI foto. Ini penting untuk landscape:
-    // lebar foto biasanya sangat besar, tetapi watermark tidak boleh ikut
-    // membesar sampai memakan sepertiga frame.
-    final basePanelHeight = (image.height * 0.20).round();
 
     final horizontalPadding =
         (image.width * 0.038).round().clamp(24, 160).toInt();
     final dividerX = panelX + (panelWidth * 0.305).round();
 
     final dayFont = image.width >= 1800 ? img.arial48 : img.arial24;
-    final timeFont = img.arial48;
+    final timeFont = image.width >= 1800 ? img.arial48 : img.arial24;
     final bodyFont = image.width >= 1800 ? img.arial48 : img.arial24;
     final dateFont = img.arial24;
 
     final white = img.ColorRgb8(255, 255, 255);
-    // Panel watermark dibuat semi-transparan agar foto tetap terlihat di bawahnya.
+    // Transparan: foto tetap terlihat melalui panel watermark.
     final panelColor = img.ColorRgba8(82, 82, 82, 185);
 
+    // Kolom kanan.
+    final rightX = dividerX + (image.width * 0.038).round();
+    final rightWidth = panelX + panelWidth - rightX - horizontalPadding;
+    final columnGap = (image.width * 0.028).round();
+    final detailColumnWidth = ((rightWidth - columnGap) / 2).round();
+    final secondColumnX = rightX + detailColumnWidth + columnGap;
+
+    // Alamat tidak dipotong. Hanya di-wrap agar tetap terbaca.
+    final address = data.address.trim().isEmpty
+        ? 'Alamat tidak tersedia'
+        : data.address.trim();
+
+    final addressLines = _wrapText(
+      address,
+      maxChars: _addressMaxChars(
+        width: rightWidth,
+        fontScale: scale,
+      ),
+    );
+
+    final addressLineHeight = bodyFont.lineHeight + (scale * 5).round();
+
+    // Tinggi normal sekitar 20% tinggi foto. Jika alamat panjang, panel
+    // otomatis bertambah secukupnya agar tidak menimpa koordinat/metrik.
+    final basePanelHeight = (image.height * 0.20).round();
+    final topPadding = (image.height * 0.025).round();
+    final bottomContentPadding = (image.height * 0.055).round();
+    final addressHeight = addressLines.length * addressLineHeight;
+    final coordinateAreaHeight = (image.height * 0.075).round();
+
+    final requiredPanelHeight =
+        topPadding +
+        addressHeight +
+        (image.height * 0.025).round() +
+        coordinateAreaHeight +
+        bottomContentPadding;
+
+    final panelHeight = basePanelHeight > requiredPanelHeight
+        ? basePanelHeight
+        : requiredPanelHeight;
+
+    final panelY = image.height - bottomMargin - panelHeight;
+
+    // Panel utama.
     _fillRoundedRect(
       image,
       x1: panelX,
@@ -106,7 +148,7 @@ class WatermarkService {
       color: panelColor,
     );
 
-    // Divider vertikal antara kolom waktu dan informasi lokasi.
+    // Divider vertikal.
     final dividerTop = panelY + (panelHeight * 0.13).round();
     final dividerBottom = panelY + (panelHeight * 0.87).round();
     final dividerThickness = (scale * 4).round().clamp(3, 10).toInt();
@@ -122,7 +164,8 @@ class WatermarkService {
 
     final local = data.dateTime.toLocal();
     final dayName = _dayName(local.weekday);
-    final timeText = '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+    final timeText =
+        '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
     final dateText =
         '${local.day.toString().padLeft(2, '0')} ${_monthName(local.month)} ${local.year}';
 
@@ -159,42 +202,9 @@ class WatermarkService {
       color: white,
     );
 
-    // Kolom kanan: alamat di atas, koordinat dan metrik di bawah.
-    final rightX = dividerX + (image.width * 0.038).round();
-    final rightWidth = panelX + panelWidth - rightX - horizontalPadding;
-    final columnGap = (image.width * 0.028).round();
-    final detailColumnWidth = ((rightWidth - columnGap) / 2).round();
-    final secondColumnX = rightX + detailColumnWidth + columnGap;
+    // Kolom kanan: alamat lengkap.
+    final addressY = panelY + topPadding;
 
-    final address = data.address.trim().isEmpty
-        ? 'Alamat tidak tersedia'
-        : data.address.trim();
-
-    // Alamat adalah informasi penting: jangan dipotong atau diberi ellipsis.
-    // Biarkan seluruh alamat turun ke beberapa baris.
-    final addressLines = _wrapText(
-      address,
-      maxChars: _addressMaxChars(
-        width: rightWidth,
-        fontScale: scale,
-      ),
-    );
-
-    final addressLineHeight = bodyFont.lineHeight + (scale * 5).round();
-    final requiredContentHeight =
-        (image.height * 0.045).round() +
-        (addressLines.length * addressLineHeight) +
-        (image.height * 0.105).round();
-
-    // Naik sedikit hanya bila alamat benar-benar panjang.
-    // Dalam kondisi normal landscape tetap sekitar 20% tinggi foto.
-    final panelHeight = basePanelHeight > requiredContentHeight
-        ? basePanelHeight
-        : requiredContentHeight;
-
-    final panelY = image.height - bottomMargin - panelHeight;
-
-    final addressY = panelY + (image.height * 0.025).round();
     for (var index = 0; index < addressLines.length; index++) {
       img.drawString(
         image,
@@ -206,15 +216,18 @@ class WatermarkService {
       );
     }
 
-    final coordinatesY = panelY + (panelHeight * 0.55).round();
-    final metricsY = panelY + (panelHeight * 0.73).round();
+    // Koordinat dan metrik ditempatkan setelah area alamat sehingga alamat
+    // panjang tidak bertabrakan dengan informasi berikutnya.
+    final detailsY = addressY +
+        addressHeight +
+        (image.height * 0.025).round();
 
     img.drawString(
       image,
       _formatLatitude(data.latitude),
       font: bodyFont,
       x: rightX,
-      y: coordinatesY,
+      y: detailsY,
       color: white,
     );
 
@@ -223,9 +236,11 @@ class WatermarkService {
       _formatLongitude(data.longitude),
       font: bodyFont,
       x: secondColumnX,
-      y: coordinatesY,
+      y: detailsY,
       color: white,
     );
+
+    final metricsY = detailsY + bodyFont.lineHeight + (scale * 4).round();
 
     img.drawString(
       image,
@@ -248,9 +263,11 @@ class WatermarkService {
     // Logo KAMLOKA berada di atas panel dan rata kanan.
     if (showBranding) {
       final logo = await _loadLogo();
+
       if (logo != null) {
         final logoMaxWidth = (image.width * 0.31).round();
-        final logoMaxHeight = (panelY - (image.height * 0.025)).round();
+        final logoMaxHeight =
+            (panelY - (image.height * 0.025)).round();
 
         if (logoMaxWidth > 0 && logoMaxHeight > 0) {
           final logoScale = [
@@ -286,6 +303,7 @@ class WatermarkService {
 
     final outputPath = _outputPath(source.path);
     final outputFile = File(outputPath);
+
     await outputFile.writeAsBytes(
       img.encodeJpg(image, quality: 100),
       flush: true,
@@ -418,7 +436,7 @@ class WatermarkService {
     String value, {
     required int maxChars,
   }) {
-    final words = value.split(RegExp(r'\\s+'));
+    final words = value.split(RegExp(r'\s+'));
     final lines = <String>[];
     var current = '';
 
@@ -434,8 +452,7 @@ class WatermarkService {
         lines.add(current);
       }
 
-      // Satu kata yang lebih panjang dari batas tetap ditampilkan utuh.
-      // Kita tidak memotong alamat.
+      // Kata panjang tidak dipotong; alamat harus tetap utuh.
       current = word;
     }
 
@@ -444,6 +461,11 @@ class WatermarkService {
     }
 
     return lines.isEmpty ? ['Alamat tidak tersedia'] : lines;
+  }
+
+  void dispose() {
+    _logo = null;
+    _logoLoading = null;
   }
 
   String _outputPath(String inputPath) {
