@@ -13,6 +13,7 @@ class LocationService extends GetxService {
   final address = ''.obs;
   final isResolvingAddress = false.obs;
   final errorMessage = ''.obs;
+  final Geocoding _geocoding = Geocoding(locale: const Locale('id', 'ID'));
 
   StreamSubscription<Position>? _positionSubscription;
   StreamSubscription<ServiceStatus>? _serviceStatusSubscription;
@@ -196,10 +197,9 @@ class LocationService extends GetxService {
     isResolvingAddress.value = true;
 
     try {
-      final placemarks = await placemarkFromCoordinates(
+      final placemarks = await _geocoding.placemarkFromCoordinates(
         value.latitude,
         value.longitude,
-        localeIdentifier: 'id_ID',
       );
 
       if (placemarks.isEmpty) {
