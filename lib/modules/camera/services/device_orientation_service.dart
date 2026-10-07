@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:native_device_orientation/native_device_orientation.dart';
 
@@ -15,15 +14,12 @@ class DeviceOrientationService extends GetxService {
     final communicator = NativeDeviceOrientationCommunicator();
 
     orientation.value = await communicator.orientation(useSensor: true);
-    await _applySystemOrientation(orientation.value);
-
     _subscription = communicator
         .onOrientationChanged(useSensor: true)
         .listen((value) {
       if (value == NativeDeviceOrientation.unknown) return;
 
       orientation.value = value;
-      unawaited(_applySystemOrientation(value));
     });
 
     return this;
@@ -37,24 +33,6 @@ class DeviceOrientationService extends GetxService {
       orientation.value == NativeDeviceOrientation.landscapeLeft ||
       orientation.value == NativeDeviceOrientation.landscapeRight;
 
-  Future<void> _applySystemOrientation(
-    NativeDeviceOrientation value,
-  ) {
-    return SystemChrome.setPreferredOrientations([
-      switch (value) {
-        NativeDeviceOrientation.portraitUp =>
-          DeviceOrientation.portraitUp,
-        NativeDeviceOrientation.portraitDown =>
-          DeviceOrientation.portraitDown,
-        NativeDeviceOrientation.landscapeLeft =>
-          DeviceOrientation.landscapeLeft,
-        NativeDeviceOrientation.landscapeRight =>
-          DeviceOrientation.landscapeRight,
-        NativeDeviceOrientation.unknown =>
-          DeviceOrientation.portraitUp,
-      },
-    ]);
-  }
 
   @override
   void onClose() {
