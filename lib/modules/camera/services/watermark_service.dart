@@ -69,23 +69,30 @@ class WatermarkService {
       throw const FormatException('Foto tidak dapat diproses untuk watermark.');
     }
 
-    final scale = image.width / 1080.0;
+    final isPortrait = image.height > image.width;
 
-    // Lebar panel mengikuti referensi, tetapi tinggi panel mengikuti tinggi
-    // foto agar landscape tidak menghasilkan box yang terlalu tinggi.
-    final panelWidth = (image.width * 0.867).round();
+    // Portrait dan landscape memakai skala UI yang berbeda. Pada portrait,
+    // semua elemen diperkecil agar watermark tidak mendominasi foto.
+    final uiScale = isPortrait
+        ? (image.width / 1080.0).clamp(0.55, 0.75)
+        : (image.width / 1080.0).clamp(1.0, 2.0);
+
+    final panelWidth = (image.width * (isPortrait ? 0.88 : 0.867)).round();
     final panelX = ((image.width - panelWidth) / 2).round();
-    final bottomMargin = (image.height * 0.055).round();
-    final radius = (image.width * 0.032).round().clamp(18, 180).toInt();
+    final bottomMargin = (image.height * (isPortrait ? 0.035 : 0.055)).round();
+    final radius = (image.width * (isPortrait ? 0.024 : 0.032))
+        .round()
+        .clamp(12, 180)
+        .toInt();
 
     final horizontalPadding =
-        (image.width * 0.038).round().clamp(24, 160).toInt();
+        (image.width * (isPortrait ? 0.028 : 0.038)).round().clamp(14, 160).toInt();
     final dividerX = panelX + (panelWidth * 0.305).round();
 
-    final dayFont = image.width >= 1800 ? img.arial48 : img.arial24;
-    final timeFont = image.width >= 1800 ? img.arial48 : img.arial24;
-    final bodyFont = image.width >= 1800 ? img.arial48 : img.arial24;
-    final dateFont = img.arial24;
+    final dayFont = isPortrait ? img.arial16 : img.arial48;
+    final timeFont = isPortrait ? img.arial32 : img.arial48;
+    final bodyFont = isPortrait ? img.arial16 : img.arial48;
+    final dateFont = isPortrait ? img.arial14 : img.arial24;
 
     final white = img.ColorRgb8(255, 255, 255);
     // Transparan: foto tetap terlihat melalui panel watermark.
@@ -111,20 +118,25 @@ class WatermarkService {
       ),
     );
 
-    final addressLineHeight = bodyFont.lineHeight + (scale * 5).round();
+    final addressLineHeight = bodyFont.lineHeight +
+        (isPortrait ? 3 : (uiScale * 5).round());
 
-    // Tinggi normal sekitar 20% tinggi foto. Jika alamat panjang, panel
+    // Tinggi normal lebih kecil pada portrait agar watermark tetap ringan. Jika alamat panjang, panel
     // otomatis bertambah secukupnya agar tidak menimpa koordinat/metrik.
-    final basePanelHeight = (image.height * 0.20).round();
-    final topPadding = (image.height * 0.025).round();
-    final bottomContentPadding = (image.height * 0.055).round();
+    final basePanelHeight =
+        (image.height * (isPortrait ? 0.17 : 0.20)).round();
+    final topPadding =
+        (image.height * (isPortrait ? 0.018 : 0.025)).round();
+    final bottomContentPadding =
+        (image.height * (isPortrait ? 0.032 : 0.055)).round();
     final addressHeight = addressLines.length * addressLineHeight;
-    final coordinateAreaHeight = (image.height * 0.075).round();
+    final coordinateAreaHeight =
+        (image.height * (isPortrait ? 0.055 : 0.075)).round();
 
     final requiredPanelHeight =
         topPadding +
         addressHeight +
-        (image.height * 0.025).round() +
+        (image.height * (isPortrait ? 0.015 : 0.025)).round() +
         coordinateAreaHeight +
         bottomContentPadding;
 
@@ -148,7 +160,8 @@ class WatermarkService {
     // Divider vertikal.
     final dividerTop = panelY + (panelHeight * 0.13).round();
     final dividerBottom = panelY + (panelHeight * 0.87).round();
-    final dividerThickness = (scale * 4).round().clamp(3, 10).toInt();
+    final dividerThickness =
+        (isPortrait ? 2 : (uiScale * 4).round()).clamp(2, 10).toInt();
 
     img.fillRect(
       image,
@@ -237,7 +250,9 @@ class WatermarkService {
       color: white,
     );
 
-    final metricsY = detailsY + bodyFont.lineHeight + (scale * 4).round();
+    final metricsY = detailsY +
+        bodyFont.lineHeight +
+        (isPortrait ? 2 : (uiScale * 4).round());
 
     img.drawString(
       image,
@@ -262,9 +277,10 @@ class WatermarkService {
       final logo = await _loadLogo();
 
       if (logo != null) {
-        final logoMaxWidth = (image.width * 0.31).round();
+        final logoMaxWidth =
+            (image.width * (isPortrait ? 0.25 : 0.31)).round();
         final logoMaxHeight =
-            (panelY - (image.height * 0.025)).round();
+            (panelY - (image.height * (isPortrait ? 0.012 : 0.025))).round();
 
         if (logoMaxWidth > 0 && logoMaxHeight > 0) {
           final logoScale = [
@@ -279,7 +295,8 @@ class WatermarkService {
           final logoX =
               panelX + panelWidth - logoWidth - (image.width * 0.01).round();
           final logoY =
-              panelY - logoHeight - (image.height * 0.018).round();
+              panelY - logoHeight -
+              (image.height * (isPortrait ? 0.010 : 0.018)).round();
 
           final resizedLogo = img.copyResize(
             logo,
@@ -424,7 +441,7 @@ class WatermarkService {
     required int width,
     required double fontScale,
   }) {
-    final baseFont = fontScale >= 1.67 ? 48 : 24;
+    final baseFont = fontScale >= 1.0 ? 48 : 16;
     final chars = (width / (baseFont * 0.58)).floor();
     return chars.clamp(18, 90).toInt();
   }
