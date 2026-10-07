@@ -8,10 +8,10 @@ import 'modules/camera/views/camera_view.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // KAMLOKA UI is intentionally portrait-only.
+  // Physical orientation is still tracked separately for camera capture.  
   await SystemChrome.setPreferredOrientations(const [
     DeviceOrientation.portraitUp,
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
   ]);
 
   runApp(const KamlokaApp());
