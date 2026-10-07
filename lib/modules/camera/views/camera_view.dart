@@ -1,4 +1,4 @@
-import 'package:camera/camera.dart';
+import 'package:camera/camera.dart' as camera;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/camera_controller.dart';
@@ -17,11 +17,11 @@ class CameraView extends GetView<CameraController> {
 
 class _CameraPreview extends StatelessWidget {
   const _CameraPreview({required this.controller});
-  final CameraController controller;
+  final camera.CameraController controller;
   @override
   Widget build(BuildContext context) {
     return Stack(fit: StackFit.expand, children: [
-      Center(child: AspectRatio(aspectRatio: controller.value.aspectRatio, child: CameraPreview(controller))),
+      Center(child: AspectRatio(aspectRatio: controller.value.aspectRatio, child: camera.CameraPreview(controller))),
       const SafeArea(child: Align(alignment: Alignment.topLeft, child: Padding(padding: EdgeInsets.all(20), child: Text('KAMLOKA', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 1.5))))),
     ]);
   }
