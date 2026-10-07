@@ -13,6 +13,7 @@ dependencies:
   get: ^4.7.3
   permission_handler: ^12.0.1
   native_device_orientation: ^2.1.3
+  geolocator: ^14.1.1
 
 dev_dependencies:
   flutter_test:
