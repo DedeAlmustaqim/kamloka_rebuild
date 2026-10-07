@@ -103,6 +103,7 @@ class _CameraPreview extends StatelessWidget {
             ),
           ),
         ),
+        const _CameraShutter(),
       ],
     );
   }
@@ -118,6 +119,86 @@ class _CameraPreview extends StatelessWidget {
   }
 }
 
+
+class _CameraShutter extends GetView<CameraController> {
+  const _CameraShutter();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final isCapturing = controller.isCapturing.value;
+      final error = controller.captureErrorMessage.value;
+
+      return SafeArea(
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (error.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      error,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                GestureDetector(
+                  onTap: isCapturing ? null : controller.capturePhoto,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 150),
+                    opacity: isCapturing ? 0.6 : 1,
+                    child: Container(
+                      width: 76,
+                      height: 76,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 4,
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(6),
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: isCapturing
+                            ? const Padding(
+                                padding: EdgeInsets.all(22),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.black,
+                                ),
+                              )
+                            : null,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    });
+  }
+}
 
 class _LocationStatus extends StatelessWidget {
   const _LocationStatus({required this.service});
