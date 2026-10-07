@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
-
 import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -13,17 +11,14 @@ class LocationService extends GetxService {
   final position = Rxn<Position>();
   final address = ''.obs;
   final isResolvingAddress = false.obs;
-  final isGeocoderAvailable = false.obs;
   final errorMessage = ''.obs;
-  final Geocoding _geocoding = Geocoding(locale: const Locale('id', 'ID'));
 
   StreamSubscription<Position>? _positionSubscription;
   StreamSubscription<ServiceStatus>? _serviceStatusSubscription;
   bool _initialized = false;
   bool _reverseGeocodingInProgress = false;
   Timer? _reverseGeocodingDebounce;
-  double? _lastGeocodedLatitude;
-  double? _lastGeocodedLongitude;
+  final Map<String, String> _addressCache = {};
 
   Future<LocationService> init() async {
     await initialize();
@@ -61,11 +56,6 @@ class LocationService extends GetxService {
       if (currentPermission == LocationPermission.deniedForever) {
         throw const _LocationPermissionDeniedForeverException();
       }
-
-      isGeocoderAvailable.value = await _geocoding.isPresent();
-      debugPrint(
-        '[KAMLOKA LOCATION] geocoder available: ${isGeocoderAvailable.value}',
-      );
 
       await _refreshCurrentPosition();
       _startStreams();
@@ -205,24 +195,15 @@ class LocationService extends GetxService {
   }
 
   Future<void> _reverseGeocode(Position value) async {
-    final lastLat = _lastGeocodedLatitude;
-    final lastLng = _lastGeocodedLongitude;
+    final key = '${value.latitude.toStringAsFixed(4)},'
+        '${value.longitude.toStringAsFixed(4)}';
 
-    if (lastLat != null &&
-        lastLng != null &&
-        Geolocator.distanceBetween(
-              lastLat,
-              lastLng,
-              value.latitude,
-              value.longitude,
-            ) <
-            50) {
+    final cached = _addressCache[key];
+    if (cached != null) {
+      address.value = cached;
       return;
     }
 
-    // Android geocoding uses Pigeon-backed native listener objects.
-    // Keep only one reverse-geocoding request alive at a time so rapid
-    // position updates cannot overlap their native listener lifecycle.
     if (_reverseGeocodingInProgress) {
       return;
     }
@@ -231,10 +212,9 @@ class LocationService extends GetxService {
     isResolvingAddress.value = true;
 
     try {
-      final placemarks = await _geocoding.placemarkFromCoordinates(
+      final placemarks = await placemarkFromCoordinates(
         value.latitude,
         value.longitude,
-        locale: const Locale('id', 'ID'),
       );
 
       debugPrint(
@@ -246,18 +226,17 @@ class LocationService extends GetxService {
         return;
       }
 
-      final place = placemarks.first;
-      debugPrint('[KAMLOKA LOCATION] placemark: $place');
+      final formattedAddress = _formatPlacemark(placemarks.first);
 
-      final formattedAddress = _formatPlacemark(place);
-      address.value = formattedAddress.isEmpty
-          ? 'Alamat tidak tersedia'
-          : formattedAddress;
-
-      if (formattedAddress.isNotEmpty) {
-        _lastGeocodedLatitude = value.latitude;
-        _lastGeocodedLongitude = value.longitude;
+      if (formattedAddress.isEmpty) {
+        address.value = 'Alamat tidak tersedia';
+        return;
       }
+
+      _addressCache[key] = formattedAddress;
+      address.value = formattedAddress;
+
+      debugPrint('[KAMLOKA LOCATION] address: $formattedAddress');
     } catch (error, stack) {
       debugPrint('[KAMLOKA LOCATION] reverse geocode: $error');
       debugPrintStack(stackTrace: stack);
