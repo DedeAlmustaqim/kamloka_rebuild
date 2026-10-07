@@ -21,6 +21,7 @@ class LocationService extends GetxService {
   StreamSubscription<ServiceStatus>? _serviceStatusSubscription;
   bool _initialized = false;
   bool _reverseGeocodingInProgress = false;
+  Timer? _reverseGeocodingDebounce;
   double? _lastGeocodedLatitude;
   double? _lastGeocodedLongitude;
 
@@ -96,7 +97,9 @@ class LocationService extends GetxService {
 
   Future<void> retry() => initialize(force: true);
 
-  Future<void> _refreshCurrentPosition() async {
+  Future<void> _refreshCurrentPosition({
+    bool resolveAddress = true,
+  }) async {
     final settings = const LocationSettings(
       accuracy: LocationAccuracy.high,
       distanceFilter: 5,
@@ -107,7 +110,9 @@ class LocationService extends GetxService {
         locationSettings: settings,
       );
       errorMessage.value = '';
-      await _reverseGeocode(position.value!);
+      if (resolveAddress) {
+        await _reverseGeocode(position.value!);
+      }
     } on TimeoutException {
       rethrow;
     } catch (error, stack) {
@@ -118,7 +123,9 @@ class LocationService extends GetxService {
       if (fallback != null) {
         position.value = fallback;
         errorMessage.value = 'Menggunakan lokasi terakhir yang tersedia.';
-        await _reverseGeocode(fallback);
+        if (resolveAddress) {
+          await _reverseGeocode(fallback);
+        }
         return;
       }
 
@@ -154,7 +161,9 @@ class LocationService extends GetxService {
         return;
       }
 
-      await _refreshCurrentPosition().catchError((error) {
+      await _refreshCurrentPosition(
+        resolveAddress: false,
+      ).catchError((error) {
         debugPrint('[KAMLOKA LOCATION] service refresh: $error');
       });
     });
@@ -169,7 +178,7 @@ class LocationService extends GetxService {
       (value) {
         position.value = value;
         errorMessage.value = '';
-        unawaited(_reverseGeocode(value));
+        _scheduleReverseGeocode(value);
       },
       onError: (Object error, StackTrace stack) {
         debugPrint('[KAMLOKA LOCATION] stream: $error');
@@ -180,10 +189,19 @@ class LocationService extends GetxService {
   }
 
   Future<void> _stopStreams() async {
+    _reverseGeocodingDebounce?.cancel();
+    _reverseGeocodingDebounce = null;
     await _positionSubscription?.cancel();
     await _serviceStatusSubscription?.cancel();
     _positionSubscription = null;
     _serviceStatusSubscription = null;
+  }
+
+  void _scheduleReverseGeocode(Position value) {
+    _reverseGeocodingDebounce?.cancel();
+    _reverseGeocodingDebounce = Timer(const Duration(seconds: 2), () {
+      unawaited(_reverseGeocode(value));
+    });
   }
 
   Future<void> _reverseGeocode(Position value) async {
@@ -307,6 +325,8 @@ class LocationService extends GetxService {
 
   @override
   void onClose() {
+    _reverseGeocodingDebounce?.cancel();
+    _reverseGeocodingDebounce = null;
     _stopStreams();
     super.onClose();
   }
