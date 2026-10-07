@@ -91,7 +91,6 @@ class LocationService extends GetxService {
     try {
       position.value = await Geolocator.getCurrentPosition(
         locationSettings: settings,
-        timeLimit: const Duration(seconds: 15),
       );
       errorMessage.value = '';
     } on TimeoutException {
