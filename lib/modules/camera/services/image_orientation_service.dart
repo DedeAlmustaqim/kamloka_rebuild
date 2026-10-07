@@ -6,7 +6,7 @@ import 'package:image/image.dart' as img;
 
 class ImageOrientationService {
   Future<camera.XFile> normalize(camera.XFile source) async {
-    final inputPath = source.path as String;
+    final inputPath = source.path;
     final inputFile = File(inputPath);
     final bytes = await inputFile.readAsBytes();
     final decoded = img.decodeImage(bytes);
