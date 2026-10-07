@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/camera_controller.dart';
+import 'photo_preview_view.dart';
 import '../services/device_orientation_service.dart';
 import '../../location/services/location_service.dart';
 
@@ -158,7 +159,19 @@ class _CameraShutter extends GetView<CameraController> {
                     ),
                   ),
                 GestureDetector(
-                  onTap: isCapturing ? null : controller.capturePhoto,
+                  onTap: isCapturing
+                      ? null
+                      : () async {
+                          final path = await controller.capturePhoto();
+
+                          if (path == null || !context.mounted) {
+                            return;
+                          }
+
+                          await Get.to(
+                            () => PhotoPreviewView(filePath: path),
+                          );
+                        },
                   child: AnimatedOpacity(
                     duration: const Duration(milliseconds: 150),
                     opacity: isCapturing ? 0.6 : 1,
