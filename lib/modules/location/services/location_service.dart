@@ -20,6 +20,7 @@ class LocationService extends GetxService {
   StreamSubscription<Position>? _positionSubscription;
   StreamSubscription<ServiceStatus>? _serviceStatusSubscription;
   bool _initialized = false;
+  bool _reverseGeocodingInProgress = false;
   double? _lastGeocodedLatitude;
   double? _lastGeocodedLongitude;
 
@@ -201,6 +202,14 @@ class LocationService extends GetxService {
       return;
     }
 
+    // Android geocoding uses Pigeon-backed native listener objects.
+    // Keep only one reverse-geocoding request alive at a time so rapid
+    // position updates cannot overlap their native listener lifecycle.
+    if (_reverseGeocodingInProgress) {
+      return;
+    }
+
+    _reverseGeocodingInProgress = true;
     isResolvingAddress.value = true;
 
     try {
@@ -237,6 +246,7 @@ class LocationService extends GetxService {
       address.value = 'Alamat tidak tersedia';
     } finally {
       isResolvingAddress.value = false;
+      _reverseGeocodingInProgress = false;
     }
   }
 
