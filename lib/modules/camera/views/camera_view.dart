@@ -128,6 +128,7 @@ class _LocationStatus extends StatelessWidget {
     final position = service.position.value;
     final hasPosition = position != null;
     final isEnabled = service.isServiceEnabled.value;
+    final error = service.errorMessage.value;
 
     if (hasPosition) {
       return DecoratedBox(
@@ -193,7 +194,9 @@ class _LocationStatus extends StatelessWidget {
             Icon(isEnabled ? Icons.gps_fixed : Icons.gps_off, size: 14),
             const SizedBox(width: 6),
             Text(
-              isEnabled ? 'Mencari GPS...' : 'GPS mati',
+              error.isNotEmpty
+                  ? error
+                  : (isEnabled ? 'Mencari GPS...' : 'GPS mati'),
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
