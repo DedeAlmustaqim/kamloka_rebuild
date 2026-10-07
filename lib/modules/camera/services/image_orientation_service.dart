@@ -1,10 +1,11 @@
 import 'dart:io';
 
+import 'package:camera/camera.dart' as camera;
 import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 
 class ImageOrientationService {
-  Future<File> normalize(dynamic source) async {
+  Future<camera.XFile> normalize(camera.XFile source) async {
     final inputPath = source.path as String;
     final inputFile = File(inputPath);
     final bytes = await inputFile.readAsBytes();
@@ -27,7 +28,7 @@ class ImageOrientationService {
       '${normalized.width}x${normalized.height}',
     );
 
-    return outputFile;
+    return camera.XFile(outputFile.path);
   }
 
   String _outputPath(String inputPath) {
