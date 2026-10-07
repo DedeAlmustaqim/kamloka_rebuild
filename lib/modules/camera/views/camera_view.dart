@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:camera/camera.dart' as camera;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -158,21 +160,17 @@ class _CameraShutter extends GetView<CameraController> {
                       ),
                     ),
                   ),
-                GestureDetector(
-                  onTap: isCapturing
-                      ? null
-                      : () async {
-                          final path = await controller.capturePhoto();
-
-                          if (path == null || !context.mounted) {
-                            return;
-                          }
-
-                          await Get.to(
-                            () => PhotoPreviewView(filePath: path),
-                          );
-                        },
-                  child: AnimatedOpacity(
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const _CaptureThumbnail(),
+                    const SizedBox(width: 24),
+                    GestureDetector(
+                      onTap: isCapturing
+                          ? null
+                          : controller.capturePhoto,
+                      child: AnimatedOpacity(
                     duration: const Duration(milliseconds: 150),
                     opacity: isCapturing ? 0.6 : 1,
                     child: Container(
@@ -202,11 +200,63 @@ class _CameraShutter extends GetView<CameraController> {
                             : null,
                       ),
                     ),
-                  ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
+        ),
+      );
+    });
+  }
+}
+
+class _CaptureThumbnail extends GetView<CameraController> {
+  const _CaptureThumbnail();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final path = controller.lastCapturePath.value;
+
+      return GestureDetector(
+        onTap: path.isEmpty
+            ? null
+            : () => Get.to(
+                  () => PhotoPreviewView(filePath: path),
+                ),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          width: 54,
+          height: 54,
+          decoration: BoxDecoration(
+            color: Colors.black54,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: Colors.white,
+              width: 2,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: path.isEmpty
+              ? const Icon(
+                  Icons.photo_outlined,
+                  color: Colors.white70,
+                  size: 25,
+                )
+              : Image.file(
+                  File(path),
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(
+                      Icons.broken_image_outlined,
+                      color: Colors.white70,
+                      size: 24,
+                    );
+                  },
+                ),
         ),
       );
     });
