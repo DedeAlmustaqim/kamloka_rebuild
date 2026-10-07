@@ -14,7 +14,6 @@ class CameraView extends GetView<CameraController> {
 
   @override
   Widget build(BuildContext context) {
-    final orientationService = Get.find<DeviceOrientationService>();
     final locationService = Get.find<LocationService>();
 
     return Scaffold(
@@ -33,7 +32,6 @@ class CameraView extends GetView<CameraController> {
 
         return _CameraPreview(
           controller: controller.cameraController,
-          isLandscape: orientationService.isLandscape,
           locationService: locationService,
         );
       }),
@@ -49,7 +47,6 @@ class _CameraPreview extends StatelessWidget {
   });
 
   final camera.CameraController controller;
-  final bool isLandscape;
   final LocationService locationService;
 
   @override
@@ -62,9 +59,9 @@ class _CameraPreview extends StatelessWidget {
             final screenAspectRatio =
                 constraints.maxWidth / constraints.maxHeight;
             final sensorAspectRatio = controller.value.aspectRatio;
-            final previewAspectRatio = isLandscape
-                ? sensorAspectRatio
-                : 1 / sensorAspectRatio;
+            // The UI stays portrait; physical orientation is handled
+            // separately by DeviceOrientationService/capture processing.
+            final previewAspectRatio = 1 / sensorAspectRatio;
 
             final scale = _coverScale(
               previewAspectRatio,
