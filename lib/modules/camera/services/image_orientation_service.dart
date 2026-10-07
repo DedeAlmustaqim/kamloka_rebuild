@@ -1,0 +1,42 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+import 'package:image/image.dart' as img;
+
+class ImageOrientationService {
+  Future<File> normalize(dynamic source) async {
+    final inputPath = source.path as String;
+    final inputFile = File(inputPath);
+    final bytes = await inputFile.readAsBytes();
+    final decoded = img.decodeImage(bytes);
+
+    if (decoded == null) {
+      throw const FormatException('Format foto tidak dapat diproses.');
+    }
+
+    // Bake the orientation into the pixels. No resize is performed.
+    final normalized = img.bakeOrientation(decoded);
+    final outputPath = _outputPath(inputPath);
+    final outputBytes = img.encodeJpg(normalized, quality: 100);
+
+    final outputFile = File(outputPath);
+    await outputFile.writeAsBytes(outputBytes, flush: true);
+
+    debugPrint(
+      '[KAMLOKA ORIENTATION] ${decoded.width}x${decoded.height} -> '
+      '${normalized.width}x${normalized.height}',
+    );
+
+    return outputFile;
+  }
+
+  String _outputPath(String inputPath) {
+    final separator = Platform.pathSeparator;
+    final name = inputPath.split(separator).last;
+    final baseName = name.replaceFirst(RegExp(r'\.[^.]+$'), '');
+    final directory = inputPath.substring(0, inputPath.length - name.length);
+    return '$directory${baseName}_normalized.jpg';
+  }
+
+  void dispose() {}
+}
