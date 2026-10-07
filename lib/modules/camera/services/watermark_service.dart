@@ -89,9 +89,9 @@ class WatermarkService {
         (image.width * (isPortrait ? 0.028 : 0.038)).round().clamp(14, 160).toInt();
     final dividerX = panelX + (panelWidth * 0.305).round();
 
-    final dayFont = isPortrait ? img.arial16 : img.arial48;
-    final timeFont = isPortrait ? img.arial32 : img.arial48;
-    final bodyFont = isPortrait ? img.arial16 : img.arial48;
+    final dayFont = isPortrait ? img.arial14 : img.arial48;
+    final timeFont = isPortrait ? img.arial24 : img.arial48;
+    final bodyFont = isPortrait ? img.arial14 : img.arial48;
     final dateFont = isPortrait ? img.arial14 : img.arial24;
 
     final white = img.ColorRgb8(255, 255, 255);
