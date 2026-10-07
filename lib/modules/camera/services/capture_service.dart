@@ -1,8 +1,12 @@
 import 'package:camera/camera.dart' as camera;
 import 'package:flutter/foundation.dart';
 
+import 'image_orientation_service.dart';
+
 class CaptureService {
   bool _isCapturing = false;
+  final ImageOrientationService _orientationService =
+      ImageOrientationService();
 
   Future<camera.XFile?> capture(camera.CameraController controller) async {
     if (_isCapturing || !controller.value.isInitialized) {
@@ -22,7 +26,14 @@ class CaptureService {
         '[KAMLOKA CAPTURE] captured: ${file.path}',
       );
 
-      return file;
+      final normalizedFile =
+          await _orientationService.normalize(file);
+
+      debugPrint(
+        '[KAMLOKA CAPTURE] normalized: ${normalizedFile.path}',
+      );
+
+      return normalizedFile;
     } on camera.CameraException catch (error, stack) {
       debugPrint(
         '[KAMLOKA CAPTURE] ${error.code}: ${error.description}',
@@ -38,5 +49,7 @@ class CaptureService {
     }
   }
 
-  void dispose() {}
+  void dispose() {
+    _orientationService.dispose();
+  }
 }
