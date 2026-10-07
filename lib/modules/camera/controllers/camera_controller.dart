@@ -100,7 +100,13 @@ class CameraController extends GetxController {
     isCapturing.value = true;
 
     try {
-      final file = await _captureService.capture(cameraController);
+      final physicalOrientation =
+          Get.find<DeviceOrientationService>().orientation.value;
+
+      final file = await _captureService.capture(
+        cameraController,
+        physicalOrientation: physicalOrientation,
+      );
 
       if (file == null) {
         return null;
