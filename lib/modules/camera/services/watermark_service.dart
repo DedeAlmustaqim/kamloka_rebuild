@@ -1,6 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:camera/camera.dart' as camera;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -449,6 +447,8 @@ class WatermarkService {
 
     return lines.isEmpty ? ['Alamat tidak tersedia'] : lines;
   }
+
+  void dispose() {}
 
   String _outputPath(String inputPath) {
     final separator = Platform.pathSeparator;
