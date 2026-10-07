@@ -60,7 +60,7 @@ class LocationService extends GetxService {
       }
 
       isGeocoderAvailable.value = await _geocoding.isPresent();
-      debugPrint('[KAMLOKA LOCATION] geocoder available: ' + isGeocoderAvailable.value.toString());
+      debugPrint('[KAMLOKA LOCATION] geocoder available: ${isGeocoderAvailable.value}');
 
       await _refreshCurrentPosition();
       _startStreams();
@@ -208,7 +208,7 @@ class LocationService extends GetxService {
       );
 
       debugPrint(
-        '[KAMLOKA LOCATION] reverse geocode result count: ' + placemarks.length.toString(),
+        '[KAMLOKA LOCATION] reverse geocode result count: ${placemarks.length}',
       );
 
       if (placemarks.isEmpty) {
@@ -217,7 +217,7 @@ class LocationService extends GetxService {
       }
 
       final place = placemarks.first;
-      debugPrint('[KAMLOKA LOCATION] placemark: ' + place.toString());
+      debugPrint('[KAMLOKA LOCATION] placemark: $place');
       address.value = _formatPlacemark(place);
       _lastGeocodedLatitude = value.latitude;
       _lastGeocodedLongitude = value.longitude;
