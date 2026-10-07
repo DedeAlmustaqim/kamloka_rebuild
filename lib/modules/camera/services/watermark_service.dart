@@ -136,7 +136,7 @@ class WatermarkService {
     required int fontSize,
   }) {
     final usableWidth = panelWidth - (horizontalPadding * 2);
-    return (usableWidth / (fontSize * 0.58)).floor().clamp(18, 120);
+    return (usableWidth / (fontSize * 0.58)).floor().clamp(18, 120).toInt();
   }
 
   List<String> _wrapText(
