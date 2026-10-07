@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../services/device_orientation_service.dart';
+import '../../location/services/location_service.dart';
 
 class CameraController extends GetxController {
   final isInitializing = true.obs;
@@ -63,6 +64,10 @@ class CameraController extends GetxController {
       await controller.initialize();
 
       isReady.value = true;
+
+      // Location is independent from camera readiness. If GPS fails,
+      // the camera remains usable and LocationService keeps the error state.
+      await Get.find<LocationService>().init();
     } on camera.CameraException catch (error, stack) {
       debugPrint(
         '[KAMLOKA CAMERA] ${error.code}: ${error.description}',
