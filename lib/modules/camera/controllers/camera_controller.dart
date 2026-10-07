@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../services/device_orientation_service.dart';
+
 class CameraController extends GetxController {
   final isInitializing = true.obs;
   final isReady = false.obs;
@@ -24,6 +26,8 @@ class CameraController extends GetxController {
     errorMessage.value = '';
 
     try {
+      await Get.find<DeviceOrientationService>().init();
+
       final permission = await Permission.camera.request();
 
       if (!permission.isGranted) {
