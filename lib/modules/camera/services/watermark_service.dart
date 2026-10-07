@@ -1,6 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:camera/camera.dart' as camera;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -45,8 +43,7 @@ class WatermarkService {
   Future<img.Image?> _loadLogoInternal() async {
     try {
       final data = await rootBundle.load(_logoAsset);
-      final bytes = Uint8List.view(
-        data.buffer,
+      final bytes = data.buffer.asUint8List(
         data.offsetInBytes,
         data.lengthInBytes,
       );
