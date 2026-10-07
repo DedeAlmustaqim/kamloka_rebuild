@@ -177,7 +177,34 @@ class _LocationStatus extends StatelessWidget {
                 shadows: _shadow,
               ),
             ),
-            const SizedBox(height: 2),
+            if (service.address.value.isNotEmpty) ...[
+              const SizedBox(height: 3),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 280),
+                child: Text(
+                  service.address.value,
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    height: 1.15,
+                    shadows: _shadow,
+                  ),
+                ),
+              ),
+            ] else if (service.isResolvingAddress.value) ...[
+              const SizedBox(height: 3),
+              const Text(
+                'Mencari alamat...',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 11,
+                  shadows: _shadow,
+                ),
+              ),
+            ],
+            const SizedBox(height: 3),
             Text(
               'Akurasi ${service.accuracyText} • Alt ${service.altitudeText}',
               style: const TextStyle(
