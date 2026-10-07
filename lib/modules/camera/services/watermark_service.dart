@@ -75,12 +75,13 @@ class WatermarkService {
     // Layout mengacu pada referensi 1080x720 dan diskalakan proporsional.
     final panelWidth = (image.width * 0.867).round();
     final panelX = ((image.width - panelWidth) / 2).round();
-    final bottomMargin = (image.width * 0.067).round();
+    final bottomMargin = (image.height * 0.055).round();
     final radius = (image.width * 0.032).round().clamp(18, 180).toInt();
-    // Tinggi panel mengikuti lebar foto, bukan tinggi foto, agar proporsinya
-    // tetap konsisten pada portrait maupun landscape.
-    final panelHeight = (image.width * 0.20).round();
-    final panelY = image.height - bottomMargin - panelHeight;
+
+    // Tinggi watermark mengikuti TINGGI foto. Ini penting untuk landscape:
+    // lebar foto biasanya sangat besar, tetapi watermark tidak boleh ikut
+    // membesar sampai memakan sepertiga frame.
+    final basePanelHeight = (image.height * 0.20).round();
 
     final horizontalPadding =
         (image.width * 0.038).round().clamp(24, 160).toInt();
@@ -179,9 +180,21 @@ class WatermarkService {
       ),
     );
 
-    final addressY = panelY + (panelHeight * 0.15).round();
     final addressLineHeight = bodyFont.lineHeight + (scale * 5).round();
+    final requiredContentHeight =
+        (image.height * 0.045).round() +
+        (addressLines.length * addressLineHeight) +
+        (image.height * 0.105).round();
 
+    // Naik sedikit hanya bila alamat benar-benar panjang.
+    // Dalam kondisi normal landscape tetap sekitar 20% tinggi foto.
+    final panelHeight = basePanelHeight > requiredContentHeight
+        ? basePanelHeight
+        : requiredContentHeight;
+
+    final panelY = image.height - bottomMargin - panelHeight;
+
+    final addressY = panelY + (image.height * 0.025).round();
     for (var index = 0; index < addressLines.length; index++) {
       img.drawString(
         image,
