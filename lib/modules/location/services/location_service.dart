@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 
@@ -9,11 +10,15 @@ class LocationService extends GetxService {
   final isServiceEnabled = false.obs;
   final permission = Rxn<LocationPermission>();
   final position = Rxn<Position>();
+  final address = ''.obs;
+  final isResolvingAddress = false.obs;
   final errorMessage = ''.obs;
 
   StreamSubscription<Position>? _positionSubscription;
   StreamSubscription<ServiceStatus>? _serviceStatusSubscription;
   bool _initialized = false;
+  double? _lastGeocodedLatitude;
+  double? _lastGeocodedLongitude;
 
   Future<LocationService> init() async {
     await initialize();
@@ -93,6 +98,7 @@ class LocationService extends GetxService {
         locationSettings: settings,
       );
       errorMessage.value = '';
+      await _reverseGeocode(position.value!);
     } on TimeoutException {
       rethrow;
     } catch (error, stack) {
@@ -103,6 +109,7 @@ class LocationService extends GetxService {
       if (fallback != null) {
         position.value = fallback;
         errorMessage.value = 'Menggunakan lokasi terakhir yang tersedia.';
+        await _reverseGeocode(fallback);
         return;
       }
 
@@ -115,6 +122,7 @@ class LocationService extends GetxService {
       final fallback = await Geolocator.getLastKnownPosition();
       if (fallback != null) {
         position.value = fallback;
+        await _reverseGeocode(fallback);
       }
     } catch (error) {
       debugPrint('[KAMLOKA LOCATION] last known: $error');
@@ -152,6 +160,7 @@ class LocationService extends GetxService {
       (value) {
         position.value = value;
         errorMessage.value = '';
+        unawaited(_reverseGeocode(value));
       },
       onError: (Object error, StackTrace stack) {
         debugPrint('[KAMLOKA LOCATION] stream: $error');
@@ -168,6 +177,61 @@ class LocationService extends GetxService {
     _serviceStatusSubscription = null;
   }
 
+  Future<void> _reverseGeocode(Position value) async {
+    final lastLat = _lastGeocodedLatitude;
+    final lastLng = _lastGeocodedLongitude;
+
+    if (lastLat != null &&
+        lastLng != null &&
+        Geolocator.distanceBetween(
+              lastLat,
+              lastLng,
+              value.latitude,
+              value.longitude,
+            ) <
+            50) {
+      return;
+    }
+
+    isResolvingAddress.value = true;
+
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        value.latitude,
+        value.longitude,
+        localeIdentifier: 'id_ID',
+      );
+
+      if (placemarks.isEmpty) {
+        address.value = '';
+        return;
+      }
+
+      final place = placemarks.first;
+      address.value = _formatPlacemark(place);
+      _lastGeocodedLatitude = value.latitude;
+      _lastGeocodedLongitude = value.longitude;
+    } catch (error, stack) {
+      debugPrint('[KAMLOKA LOCATION] reverse geocode: $error');
+      debugPrintStack(stackTrace: stack);
+    } finally {
+      isResolvingAddress.value = false;
+    }
+  }
+
+  String _formatPlacemark(Placemark place) {
+    final parts = <String>[
+      if ((place.street ?? '').trim().isNotEmpty) place.street!.trim(),
+      if ((place.subLocality ?? '').trim().isNotEmpty) place.subLocality!.trim(),
+      if ((place.locality ?? '').trim().isNotEmpty) place.locality!.trim(),
+      if ((place.subAdministrativeArea ?? '').trim().isNotEmpty)
+        place.subAdministrativeArea!.trim(),
+      if ((place.administrativeArea ?? '').trim().isNotEmpty)
+        place.administrativeArea!.trim(),
+    ];
+
+    return parts.toSet().join(', ');
+  }
   String get coordinateText {
     final value = position.value;
     if (value == null) return '--';
