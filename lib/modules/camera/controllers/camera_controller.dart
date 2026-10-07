@@ -5,15 +5,20 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../services/capture_service.dart';
 import '../services/device_orientation_service.dart';
 import '../../location/services/location_service.dart';
 
 class CameraController extends GetxController {
   final isInitializing = true.obs;
   final isReady = false.obs;
+  final isCapturing = false.obs;
   final errorMessage = ''.obs;
+  final captureErrorMessage = ''.obs;
+  final lastCapturePath = ''.obs;
 
   camera.CameraController? _cameraController;
+  final CaptureService _captureService = CaptureService();
 
   camera.CameraController get cameraController => _cameraController!;
 
@@ -67,8 +72,6 @@ class CameraController extends GetxController {
 
       isReady.value = true;
 
-      // Location is independent from camera readiness. If GPS is slow or
-      // unavailable, the camera must remain immediately usable.
       unawaited(Get.find<LocationService>().init());
     } on camera.CameraException catch (error, stack) {
       debugPrint(
@@ -86,12 +89,40 @@ class CameraController extends GetxController {
     }
   }
 
+  Future<void> capturePhoto() async {
+    if (!isReady.value || isCapturing.value) {
+      return;
+    }
+
+    captureErrorMessage.value = '';
+    isCapturing.value = true;
+
+    try {
+      final file = await _captureService.capture(cameraController);
+
+      if (file == null) {
+        return;
+      }
+
+      lastCapturePath.value = file.path;
+    } on camera.CameraException catch (error) {
+      captureErrorMessage.value =
+          error.description ?? 'Gagal mengambil foto.';
+    } catch (error) {
+      captureErrorMessage.value =
+          error.toString().replaceFirst('Exception: ', '');
+    } finally {
+      isCapturing.value = false;
+    }
+  }
+
   Future<void> retry() => initialize();
 
   @override
   void onClose() {
     _cameraController?.dispose();
     _cameraController = null;
+    _captureService.dispose();
     super.onClose();
   }
 }
