@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:geocoding/geocoding.dart';
+import 'address_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 
@@ -19,6 +19,7 @@ class LocationService extends GetxService {
   bool _reverseGeocodingInProgress = false;
   Timer? _reverseGeocodingDebounce;
   final Map<String, String> _addressCache = {};
+  final AddressService _addressService = AddressService();
 
   Future<LocationService> init() async {
     await initialize();
@@ -212,31 +213,20 @@ class LocationService extends GetxService {
     isResolvingAddress.value = true;
 
     try {
-      final placemarks = await placemarkFromCoordinates(
-        value.latitude,
-        value.longitude,
+      final resolvedAddress = await _addressService.reverseGeocode(
+        latitude: value.latitude,
+        longitude: value.longitude,
       );
 
-      debugPrint(
-        '[KAMLOKA LOCATION] reverse geocode result count: ${placemarks.length}',
-      );
-
-      if (placemarks.isEmpty) {
-        address.value = 'Alamat tidak ditemukan';
-        return;
-      }
-
-      final formattedAddress = _formatPlacemark(placemarks.first);
-
-      if (formattedAddress.isEmpty) {
+      if (resolvedAddress == null || resolvedAddress.isEmpty) {
         address.value = 'Alamat tidak tersedia';
         return;
       }
 
-      _addressCache[key] = formattedAddress;
-      address.value = formattedAddress;
+      _addressCache[key] = resolvedAddress;
+      address.value = resolvedAddress;
 
-      debugPrint('[KAMLOKA LOCATION] address: $formattedAddress');
+      debugPrint('[KAMLOKA LOCATION] address: $resolvedAddress');
     } catch (error, stack) {
       debugPrint('[KAMLOKA LOCATION] reverse geocode: $error');
       debugPrintStack(stackTrace: stack);
@@ -247,23 +237,6 @@ class LocationService extends GetxService {
     }
   }
 
-  String _formatPlacemark(Placemark place) {
-    final parts = <String>[
-      if ((place.name ?? '').trim().isNotEmpty) place.name!.trim(),
-      if ((place.street ?? '').trim().isNotEmpty) place.street!.trim(),
-      if ((place.thoroughfare ?? '').trim().isNotEmpty)
-        place.thoroughfare!.trim(),
-      if ((place.subLocality ?? '').trim().isNotEmpty)
-        place.subLocality!.trim(),
-      if ((place.locality ?? '').trim().isNotEmpty) place.locality!.trim(),
-      if ((place.subAdministrativeArea ?? '').trim().isNotEmpty)
-        place.subAdministrativeArea!.trim(),
-      if ((place.administrativeArea ?? '').trim().isNotEmpty)
-        place.administrativeArea!.trim(),
-    ];
-
-    return parts.toSet().join(', ');
-  }
   String get coordinateText {
     final value = position.value;
     if (value == null) return '--';
@@ -307,6 +280,7 @@ class LocationService extends GetxService {
     _reverseGeocodingDebounce?.cancel();
     _reverseGeocodingDebounce = null;
     _stopStreams();
+    _addressService.dispose();
     super.onClose();
   }
 }
