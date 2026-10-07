@@ -42,9 +42,21 @@ class WatermarkService {
     final panelWidth = (image.width * 0.92).round();
     final panelX = ((image.width - panelWidth) / 2).round();
 
+    final address = data.address.isEmpty
+        ? 'Alamat tidak tersedia'
+        : data.address;
+    final addressLines = _wrapText(
+      address,
+      maxChars: _addressMaxChars(
+        panelWidth: panelWidth,
+        horizontalPadding: horizontalPadding,
+        fontSize: image.width >= 3000 ? 48 : 24,
+      ),
+    );
+
     final lines = <String>[
       _formatDateTime(data.dateTime),
-      _limit(data.address.isEmpty ? 'Alamat tidak tersedia' : data.address, 70),
+      ...addressLines,
       _formatCoordinates(data.latitude, data.longitude),
       _formatMetrics(data.accuracy, data.altitude),
     ];
@@ -118,9 +130,45 @@ class WatermarkService {
     return 'Akurasi $accuracyText  •  Alt $altitudeText';
   }
 
-  String _limit(String value, int maxCharacters) {
-    if (value.length <= maxCharacters) return value;
-    return '${value.substring(0, maxCharacters - 1).trimRight()}…';
+  int _addressMaxChars({
+    required int panelWidth,
+    required int horizontalPadding,
+    required int fontSize,
+  }) {
+    final usableWidth = panelWidth - (horizontalPadding * 2);
+    return (usableWidth / (fontSize * 0.58)).floor().clamp(18, 120);
+  }
+
+  List<String> _wrapText(
+    String value, {
+    required int maxChars,
+  }) {
+    final words = value.trim().split(RegExp(r'\s+'));
+    final lines = <String>[];
+    var current = '';
+
+    for (final word in words) {
+      final candidate = current.isEmpty ? word : '$current $word';
+
+      if (candidate.length <= maxChars) {
+        current = candidate;
+        continue;
+      }
+
+      if (current.isNotEmpty) {
+        lines.add(current);
+      }
+
+      current = word.length <= maxChars
+          ? word
+          : word.substring(0, maxChars);
+    }
+
+    if (current.isNotEmpty) {
+      lines.add(current);
+    }
+
+    return lines.isEmpty ? ['Alamat tidak tersedia'] : lines;
   }
 
   String _outputPath(String inputPath) {
