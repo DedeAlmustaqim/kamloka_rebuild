@@ -8,6 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../services/capture_service.dart';
 import '../services/device_orientation_service.dart';
 import '../../location/services/location_service.dart';
+import '../services/watermark_service.dart';
 
 class CameraController extends GetxController {
   final isInitializing = true.obs;
@@ -19,6 +20,7 @@ class CameraController extends GetxController {
 
   camera.CameraController? _cameraController;
   final CaptureService _captureService = CaptureService();
+  final WatermarkService _watermarkService = WatermarkService();
 
   camera.CameraController get cameraController => _cameraController!;
 
@@ -104,8 +106,23 @@ class CameraController extends GetxController {
         return null;
       }
 
-      lastCapturePath.value = file.path;
-      return file.path;
+      final location = Get.find<LocationService>();
+      final position = location.position.value;
+
+      final watermarked = await _watermarkService.apply(
+        file,
+        data: WatermarkData(
+          dateTime: DateTime.now(),
+          address: location.address.value,
+          latitude: position?.latitude,
+          longitude: position?.longitude,
+          accuracy: position?.accuracy,
+          altitude: position?.altitude,
+        ),
+      );
+
+      lastCapturePath.value = watermarked.path;
+      return watermarked.path;
     } on camera.CameraException catch (error) {
       captureErrorMessage.value =
           error.description ?? 'Gagal mengambil foto.';
@@ -130,6 +147,7 @@ class CameraController extends GetxController {
     _cameraController?.dispose();
     _cameraController = null;
     _captureService.dispose();
+    _watermarkService.dispose();
     super.onClose();
   }
 }
