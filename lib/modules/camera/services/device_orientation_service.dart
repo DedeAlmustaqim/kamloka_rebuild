@@ -9,6 +9,8 @@ class DeviceOrientationService extends GetxService {
   StreamSubscription<NativeDeviceOrientation>? _subscription;
 
   Future<DeviceOrientationService> init() async {
+    if (_subscription != null) return this;
+
     final communicator = NativeDeviceOrientationCommunicator();
 
     orientation.value = await communicator.orientation(useSensor: true);
