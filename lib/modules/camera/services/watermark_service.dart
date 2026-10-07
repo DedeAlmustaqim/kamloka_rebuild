@@ -77,9 +77,11 @@ class WatermarkService {
     // Layout mengacu pada referensi 1080x720 dan diskalakan proporsional.
     final panelWidth = (image.width * 0.867).round();
     final panelX = ((image.width - panelWidth) / 2).round();
-    final bottomMargin = (image.height * 0.10).round();
+    final bottomMargin = (image.width * 0.067).round();
     final radius = (image.width * 0.032).round().clamp(18, 180).toInt();
-    final panelHeight = (image.height * 0.30).round();
+    // Tinggi panel mengikuti lebar foto, bukan tinggi foto, agar proporsinya
+    // tetap konsisten pada portrait maupun landscape.
+    final panelHeight = (image.width * 0.20).round();
     final panelY = image.height - bottomMargin - panelHeight;
 
     final horizontalPadding =
