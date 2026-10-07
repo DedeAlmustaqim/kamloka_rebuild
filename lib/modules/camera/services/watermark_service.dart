@@ -139,8 +139,8 @@ class WatermarkService {
     final panelY = image.height - bottomMargin - panelHeight;
     final contentTop = panelY + panelTopPadding;
 
-    // Black 80% opacity. Foto masih sedikit terlihat di bawah panel.
-    final panelColor = img.ColorRgba8(0, 0, 0, 204);
+    // Black dengan transparansi 20% (opacity 80%). Foto tetap terlihat jelas.
+    final panelColor = img.ColorRgba8(0, 0, 0, 51);
     _fillRoundedRect(
       image,
       x1: panelX,
