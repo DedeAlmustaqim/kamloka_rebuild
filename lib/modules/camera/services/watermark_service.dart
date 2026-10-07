@@ -1,4 +1,7 @@
 import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:flutter/services.dart';
 
 import 'package:camera/camera.dart' as camera;
 import 'package:flutter/foundation.dart';
@@ -23,6 +26,40 @@ class WatermarkData {
 }
 
 class WatermarkService {
+  static const _logoAsset = 'assets/images/kamloka_typo.png';
+
+  img.Image? _logo;
+  Future<img.Image?>? _logoLoading;
+
+  Future<img.Image?> _loadLogo() {
+    final cached = _logo;
+    if (cached != null) return Future.value(cached);
+
+    final loading = _logoLoading;
+    if (loading != null) return loading;
+
+    final future = _loadLogoInternal();
+    _logoLoading = future;
+    return future;
+  }
+
+  Future<img.Image?> _loadLogoInternal() async {
+    try {
+      final data = await rootBundle.load(_logoAsset);
+      final bytes = Uint8List.view(
+        data.buffer,
+        data.offsetInBytes,
+        data.lengthInBytes,
+      );
+      final decoded = img.decodeImage(bytes);
+      _logo = decoded;
+      return decoded;
+    } catch (error) {
+      debugPrint('[KAMLOKA WATERMARK] Logo tidak tersedia: $error');
+      return null;
+    }
+  }
+
   Future<camera.XFile> apply(
     camera.XFile source, {
     required WatermarkData data,
@@ -41,6 +78,9 @@ class WatermarkService {
     final verticalPadding = image.width >= 3000 ? 28 : 16;
     final panelWidth = (image.width * 0.92).round();
     final panelX = ((image.width - panelWidth) / 2).round();
+    final panelGap = image.width >= 3000 ? 28 : 16;
+    final logoColumnWidth = (panelWidth * 0.30).round();
+    final infoColumnWidth = panelWidth - logoColumnWidth;
 
     final address = data.address.isEmpty
         ? 'Alamat tidak tersedia'
@@ -85,6 +125,47 @@ class WatermarkService {
         color: img.ColorRgb8(255, 255, 255),
       );
       textY += lineHeight;
+    }
+
+    // Kolom kanan khusus branding KAMLOKA.
+    final logo = await _loadLogo();
+    if (logo != null) {
+      final logoAreaX = panelX + infoColumnWidth + panelGap;
+      final logoAreaWidth = logoColumnWidth - panelGap - horizontalPadding;
+      final logoMaxWidth = logoAreaWidth.clamp(40, 1000).toInt();
+      final logoMaxHeight =
+          (panelHeight - (verticalPadding * 2)).clamp(40, 1000).toInt();
+
+      var logoWidth = logo.width;
+      var logoHeight = logo.height;
+      final scale = [
+        logoMaxWidth / logoWidth,
+        logoMaxHeight / logoHeight,
+        1.0,
+      ].reduce((a, b) => a < b ? a : b);
+
+      logoWidth = (logoWidth * scale).round().clamp(1, logo.width).toInt();
+      logoHeight =
+          (logoHeight * scale).round().clamp(1, logo.height).toInt();
+
+      final resizedLogo = img.copyResize(
+        logo,
+        width: logoWidth,
+        height: logoHeight,
+      );
+
+      final logoX =
+          logoAreaX + ((logoAreaWidth - logoWidth) / 2).round();
+      final logoY =
+          panelY + ((panelHeight - logoHeight) / 2).round();
+
+      img.compositeImage(
+        image,
+        resizedLogo,
+        dstX: logoX,
+        dstY: logoY,
+        blend: img.BlendMode.alpha,
+      );
     }
 
     final outputPath = _outputPath(source.path);
