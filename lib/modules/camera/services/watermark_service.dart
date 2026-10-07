@@ -92,7 +92,8 @@ class WatermarkService {
     final dateFont = img.arial24;
 
     final white = img.ColorRgb8(255, 255, 255);
-    final panelColor = img.ColorRgb8(82, 82, 82);
+    // Panel watermark dibuat semi-transparan agar foto tetap terlihat di bawahnya.
+    final panelColor = img.ColorRgba8(82, 82, 82, 185);
 
     _fillRoundedRect(
       image,
@@ -168,13 +169,14 @@ class WatermarkService {
         ? 'Alamat tidak tersedia'
         : data.address.trim();
 
+    // Alamat adalah informasi penting: jangan dipotong atau diberi ellipsis.
+    // Biarkan seluruh alamat turun ke beberapa baris.
     final addressLines = _wrapText(
       address,
       maxChars: _addressMaxChars(
         width: rightWidth,
         fontScale: scale,
       ),
-      maxLines: 2,
     );
 
     final addressY = panelY + (panelHeight * 0.15).round();
@@ -402,9 +404,8 @@ class WatermarkService {
   List<String> _wrapText(
     String value, {
     required int maxChars,
-    required int maxLines,
   }) {
-    final words = value.split(RegExp(r'\s+'));
+    final words = value.split(RegExp(r'\\s+'));
     final lines = <String>[];
     var current = '';
 
@@ -420,35 +421,17 @@ class WatermarkService {
         lines.add(current);
       }
 
+      // Satu kata yang lebih panjang dari batas tetap ditampilkan utuh.
+      // Kita tidak memotong alamat.
       current = word;
-
-      if (lines.length == maxLines - 1) {
-        break;
-      }
     }
 
-    if (current.isNotEmpty && lines.length < maxLines) {
+    if (current.isNotEmpty) {
       lines.add(current);
-    }
-
-    if (lines.length > maxLines) {
-      return lines.take(maxLines).toList();
-    }
-
-    if (lines.length == maxLines) {
-      final renderedLength = lines.join(' ').length;
-      if (renderedLength < value.length) {
-        final last = lines.last;
-        lines[lines.length - 1] = last.length > 3
-            ? '${last.substring(0, last.length - 3)}...'
-            : last;
-      }
     }
 
     return lines.isEmpty ? ['Alamat tidak tersedia'] : lines;
   }
-
-  void dispose() {}
 
   String _outputPath(String inputPath) {
     final separator = Platform.pathSeparator;
