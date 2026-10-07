@@ -71,106 +71,19 @@ class WatermarkService {
 
     final isPortrait = image.height > image.width;
 
-    // Portrait dan landscape memakai skala UI yang berbeda. Pada portrait,
-    // semua elemen diperkecil agar watermark tidak mendominasi foto.
-    final uiScale = isPortrait
-        ? (image.width / 1080.0).clamp(0.55, 0.75)
-        : (image.width / 1080.0).clamp(1.0, 2.0);
-
-    final panelWidth = (image.width * (isPortrait ? 0.88 : 0.867)).round();
-    final panelX = ((image.width - panelWidth) / 2).round();
-    final bottomMargin = (image.height * (isPortrait ? 0.035 : 0.055)).round();
-    final radius = (image.width * (isPortrait ? 0.024 : 0.032))
-        .round()
-        .clamp(12, 180)
-        .toInt();
-
-    final horizontalPadding =
-        (image.width * (isPortrait ? 0.028 : 0.038)).round().clamp(14, 160).toInt();
-    final dividerX = panelX + (panelWidth * 0.305).round();
-
-    final dayFont = isPortrait ? img.arial14 : img.arial48;
+    // Watermark tanpa panel/background. Semua elemen dirancang sebagai
+    // teks putih tegas agar menyatu dengan foto tanpa menutupinya.
+    final textFont = isPortrait ? img.arial14 : img.arial24;
     final timeFont = isPortrait ? img.arial24 : img.arial48;
-    final bodyFont = isPortrait ? img.arial14 : img.arial48;
     final dateFont = isPortrait ? img.arial14 : img.arial24;
 
-    final white = img.ColorRgb8(255, 255, 255);
-    // Transparan: foto tetap terlihat melalui panel watermark.
-    final panelColor = img.ColorRgba8(82, 82, 82, 185);
+    final horizontalPadding =
+        (image.width * (isPortrait ? 0.035 : 0.038)).round().clamp(18, 160).toInt();
+    final bottomPadding =
+        (image.height * (isPortrait ? 0.035 : 0.045)).round().clamp(24, 180).toInt();
 
-    // Kolom kanan.
-    final rightX = dividerX + (image.width * 0.038).round();
-    final rightWidth = panelX + panelWidth - rightX - horizontalPadding;
-    final columnGap = (image.width * 0.028).round();
-    final detailColumnWidth = ((rightWidth - columnGap) / 2).round();
-    final secondColumnX = rightX + detailColumnWidth + columnGap;
-
-    // Alamat tidak dipotong. Hanya di-wrap agar tetap terbaca.
-    final address = data.address.trim().isEmpty
-        ? 'Alamat tidak tersedia'
-        : data.address.trim();
-
-    final addressLines = _wrapText(
-      address,
-      maxChars: _addressMaxChars(
-        width: rightWidth,
-        fontScale: scale,
-      ),
-    );
-
-    final addressLineHeight = bodyFont.lineHeight +
-        (isPortrait ? 3 : (uiScale * 5).round());
-
-    // Tinggi normal lebih kecil pada portrait agar watermark tetap ringan. Jika alamat panjang, panel
-    // otomatis bertambah secukupnya agar tidak menimpa koordinat/metrik.
-    final basePanelHeight =
-        (image.height * (isPortrait ? 0.17 : 0.20)).round();
-    final topPadding =
-        (image.height * (isPortrait ? 0.018 : 0.025)).round();
-    final bottomContentPadding =
-        (image.height * (isPortrait ? 0.032 : 0.055)).round();
-    final addressHeight = addressLines.length * addressLineHeight;
-    final coordinateAreaHeight =
-        (image.height * (isPortrait ? 0.055 : 0.075)).round();
-
-    final requiredPanelHeight =
-        topPadding +
-        addressHeight +
-        (image.height * (isPortrait ? 0.015 : 0.025)).round() +
-        coordinateAreaHeight +
-        bottomContentPadding;
-
-    final panelHeight = basePanelHeight > requiredPanelHeight
-        ? basePanelHeight
-        : requiredPanelHeight;
-
-    final panelY = image.height - bottomMargin - panelHeight;
-
-    // Panel utama.
-    _fillRoundedRect(
-      image,
-      x1: panelX,
-      y1: panelY,
-      x2: panelX + panelWidth,
-      y2: panelY + panelHeight,
-      radius: radius,
-      color: panelColor,
-    );
-
-    // Divider vertikal.
-    final dividerTop = panelY + (panelHeight * 0.13).round();
-    final dividerBottom = panelY + (panelHeight * 0.87).round();
-    final dividerThickness =
-        (isPortrait ? 2 : (uiScale * 4).round()).clamp(2, 10).toInt();
-
-    img.fillRect(
-      image,
-      x1: dividerX,
-      y1: dividerTop,
-      x2: dividerX + dividerThickness,
-      y2: dividerBottom,
-      color: white,
-    );
+    final leftX = horizontalPadding;
+    final contentRight = image.width - horizontalPadding;
 
     final local = data.dateTime.toLocal();
     final dayName = _dayName(local.weekday);
@@ -179,141 +92,189 @@ class WatermarkService {
     final dateText =
         '${local.day.toString().padLeft(2, '0')} ${_monthName(local.month)} ${local.year}';
 
-    // Kolom kiri: hari, jam, tanggal.
-    final leftX = panelX + horizontalPadding;
-    final dayY = panelY + (panelHeight * 0.16).round();
-    final timeY = panelY + (panelHeight * 0.35).round();
-    final dateY = panelY + (panelHeight * 0.75).round();
+    final address = data.address.trim().isEmpty
+        ? 'Alamat tidak tersedia'
+        : data.address.trim();
 
-    img.drawString(
+    final infoColumnWidth = isPortrait
+        ? (image.width * 0.90).round()
+        : (image.width * 0.55).round();
+
+    final addressLines = _wrapText(
+      address,
+      maxChars: _addressMaxChars(
+        width: infoColumnWidth,
+        fontScale: isPortrait ? 0.75 : 1.0,
+      ),
+    );
+
+    // Posisi dasar dari bawah foto. Tidak ada box sehingga foto tetap penuh.
+    final metricsLineHeight =
+        textFont.lineHeight + (isPortrait ? 2 : 6);
+    final addressHeight = addressLines.length * metricsLineHeight;
+    final detailsHeight = textFont.lineHeight * 2 + (isPortrait ? 8 : 14);
+    final contentHeight =
+        timeFont.lineHeight +
+        dateFont.lineHeight +
+        addressHeight +
+        detailsHeight +
+        (isPortrait ? 20 : 36);
+
+    final contentBottom = image.height - bottomPadding;
+    final contentTop = contentBottom - contentHeight;
+
+    // Logo tetap sebagai branding Free, berada di atas informasi dan rata kanan.
+    if (showBranding) {
+      final logo = await _loadLogo();
+
+      if (logo != null) {
+        final logoMaxWidth =
+            (image.width * (isPortrait ? 0.23 : 0.27)).round();
+        final logoMaxHeight =
+            (image.height * (isPortrait ? 0.08 : 0.10)).round();
+
+        final logoScale = [
+          logoMaxWidth / logo.width,
+          logoMaxHeight / logo.height,
+          1.0,
+        ].reduce((a, b) => a < b ? a : b);
+
+        final logoWidth = (logo.width * logoScale).round();
+        final logoHeight = (logo.height * logoScale).round();
+
+        final logoX = contentRight - logoWidth;
+        final logoY = contentTop - logoHeight - (isPortrait ? 8 : 14);
+
+        final resizedLogo = img.copyResize(
+          logo,
+          width: logoWidth,
+          height: logoHeight,
+        );
+
+        img.compositeImage(
+          image,
+          resizedLogo,
+          dstX: logoX,
+          dstY: logoY,
+          blend: img.BlendMode.alpha,
+        );
+      }
+    }
+
+    final white = img.ColorRgb8(255, 255, 255);
+    final shadow = img.ColorRgba8(0, 0, 0, 190);
+
+    // Kolom kiri: hari, jam, tanggal.
+    final leftColumnWidth = isPortrait
+        ? (image.width * 0.30).round()
+        : (image.width * 0.23).round();
+
+    final dayY = contentTop;
+    final timeY = dayY + textFont.lineHeight + (isPortrait ? 2 : 4);
+    final dateY = timeY + timeFont.lineHeight + (isPortrait ? 3 : 6);
+
+    _drawStrongText(
       image,
       dayName,
-      font: dayFont,
+      font: textFont,
       x: leftX,
       y: dayY,
       color: white,
+      shadow: shadow,
+      shadowOffset: isPortrait ? 1 : 2,
     );
 
-    img.drawString(
+    _drawStrongText(
       image,
       timeText,
       font: timeFont,
       x: leftX,
       y: timeY,
       color: white,
+      shadow: shadow,
+      shadowOffset: isPortrait ? 1 : 2,
     );
 
-    img.drawString(
+    _drawStrongText(
       image,
       dateText,
       font: dateFont,
       x: leftX,
       y: dateY,
       color: white,
+      shadow: shadow,
+      shadowOffset: isPortrait ? 1 : 2,
     );
 
-    // Kolom kanan: alamat lengkap.
-    final addressY = panelY + topPadding;
+    // Kolom kanan.
+    final rightX = leftX + leftColumnWidth;
+    final rightWidth = contentRight - rightX;
+
+    final addressX = rightX;
+    final addressY = contentTop;
 
     for (var index = 0; index < addressLines.length; index++) {
-      img.drawString(
+      _drawStrongText(
         image,
         addressLines[index],
-        font: bodyFont,
-        x: rightX,
-        y: addressY + (index * addressLineHeight),
+        font: textFont,
+        x: addressX,
+        y: addressY + (index * metricsLineHeight),
         color: white,
+        shadow: shadow,
+        shadowOffset: isPortrait ? 1 : 2,
       );
     }
 
-    // Koordinat dan metrik ditempatkan setelah area alamat sehingga alamat
-    // panjang tidak bertabrakan dengan informasi berikutnya.
-    final detailsY = addressY +
-        addressHeight +
-        (image.height * 0.025).round();
+    final detailsY = addressY + addressHeight + (isPortrait ? 5 : 10);
+    final detailGap = (rightWidth * 0.06).round();
+    final secondColumnX = addressX + ((rightWidth - detailGap) / 2).round() + detailGap;
 
-    img.drawString(
+    _drawStrongText(
       image,
       _formatLatitude(data.latitude),
-      font: bodyFont,
-      x: rightX,
+      font: textFont,
+      x: addressX,
       y: detailsY,
       color: white,
+      shadow: shadow,
+      shadowOffset: isPortrait ? 1 : 2,
     );
 
-    img.drawString(
+    _drawStrongText(
       image,
       _formatLongitude(data.longitude),
-      font: bodyFont,
+      font: textFont,
       x: secondColumnX,
       y: detailsY,
       color: white,
+      shadow: shadow,
+      shadowOffset: isPortrait ? 1 : 2,
     );
 
-    final metricsY = detailsY +
-        bodyFont.lineHeight +
-        (isPortrait ? 2 : (uiScale * 4).round());
+    final metricsY = detailsY + textFont.lineHeight + (isPortrait ? 4 : 8);
 
-    img.drawString(
+    _drawStrongText(
       image,
       _formatAccuracy(data.accuracy),
-      font: bodyFont,
-      x: rightX,
+      font: textFont,
+      x: addressX,
       y: metricsY,
       color: white,
+      shadow: shadow,
+      shadowOffset: isPortrait ? 1 : 2,
     );
 
-    img.drawString(
+    _drawStrongText(
       image,
       _formatAltitude(data.altitude),
-      font: bodyFont,
+      font: textFont,
       x: secondColumnX,
       y: metricsY,
       color: white,
+      shadow: shadow,
+      shadowOffset: isPortrait ? 1 : 2,
     );
-
-    // Logo KAMLOKA berada di atas panel dan rata kanan.
-    if (showBranding) {
-      final logo = await _loadLogo();
-
-      if (logo != null) {
-        final logoMaxWidth =
-            (image.width * (isPortrait ? 0.25 : 0.31)).round();
-        final logoMaxHeight =
-            (panelY - (image.height * (isPortrait ? 0.012 : 0.025))).round();
-
-        if (logoMaxWidth > 0 && logoMaxHeight > 0) {
-          final logoScale = [
-            logoMaxWidth / logo.width,
-            logoMaxHeight / logo.height,
-            1.0,
-          ].reduce((a, b) => a < b ? a : b);
-
-          final logoWidth = (logo.width * logoScale).round();
-          final logoHeight = (logo.height * logoScale).round();
-
-          final logoX =
-              panelX + panelWidth - logoWidth - (image.width * 0.01).round();
-          final logoY =
-              panelY - logoHeight -
-              (image.height * (isPortrait ? 0.010 : 0.018)).round();
-
-          final resizedLogo = img.copyResize(
-            logo,
-            width: logoWidth,
-            height: logoHeight,
-          );
-
-          img.compositeImage(
-            image,
-            resizedLogo,
-            dstX: logoX,
-            dstY: logoY,
-            blend: img.BlendMode.alpha,
-          );
-        }
-      }
-    }
 
     final outputPath = _outputPath(source.path);
     final outputFile = File(outputPath);
@@ -328,6 +289,44 @@ class WatermarkService {
     );
 
     return camera.XFile(outputPath);
+  }
+
+  void _drawStrongText(
+    img.Image image,
+    String text, {
+    required img.BitmapFont font,
+    required int x,
+    required int y,
+    required img.Color color,
+    required img.Color shadow,
+    required int shadowOffset,
+  }) {
+    // Fake-bold + shadow menggunakan dua layer kecil. Ini memberi karakter
+    // putih yang tegas tanpa perlu menambah font asset khusus.
+    img.drawString(
+      image,
+      text,
+      font: font,
+      x: x + shadowOffset,
+      y: y + shadowOffset,
+      color: shadow,
+    );
+    img.drawString(
+      image,
+      text,
+      font: font,
+      x: x + 1,
+      y: y,
+      color: color,
+    );
+    img.drawString(
+      image,
+      text,
+      font: font,
+      x: x,
+      y: y,
+      color: color,
+    );
   }
 
   void _fillRoundedRect(
