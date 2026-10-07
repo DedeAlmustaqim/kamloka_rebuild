@@ -53,11 +53,15 @@ class _CameraPreview extends StatelessWidget {
           builder: (context, constraints) {
             final screenAspectRatio =
                 constraints.maxWidth / constraints.maxHeight;
-            final cameraAspectRatio = controller.value.aspectRatio;
+            final sensorAspectRatio = controller.value.aspectRatio;
+            final previewAspectRatio = isLandscape
+                ? sensorAspectRatio
+                : 1 / sensorAspectRatio;
 
-            final scale = isLandscape
-                ? _coverScale(cameraAspectRatio, screenAspectRatio)
-                : _coverScale(cameraAspectRatio, screenAspectRatio);
+            final scale = _coverScale(
+              previewAspectRatio,
+              screenAspectRatio,
+            );
 
             return ClipRect(
               child: Transform.scale(
