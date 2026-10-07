@@ -124,91 +124,97 @@ class _LocationStatus extends StatelessWidget {
 
   final LocationService service;
 
+  static const _shadow = [
+    Shadow(
+      color: Colors.black87,
+      blurRadius: 4,
+      offset: Offset(0, 1),
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Obx(() {
       final position = service.position.value;
-    final hasPosition = position != null;
-    final isEnabled = service.isServiceEnabled.value;
-    final error = service.errorMessage.value;
+      final hasPosition = position != null;
+      final isEnabled = service.isServiceEnabled.value;
+      final error = service.errorMessage.value;
 
-    if (hasPosition) {
-      return DecoratedBox(
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.55),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 8,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.location_on, size: 14),
-                  SizedBox(width: 4),
-                  Text(
-                    'GPS',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 3),
-              Text(
-                service.coordinateText,
-                style: const TextStyle(
-                  fontSize: 10,
-                ),
-              ),
-              Text(
-                'Akurasi ${service.accuracyText} • Alt ${service.altitudeText}',
-                style: const TextStyle(
-                  fontSize: 9,
-                  color: Colors.white70,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 8,
-        ),
-        child: Row(
+      if (hasPosition) {
+        return Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Icon(isEnabled ? Icons.gps_fixed : Icons.gps_off, size: 14),
-            const SizedBox(width: 6),
+            const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.location_on,
+                  size: 21,
+                  color: Colors.white,
+                  shadows: _shadow,
+                ),
+                SizedBox(width: 5),
+                Text(
+                  'GPS',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                    shadows: _shadow,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
             Text(
-              error.isNotEmpty
-                  ? error
-                  : (isEnabled ? 'Mencari GPS...' : 'GPS mati'),
+              service.coordinateText,
               style: const TextStyle(
-                fontSize: 11,
+                color: Colors.white,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
+                shadows: _shadow,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'Akurasi ${service.accuracyText} • Alt ${service.altitudeText}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                shadows: _shadow,
               ),
             ),
           ],
-        ),
-      ),
-    );
-  });
+        );
+      }
+
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isEnabled ? Icons.gps_fixed : Icons.gps_off,
+            size: 20,
+            color: Colors.white,
+            shadows: _shadow,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            error.isNotEmpty
+                ? error
+                : (isEnabled ? 'Mencari GPS...' : 'GPS mati'),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              shadows: _shadow,
+            ),
+          ),
+        ],
+      );
+    });
   }
 }
 
