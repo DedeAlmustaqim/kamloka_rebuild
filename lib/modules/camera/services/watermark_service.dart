@@ -71,19 +71,25 @@ class WatermarkService {
 
     final isPortrait = image.height > image.width;
 
-    // Watermark tanpa panel/background. Semua elemen dirancang sebagai
-    // teks putih tegas agar menyatu dengan foto tanpa menutupinya.
+    // Portrait dibuat lebih compact. Landscape menggunakan ukuran yang lebih
+    // besar, tetapi margin bawah dibuat kecil agar watermark tidak "naik".
     final textFont = isPortrait ? img.arial14 : img.arial24;
     final timeFont = isPortrait ? img.arial24 : img.arial48;
     final dateFont = isPortrait ? img.arial14 : img.arial24;
 
     final horizontalPadding =
-        (image.width * (isPortrait ? 0.035 : 0.038)).round().clamp(18, 160).toInt();
-    final bottomPadding =
-        (image.height * (isPortrait ? 0.035 : 0.045)).round().clamp(24, 180).toInt();
+        (image.width * (isPortrait ? 0.025 : 0.028)).round().clamp(14, 160).toInt();
+    final panelHorizontalPadding =
+        (image.width * (isPortrait ? 0.025 : 0.030)).round().clamp(14, 160).toInt();
+    final bottomMargin =
+        (image.height * (isPortrait ? 0.025 : 0.012)).round().clamp(10, 100).toInt();
+    final panelWidth = (image.width * (isPortrait ? 0.91 : 0.93)).round();
+    final panelX = ((image.width - panelWidth) / 2).round();
+    final radius =
+        (image.width * (isPortrait ? 0.022 : 0.018)).round().clamp(12, 80).toInt();
 
-    final leftX = horizontalPadding;
-    final contentRight = image.width - horizontalPadding;
+    final leftX = panelX + panelHorizontalPadding;
+    final contentRight = panelX + panelWidth - panelHorizontalPadding;
 
     final local = data.dateTime.toLocal();
     final dayName = _dayName(local.weekday);
@@ -96,34 +102,56 @@ class WatermarkService {
         ? 'Alamat tidak tersedia'
         : data.address.trim();
 
-    final infoColumnWidth = isPortrait
-        ? (image.width * 0.90).round()
-        : (image.width * 0.55).round();
+    final leftColumnWidth =
+        (panelWidth * (isPortrait ? 0.30 : 0.23)).round();
+    final rightX = leftX + leftColumnWidth;
+    final rightWidth = contentRight - rightX;
 
     final addressLines = _wrapText(
       address,
       maxChars: _addressMaxChars(
-        width: infoColumnWidth,
+        width: rightWidth,
         fontScale: isPortrait ? 0.75 : 1.0,
       ),
     );
 
-    // Posisi dasar dari bawah foto. Tidak ada box sehingga foto tetap penuh.
-    final metricsLineHeight =
-        textFont.lineHeight + (isPortrait ? 2 : 6);
-    final addressHeight = addressLines.length * metricsLineHeight;
-    final detailsHeight = textFont.lineHeight * 2 + (isPortrait ? 8 : 14);
+    final lineHeight = textFont.lineHeight + (isPortrait ? 2 : 6);
+    final addressHeight = addressLines.length * lineHeight;
+    final detailsGap = isPortrait ? 5 : 10;
+    final detailsLineHeight = textFont.lineHeight + (isPortrait ? 4 : 8);
+
     final contentHeight =
         timeFont.lineHeight +
         dateFont.lineHeight +
         addressHeight +
-        detailsHeight +
-        (isPortrait ? 20 : 36);
+        detailsGap +
+        (detailsLineHeight * 2);
 
-    final contentBottom = image.height - bottomPadding;
-    final contentTop = contentBottom - contentHeight;
+    final panelTopPadding =
+        (image.height * (isPortrait ? 0.018 : 0.022)).round();
+    final panelBottomPadding =
+        (image.height * (isPortrait ? 0.018 : 0.022)).round();
 
-    // Logo tetap sebagai branding Free, berada di atas informasi dan rata kanan.
+    final panelHeight = contentHeight +
+        panelTopPadding +
+        panelBottomPadding;
+
+    final panelY = image.height - bottomMargin - panelHeight;
+    final contentTop = panelY + panelTopPadding;
+
+    // Black 80% opacity. Foto masih sedikit terlihat di bawah panel.
+    final panelColor = img.ColorRgba8(0, 0, 0, 204);
+    _fillRoundedRect(
+      image,
+      x1: panelX,
+      y1: panelY,
+      x2: panelX + panelWidth,
+      y2: panelY + panelHeight,
+      radius: radius,
+      color: panelColor,
+    );
+
+    // Logo tetap di atas panel sebagai branding versi Free.
     if (showBranding) {
       final logo = await _loadLogo();
 
@@ -131,7 +159,7 @@ class WatermarkService {
         final logoMaxWidth =
             (image.width * (isPortrait ? 0.23 : 0.27)).round();
         final logoMaxHeight =
-            (image.height * (isPortrait ? 0.08 : 0.10)).round();
+            (image.height * (isPortrait ? 0.075 : 0.09)).round();
 
         final logoScale = [
           logoMaxWidth / logo.width,
@@ -143,21 +171,24 @@ class WatermarkService {
         final logoHeight = (logo.height * logoScale).round();
 
         final logoX = contentRight - logoWidth;
-        final logoY = contentTop - logoHeight - (isPortrait ? 8 : 14);
+        final logoY =
+            panelY - logoHeight - (isPortrait ? 8 : 10);
 
-        final resizedLogo = img.copyResize(
-          logo,
-          width: logoWidth,
-          height: logoHeight,
-        );
+        if (logoY >= 0) {
+          final resizedLogo = img.copyResize(
+            logo,
+            width: logoWidth,
+            height: logoHeight,
+          );
 
-        img.compositeImage(
-          image,
-          resizedLogo,
-          dstX: logoX,
-          dstY: logoY,
-          blend: img.BlendMode.alpha,
-        );
+          img.compositeImage(
+            image,
+            resizedLogo,
+            dstX: logoX,
+            dstY: logoY,
+            blend: img.BlendMode.alpha,
+          );
+        }
       }
     }
 
@@ -165,10 +196,6 @@ class WatermarkService {
     final shadow = img.ColorRgba8(0, 0, 0, 190);
 
     // Kolom kiri: hari, jam, tanggal.
-    final leftColumnWidth = isPortrait
-        ? (image.width * 0.30).round()
-        : (image.width * 0.23).round();
-
     final dayY = contentTop;
     final timeY = dayY + textFont.lineHeight + (isPortrait ? 2 : 4);
     final dateY = timeY + timeFont.lineHeight + (isPortrait ? 3 : 6);
@@ -206,11 +233,7 @@ class WatermarkService {
       shadowOffset: isPortrait ? 1 : 2,
     );
 
-    // Kolom kanan.
-    final rightX = leftX + leftColumnWidth;
-    final rightWidth = contentRight - rightX;
-
-    final addressX = rightX;
+    // Kolom kanan: alamat lengkap.
     final addressY = contentTop;
 
     for (var index = 0; index < addressLines.length; index++) {
@@ -218,23 +241,24 @@ class WatermarkService {
         image,
         addressLines[index],
         font: textFont,
-        x: addressX,
-        y: addressY + (index * metricsLineHeight),
+        x: rightX,
+        y: addressY + (index * lineHeight),
         color: white,
         shadow: shadow,
         shadowOffset: isPortrait ? 1 : 2,
       );
     }
 
-    final detailsY = addressY + addressHeight + (isPortrait ? 5 : 10);
+    final detailsY = addressY + addressHeight + detailsGap;
     final detailGap = (rightWidth * 0.06).round();
-    final secondColumnX = addressX + ((rightWidth - detailGap) / 2).round() + detailGap;
+    final secondColumnX =
+        rightX + ((rightWidth - detailGap) / 2).round() + detailGap;
 
     _drawStrongText(
       image,
       _formatLatitude(data.latitude),
       font: textFont,
-      x: addressX,
+      x: rightX,
       y: detailsY,
       color: white,
       shadow: shadow,
@@ -252,13 +276,13 @@ class WatermarkService {
       shadowOffset: isPortrait ? 1 : 2,
     );
 
-    final metricsY = detailsY + textFont.lineHeight + (isPortrait ? 4 : 8);
+    final metricsY = detailsY + detailsLineHeight;
 
     _drawStrongText(
       image,
       _formatAccuracy(data.accuracy),
       font: textFont,
-      x: addressX,
+      x: rightX,
       y: metricsY,
       color: white,
       shadow: shadow,
@@ -289,6 +313,63 @@ class WatermarkService {
     );
 
     return camera.XFile(outputPath);
+  }
+
+
+
+  void _fillRoundedRect(
+    img.Image image, {
+    required int x1,
+    required int y1,
+    required int x2,
+    required int y2,
+    required int radius,
+    required img.Color color,
+  }) {
+    img.fillRect(
+      image,
+      x1: x1 + radius,
+      y1: y1,
+      x2: x2 - radius,
+      y2: y2,
+      color: color,
+    );
+    img.fillRect(
+      image,
+      x1: x1,
+      y1: y1 + radius,
+      x2: x2,
+      y2: y2 - radius,
+      color: color,
+    );
+    img.fillCircle(
+      image,
+      x: x1 + radius,
+      y: y1 + radius,
+      radius: radius,
+      color: color,
+    );
+    img.fillCircle(
+      image,
+      x: x2 - radius,
+      y: y1 + radius,
+      radius: radius,
+      color: color,
+    );
+    img.fillCircle(
+      image,
+      x: x1 + radius,
+      y: y2 - radius,
+      radius: radius,
+      color: color,
+    );
+    img.fillCircle(
+      image,
+      x: x2 - radius,
+      y: y2 - radius,
+      radius: radius,
+      color: color,
+    );
   }
 
   void _drawStrongText(
