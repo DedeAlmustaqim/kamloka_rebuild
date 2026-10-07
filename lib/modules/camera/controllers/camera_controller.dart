@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:camera/camera.dart' as camera;
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
@@ -65,9 +67,9 @@ class CameraController extends GetxController {
 
       isReady.value = true;
 
-      // Location is independent from camera readiness. If GPS fails,
-      // the camera remains usable and LocationService keeps the error state.
-      await Get.find<LocationService>().init();
+      // Location is independent from camera readiness. If GPS is slow or
+      // unavailable, the camera must remain immediately usable.
+      unawaited(Get.find<LocationService>().init());
     } on camera.CameraException catch (error, stack) {
       debugPrint(
         '[KAMLOKA CAMERA] ${error.code}: ${error.description}',
