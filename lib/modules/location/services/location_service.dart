@@ -12,6 +12,7 @@ class LocationService extends GetxService {
   final position = Rxn<Position>();
   final address = ''.obs;
   final isResolvingAddress = false.obs;
+  final isGeocoderAvailable = false.obs;
   final errorMessage = ''.obs;
   final Geocoding _geocoding = Geocoding(locale: const Locale('id', 'ID'));
 
@@ -57,6 +58,9 @@ class LocationService extends GetxService {
       if (currentPermission == LocationPermission.deniedForever) {
         throw const _LocationPermissionDeniedForeverException();
       }
+
+      isGeocoderAvailable.value = await _geocoding.isPresent();
+      debugPrint('[KAMLOKA LOCATION] geocoder available: ' + isGeocoderAvailable.value.toString());
 
       await _refreshCurrentPosition();
       _startStreams();
@@ -200,14 +204,20 @@ class LocationService extends GetxService {
       final placemarks = await _geocoding.placemarkFromCoordinates(
         value.latitude,
         value.longitude,
+        locale: const Locale('id', 'ID'),
+      );
+
+      debugPrint(
+        '[KAMLOKA LOCATION] reverse geocode result count: ' + placemarks.length.toString(),
       );
 
       if (placemarks.isEmpty) {
-        address.value = '';
+        address.value = 'Alamat tidak ditemukan';
         return;
       }
 
       final place = placemarks.first;
+      debugPrint('[KAMLOKA LOCATION] placemark: ' + place.toString());
       address.value = _formatPlacemark(place);
       _lastGeocodedLatitude = value.latitude;
       _lastGeocodedLongitude = value.longitude;
@@ -221,8 +231,12 @@ class LocationService extends GetxService {
 
   String _formatPlacemark(Placemark place) {
     final parts = <String>[
+      if ((place.name ?? '').trim().isNotEmpty) place.name!.trim(),
       if ((place.street ?? '').trim().isNotEmpty) place.street!.trim(),
-      if ((place.subLocality ?? '').trim().isNotEmpty) place.subLocality!.trim(),
+      if ((place.thoroughfare ?? '').trim().isNotEmpty)
+        place.thoroughfare!.trim(),
+      if ((place.subLocality ?? '').trim().isNotEmpty)
+        place.subLocality!.trim(),
       if ((place.locality ?? '').trim().isNotEmpty) place.locality!.trim(),
       if ((place.subAdministrativeArea ?? '').trim().isNotEmpty)
         place.subAdministrativeArea!.trim(),
