@@ -41,7 +41,6 @@ class CameraView extends GetView<CameraController> {
 class _CameraPreview extends StatelessWidget {
   const _CameraPreview({
     required this.controller,
-    required this.isLandscape,
     required this.locationService,
   });
 
