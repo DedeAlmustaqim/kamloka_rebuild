@@ -31,6 +31,7 @@ class CameraView extends GetView<CameraController> {
         return _CameraPreview(
           controller: controller.cameraController,
           isLandscape: orientationService.isLandscape,
+          locationService: locationService,
         );
       }),
     );
@@ -41,10 +42,12 @@ class _CameraPreview extends StatelessWidget {
   const _CameraPreview({
     required this.controller,
     required this.isLandscape,
+    required this.locationService,
   });
 
   final camera.CameraController controller;
   final bool isLandscape;
+  final LocationService locationService;
 
   @override
   Widget build(BuildContext context) {
