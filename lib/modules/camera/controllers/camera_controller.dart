@@ -132,6 +132,7 @@ class CameraController extends GetxController {
     } on camera.CameraException catch (error) {
       captureErrorMessage.value =
           error.description ?? 'Gagal mengambil foto.';
+      return null;
     } catch (error) {
       captureErrorMessage.value =
           error.toString().replaceFirst('Exception: ', '');
