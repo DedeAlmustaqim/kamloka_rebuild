@@ -162,7 +162,6 @@ class _LocationStatus extends StatelessWidget {
                 service.coordinateText,
                 style: const TextStyle(
                   fontSize: 10,
-                  fontFeatures: [FontFeature.tabularFigures()],
                 ),
               ),
               Text(
