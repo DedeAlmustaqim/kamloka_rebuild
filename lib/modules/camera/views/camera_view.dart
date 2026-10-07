@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 
 import '../controllers/camera_controller.dart';
 import 'photo_preview_view.dart';
-import '../services/device_orientation_service.dart';
 import '../../location/services/location_service.dart';
 
 class CameraView extends GetView<CameraController> {
