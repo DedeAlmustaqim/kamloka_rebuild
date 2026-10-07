@@ -33,7 +33,7 @@ class LocationService extends GetxService {
       isServiceEnabled.value = serviceEnabled;
 
       if (!serviceEnabled) {
-        throw const LocationServiceDisabledException();
+        throw const _LocationServiceDisabledException();
       }
 
       var currentPermission = await Geolocator.checkPermission();
@@ -45,22 +45,22 @@ class LocationService extends GetxService {
       permission.value = currentPermission;
 
       if (currentPermission == LocationPermission.denied) {
-        throw const LocationPermissionDeniedException();
+        throw const _LocationPermissionDeniedException();
       }
 
       if (currentPermission == LocationPermission.deniedForever) {
-        throw const LocationPermissionDeniedForeverException();
+        throw const _LocationPermissionDeniedForeverException();
       }
 
       await _refreshCurrentPosition();
       _startStreams();
 
       _initialized = true;
-    } on LocationServiceDisabledException {
+    } on _LocationServiceDisabledException {
       errorMessage.value = 'Layanan lokasi/GPS sedang dimatikan.';
-    } on LocationPermissionDeniedException {
+    } on _LocationPermissionDeniedException {
       errorMessage.value = 'Izin lokasi ditolak.';
-    } on LocationPermissionDeniedForeverException {
+    } on _LocationPermissionDeniedForeverException {
       errorMessage.value =
           'Izin lokasi ditolak permanen. Aktifkan dari Pengaturan aplikasi.';
     } on TimeoutException {
@@ -199,11 +199,11 @@ class LocationService extends GetxService {
       position.value != null &&
       position.value!.accuracy <= 100;
 
-  Future<void> openLocationSettings() {
+  Future<bool> openLocationSettings() {
     return Geolocator.openLocationSettings();
   }
 
-  Future<void> openAppSettings() {
+  Future<bool> openAppSettings() {
     return Geolocator.openAppSettings();
   }
 
@@ -212,4 +212,17 @@ class LocationService extends GetxService {
     _stopStreams();
     super.onClose();
   }
+}
+
+
+class _LocationServiceDisabledException implements Exception {
+  const _LocationServiceDisabledException();
+}
+
+class _LocationPermissionDeniedException implements Exception {
+  const _LocationPermissionDeniedException();
+}
+
+class _LocationPermissionDeniedForeverException implements Exception {
+  const _LocationPermissionDeniedForeverException();
 }
