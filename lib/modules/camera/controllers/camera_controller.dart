@@ -112,6 +112,7 @@ class CameraController extends GetxController {
     } catch (error) {
       captureErrorMessage.value =
           error.toString().replaceFirst('Exception: ', '');
+      return null;
     } finally {
       isCapturing.value = false;
     }
