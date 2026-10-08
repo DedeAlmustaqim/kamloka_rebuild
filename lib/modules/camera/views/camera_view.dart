@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:camera/camera.dart' as camera;
 
@@ -378,61 +379,102 @@ class _ExposureControl extends GetView<CameraController> {
       final supported = max > min;
 
       return Positioned(
-        left: 24,
-        right: 24,
-        bottom: 116,
+        top: 120,
+        right: 16,
+        bottom: 220,
         child: SafeArea(
-          child: Material(
-            color: Colors.black54,
-            borderRadius: BorderRadius.circular(18),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 4, 10, 4),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.wb_sunny_outlined,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                  Expanded(
-                    child: Slider(
-                      value: supported ? value.clamp(min, max).toDouble() : 0,
-                      min: supported ? min : -1,
-                      max: supported ? max : 1,
-                      divisions: supported
-                          ? ((max - min) * 2).round().clamp(1, 100).toInt()
-                          : 1,
-                      onChanged: supported && !controller.isCapturing.value
-                          ? controller.setExposure
-                          : null,
+          child: IgnorePointer(
+            ignoring: !supported || controller.isCapturing.value,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(22),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                child: Container(
+                  width: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.22),
+                      width: 1,
                     ),
                   ),
-                  SizedBox(
-                    width: 42,
-                    child: Text(
-                      value >= 0
-                          ? '+${value.toStringAsFixed(1)}'
-                          : value.toStringAsFixed(1),
-                      textAlign: TextAlign.right,
-                      style: const TextStyle(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.wb_sunny_outlined,
                         color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                        size: 19,
                       ),
-                    ),
+                      const SizedBox(height: 8),
+                      Expanded(
+                        child: RotatedBox(
+                          quarterTurns: 3,
+                          child: SliderTheme(
+                            data: SliderTheme.of(context).copyWith(
+                              trackHeight: 3,
+                              thumbShape: const RoundSliderThumbShape(
+                                enabledThumbRadius: 7,
+                              ),
+                              overlayShape: const RoundSliderOverlayShape(
+                                overlayRadius: 15,
+                              ),
+                              activeTrackColor: Colors.white,
+                              inactiveTrackColor:
+                                  Colors.white.withValues(alpha: 0.28),
+                              thumbColor: Colors.white,
+                              overlayColor:
+                                  Colors.white.withValues(alpha: 0.16),
+                            ),
+                            child: Slider(
+                              value: supported
+                                  ? value.clamp(min, max).toDouble()
+                                  : 0,
+                              min: supported ? min : -1,
+                              max: supported ? max : 1,
+                              divisions: supported
+                                  ? ((max - min) * 2)
+                                      .round()
+                                      .clamp(1, 100)
+                                      .toInt()
+                                  : 1,
+                              onChanged: supported
+                                  ? controller.setExposure
+                                  : null,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        value.abs() < 0.05
+                            ? '0'
+                            : value > 0
+                                ? '+${value.toStringAsFixed(1)}'
+                                : value.toStringAsFixed(1),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      GestureDetector(
+                        onTap: supported && value.abs() > 0.01
+                            ? () => controller.setExposure(0)
+                            : null,
+                        child: Icon(
+                          Icons.refresh,
+                          color: Colors.white.withValues(
+                            alpha: supported && value.abs() > 0.01 ? 0.9 : 0.35,
+                          ),
+                          size: 16,
+                        ),
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    tooltip: 'Reset exposure',
-                    onPressed: supported && value.abs() > 0.01
-                        ? () => controller.setExposure(0)
-                        : null,
-                    icon: const Icon(
-                      Icons.refresh,
-                      color: Colors.white,
-                      size: 19,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
