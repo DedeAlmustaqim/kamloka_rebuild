@@ -285,6 +285,8 @@ class CameraController extends GetxController {
 
   double get minZoom => _minZoom;
   double get maxZoom => _maxZoom;
+  double get minExposure => _minExposure;
+  double get maxExposure => _maxExposure;
   Future<void> cycleFlashMode() async {
     if (!isReady.value) return;
 
