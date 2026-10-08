@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import '../controllers/camera_controller.dart';
 import '../services/capture_service.dart';
 import 'photo_preview_view.dart';
+import '../widgets/collapsible_camera_control_panel.dart';
 import '../../location/services/location_service.dart';
 
 class CameraView extends GetView<CameraController> {
@@ -116,34 +117,8 @@ class _CameraPreview extends StatelessWidget {
         ),
         const _TopScrim(),
         SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const _BrandMark(),
-                const Spacer(),
-                Flexible(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        _FlashButton(),
-                        SizedBox(width: 6),
-                        _TimerButton(),
-                        SizedBox(width: 6),
-                        _AspectRatioButton(),
-                        SizedBox(width: 6),
-                        _GridButton(),
-                        SizedBox(width: 6),
-                        _SwitchCameraButton(),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          child: CollapsibleCameraControlPanel(
+            controller: Get.find<CameraController>(),
           ),
         ),
         Obx(() {
