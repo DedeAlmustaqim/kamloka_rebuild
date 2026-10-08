@@ -15,7 +15,6 @@ enum CaptureAspectRatio {
   square,
 }
 
-
 class CaptureService {
   bool _isCapturing = false;
   final ImageOrientationService _orientationService =
