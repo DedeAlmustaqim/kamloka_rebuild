@@ -294,6 +294,8 @@ class CameraController extends GetxController {
     }
   }
 
+  bool get isCountingDown => countdown.value > 0;
+
   double get minZoom => _minZoom;
   double get maxZoom => _maxZoom;
   double get minExposure => _minExposure;
