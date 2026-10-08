@@ -77,8 +77,6 @@ class WatermarkService {
     final timeFont = isPortrait ? img.arial24 : img.arial48;
     final dateFont = isPortrait ? img.arial14 : img.arial24;
 
-    final horizontalPadding =
-        (image.width * (isPortrait ? 0.025 : 0.028)).round().clamp(14, 160).toInt();
     final panelHorizontalPadding =
         (image.width * (isPortrait ? 0.025 : 0.030)).round().clamp(14, 160).toInt();
     final bottomMargin =
