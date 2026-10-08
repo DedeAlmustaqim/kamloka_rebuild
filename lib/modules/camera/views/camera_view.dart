@@ -717,91 +717,116 @@ class _ExposureControl extends GetView<CameraController> {
       final max = controller.maxExposure;
       final value = controller.exposureOffset.value;
       final supported = max > min;
+      final expanded = controller.isExposureExpanded.value;
+      final disabled = !supported || controller.isCapturing.value;
+
+      if (!supported) {
+        return const SizedBox.shrink();
+      }
 
       return Positioned(
-        top: 220,
-        right: 12,
-        bottom: 300,
+        top: 210,
+        right: 10,
         child: SafeArea(
           child: IgnorePointer(
-            ignoring: !supported || controller.isCapturing.value,
-            child: SizedBox(
-              width: 36,
-              child: Column(
-                children: [
-                  const Icon(
-                    Icons.wb_sunny_outlined,
-                    color: Colors.white,
-                    size: 17,
+            ignoring: disabled,
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              alignment: Alignment.topCenter,
+              child: Material(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(18),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 6,
                   ),
-                  const SizedBox(height: 4),
-                  Expanded(
-                    child: RotatedBox(
-                      quarterTurns: 3,
-                      child: SliderTheme(
-                        data: SliderTheme.of(context).copyWith(
-                          trackHeight: 2.5,
-                          thumbShape: const RoundSliderThumbShape(
-                            enabledThumbRadius: 6,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: controller.toggleExposureControl,
+                        child: SizedBox(
+                          width: 30,
+                          height: 30,
+                          child: Center(
+                            child: Icon(
+                              Icons.wb_sunny_outlined,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                           ),
-                          overlayShape: const RoundSliderOverlayShape(
-                            overlayRadius: 12,
-                          ),
-                          activeTrackColor: Colors.white,
-                          inactiveTrackColor: Colors.white38,
-                          thumbColor: Colors.white,
-                          overlayColor: Colors.white24,
-                        ),
-                        child: Slider(
-                          value: supported
-                              ? value.clamp(min, max).toDouble()
-                              : 0,
-                          min: supported ? min : -1,
-                          max: supported ? max : 1,
-                          divisions: supported
-                              ? ((max - min) * 2)
-                                  .round()
-                                  .clamp(1, 100)
-                                  .toInt()
-                              : 1,
-                          onChanged:
-                              supported ? controller.setExposure : null,
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    value.abs() < 0.05
-                        ? '0'
-                        : value > 0
-                            ? '+${value.toStringAsFixed(1)}'
-                            : value.toStringAsFixed(1),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black87,
-                          blurRadius: 3,
+                      if (expanded) ...[
+                        SizedBox(
+                          width: 30,
+                          height: 150,
+                          child: RotatedBox(
+                            quarterTurns: 3,
+                            child: SliderTheme(
+                              data: SliderTheme.of(context).copyWith(
+                                trackHeight: 2,
+                                thumbShape: const RoundSliderThumbShape(
+                                  enabledThumbRadius: 6,
+                                ),
+                                overlayShape:
+                                    const RoundSliderOverlayShape(
+                                  overlayRadius: 10,
+                                ),
+                                activeTrackColor: Colors.white,
+                                inactiveTrackColor: Colors.white38,
+                                thumbColor: Colors.white,
+                                overlayColor: Colors.white24,
+                              ),
+                              child: Slider(
+                                value: value.clamp(min, max).toDouble(),
+                                min: min,
+                                max: max,
+                                divisions: ((max - min) * 2)
+                                    .round()
+                                    .clamp(1, 100)
+                                    .toInt(),
+                                onChanged: controller.setExposure,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Text(
+                          value.abs() < 0.05
+                              ? '0'
+                              : value > 0
+                                  ? '${value.toStringAsFixed(1)}'
+                                  : value.toStringAsFixed(1),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black87,
+                                blurRadius: 3,
+                              ),
+                            ],
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: value.abs() > 0.01
+                              ? () => controller.setExposure(0)
+                              : null,
+                          child: Icon(
+                            Icons.refresh,
+                            color: Colors.white.withValues(
+                              alpha: value.abs() > 0.01 ? 0.85 : 0.3,
+                            ),
+                            size: 14,
+                          ),
                         ),
                       ],
-                    ),
+                    ],
                   ),
-                  GestureDetector(
-                    onTap: supported && value.abs() > 0.01
-                        ? () => controller.setExposure(0)
-                        : null,
-                    child: Icon(
-                      Icons.refresh,
-                      color: Colors.white.withValues(
-                        alpha: supported && value.abs() > 0.01 ? 0.85 : 0.3,
-                      ),
-                      size: 14,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
