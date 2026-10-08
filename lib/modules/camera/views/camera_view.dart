@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/camera_controller.dart';
-import '../services/capture_service.dart';
 import 'photo_preview_view.dart';
 import '../widgets/collapsible_camera_control_panel.dart';
 import '../../location/services/location_service.dart';
@@ -772,7 +771,7 @@ class _ExposureControl extends GetView<CameraController> {
                           value.abs() < 0.05
                               ? '0'
                               : value > 0
-                                  ? '${value.toStringAsFixed(1)}'
+                                  ? value.toStringAsFixed(1)
                                   : value.toStringAsFixed(1),
                           style: const TextStyle(
                             color: Colors.white,
@@ -803,35 +802,6 @@ class _ExposureControl extends GetView<CameraController> {
                   ),
                 ),
               ),
-            ),
-          ),
-        ),
-      );
-    });
-  }
-}
-
-class _SwitchCameraButton extends GetView<CameraController> {
-  const _SwitchCameraButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final enabled = controller.isReady.value &&
-          !controller.isCapturing.value;
-
-      return Material(
-        color: Colors.black54,
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: enabled ? controller.switchCamera : null,
-          child: const Padding(
-            padding: EdgeInsets.all(9),
-            child: Icon(
-              Icons.flip_camera_ios_outlined,
-              color: Colors.white,
-              size: 20,
             ),
           ),
         ),
