@@ -17,17 +17,8 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(8, 4, 8, 0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            height: 42,
-            child: Center(child: _Brand()),
-          ),
-          _toolbar(),
-        ],
-      ),
+      margin: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+      child: _toolbar(),
     );
   }
 
