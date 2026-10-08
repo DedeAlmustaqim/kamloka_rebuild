@@ -400,7 +400,7 @@ class _ExposureControl extends GetView<CameraController> {
                       min: supported ? min : -1,
                       max: supported ? max : 1,
                       divisions: supported
-                          ? ((max - min) * 2).round().clamp(1, 100)
+                          ? ((max - min) * 2).round().clamp(1, 100).toInt()
                           : 1,
                       onChanged: supported && !controller.isCapturing.value
                           ? controller.setExposure
