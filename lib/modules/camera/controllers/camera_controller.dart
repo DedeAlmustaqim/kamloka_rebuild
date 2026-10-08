@@ -19,6 +19,7 @@ class CameraController extends GetxController {
   final errorMessage = ''.obs;
   final captureErrorMessage = ''.obs;
   final lastCapturePath = ''.obs;
+  final lastCapturePath = ''.obs;
   final isSaving = false.obs;
 
   camera.CameraController? _cameraController;
@@ -144,6 +145,11 @@ class CameraController extends GetxController {
     } finally {
       isCapturing.value = false;
     }
+  }
+
+  void clearCapture() {
+    lastCapturePath.value = '';
+    captureErrorMessage.value = '';
   }
 
   Future<void> retry() => initialize();
