@@ -124,6 +124,8 @@ class _CameraPreview extends StatelessWidget {
                 children: const [
                   _FlashButton(),
                   SizedBox(width: 8),
+                  _TimerButton(),
+                  SizedBox(width: 8),
                   _SwitchCameraButton(),
                 ],
               ),
@@ -168,6 +170,38 @@ class _CameraPreview extends StatelessWidget {
                       border: Border.fromBorderSide(
                         BorderSide(color: Colors.white, width: 2),
                       ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+        Obx(() {
+          final value = Get.find<CameraController>().countdown.value;
+          if (value <= 0) return const SizedBox.shrink();
+
+          return Positioned.fill(
+            child: IgnorePointer(
+              child: Center(
+                child: TweenAnimationBuilder<double>(
+                  key: ValueKey(value),
+                  tween: Tween(begin: 1.35, end: 1),
+                  duration: const Duration(milliseconds: 500),
+                  builder: (context, scale, child) =>
+                      Transform.scale(scale: scale, child: child),
+                  child: Text(
+                    value.toString(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 96,
+                      fontWeight: FontWeight.w800,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black87,
+                          blurRadius: 12,
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -349,6 +383,69 @@ class _FlashButton extends GetView<CameraController> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(icon, color: Colors.white, size: 19),
+                const SizedBox(width: 5),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    });
+  }
+}
+
+class _TimerButton extends GetView<CameraController> {
+  const _TimerButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final seconds = controller.timerSeconds.value;
+      final label = seconds == 0 ? 'OFF' : seconds.toString() + 's';
+
+      return PopupMenuButton<int>(
+        enabled: controller.isReady.value && !controller.isCapturing.value,
+        onSelected: controller.setTimer,
+        offset: const Offset(0, 44),
+        color: Colors.black87,
+        itemBuilder: (context) => const [
+          PopupMenuItem<int>(
+            value: 0,
+            child: Text('Timer OFF', style: TextStyle(color: Colors.white)),
+          ),
+          PopupMenuItem<int>(
+            value: 3,
+            child: Text('3 detik', style: TextStyle(color: Colors.white)),
+          ),
+          PopupMenuItem<int>(
+            value: 5,
+            child: Text('5 detik', style: TextStyle(color: Colors.white)),
+          ),
+          PopupMenuItem<int>(
+            value: 10,
+            child: Text('10 detik', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+        child: Material(
+          color: seconds == 0 ? Colors.black54 : Colors.white24,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  seconds == 0 ? Icons.timer_off_outlined : Icons.timer,
+                  color: Colors.white,
+                  size: 19,
+                ),
                 const SizedBox(width: 5),
                 Text(
                   label,
