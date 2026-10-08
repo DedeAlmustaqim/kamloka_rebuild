@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/camera_controller.dart';
+import '../services/capture_service.dart';
 import 'photo_preview_view.dart';
 import '../../location/services/location_service.dart';
 
@@ -426,7 +427,7 @@ class _TimerButton extends GetView<CameraController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final seconds = controller.timerSeconds.value;
-      final label = seconds == 0 ? 'OFF' : seconds.toString() + 's';
+      final label = seconds == 0 ? 'OFF' : '${seconds}s';
 
       return PopupMenuButton<int>(
         enabled: controller.isReady.value && !controller.isCapturing.value,
