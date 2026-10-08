@@ -86,16 +86,28 @@ class PhotoPreviewView extends GetView<CameraController> {
                     _PreviewAction(
                       icon: Icons.check,
                       label: 'Gunakan Foto',
-                      onPressed: () {
+                      onPressed: () async {
+                        if (controller.isSaving.value) return;
+
+                        final saved = await controller.saveCapturedPhoto();
+
+                        if (!context.mounted) return;
+
                         Get.snackbar(
-                          'Preview',
-                          'Foto siap diproses pada tahap image pipeline.',
+                          saved ? 'Tersimpan' : 'Gagal menyimpan',
+                          saved
+                              ? 'Foto berhasil disimpan ke album KAMLOKA.'
+                              : controller.captureErrorMessage.value,
                           snackPosition: SnackPosition.BOTTOM,
                           margin: const EdgeInsets.all(16),
                           backgroundColor: Colors.white,
                           colorText: Colors.black,
                           duration: const Duration(seconds: 2),
                         );
+
+                        if (saved) {
+                          Get.back();
+                        }
                       },
                     ),
                   ],
