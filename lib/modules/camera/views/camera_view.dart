@@ -82,7 +82,14 @@ class _CameraPreview extends StatelessWidget {
             alignment: Alignment.topCenter,
             child: Padding(
               padding: const EdgeInsets.only(top: 16),
-              child: const _FlashButton(),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  _FlashButton(),
+                  SizedBox(width: 8),
+                  _SwitchCameraButton(),
+                ],
+              ),
             ),
           ),
         ),
@@ -251,6 +258,35 @@ class _FlashButton extends GetView<CameraController> {
                   ),
                 ),
               ],
+            ),
+          ),
+        ),
+      );
+    });
+  }
+}
+
+class _SwitchCameraButton extends GetView<CameraController> {
+  const _SwitchCameraButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final enabled = controller.isReady.value &&
+          !controller.isCapturing.value;
+
+      return Material(
+        color: Colors.black54,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: enabled ? controller.switchCamera : null,
+          child: const Padding(
+            padding: EdgeInsets.all(9),
+            child: Icon(
+              Icons.flip_camera_ios_outlined,
+              color: Colors.white,
+              size: 20,
             ),
           ),
         ),
