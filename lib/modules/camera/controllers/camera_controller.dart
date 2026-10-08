@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:camera/camera.dart' as camera;
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -19,13 +18,11 @@ class CameraController extends GetxController {
   final errorMessage = ''.obs;
   final captureErrorMessage = ''.obs;
   final lastCapturePath = ''.obs;
-  final lastCapturePath = ''.obs;
   final isSaving = false.obs;
 
   camera.CameraController? _cameraController;
   final CaptureService _captureService = CaptureService();
   final WatermarkService _watermarkService = WatermarkService();
-  final GalleryService _galleryService = GalleryService();
 
   camera.CameraController get cameraController => _cameraController!;
 
