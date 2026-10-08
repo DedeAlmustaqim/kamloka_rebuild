@@ -116,11 +116,7 @@ class CaptureService {
 
     final separator = Platform.pathSeparator;
     final name = source.path.split(separator).last;
-    final base = name.replaceFirst(RegExp(r'\.[^.]+
-    _orientationService.dispose();
-  }
-}
-), '');
+    final base = name.replaceFirst(RegExp(r'\.[^.]+$'), '');
     final directory = source.path.substring(0, source.path.length - name.length);
     final outputPath = '${directory}${base}_aspect.jpg';
 
