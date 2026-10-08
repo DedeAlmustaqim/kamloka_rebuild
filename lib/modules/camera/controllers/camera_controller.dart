@@ -20,7 +20,9 @@ class CameraController extends GetxController {
   final lastCapturePath = ''.obs;
   final isSaving = false.obs;
   final flashMode = camera.FlashMode.off.obs;
+  final lensDirection = camera.CameraLensDirection.back.obs;
 
+  List<camera.CameraDescription> _cameras = const [];
   camera.CameraController? _cameraController;
   final CaptureService _captureService = CaptureService();
   final WatermarkService _watermarkService = WatermarkService();
@@ -58,10 +60,13 @@ class CameraController extends GetxController {
         throw Exception('Tidak ada kamera yang tersedia pada perangkat.');
       }
 
+      _cameras = cameras;
+
       final backCamera = cameras.firstWhere(
         (item) => item.lensDirection == camera.CameraLensDirection.back,
         orElse: () => cameras.first,
       );
+      lensDirection.value = backCamera.lensDirection;
 
       await _cameraController?.dispose();
 
@@ -93,6 +98,62 @@ class CameraController extends GetxController {
           error.toString().replaceFirst('Exception: ', '');
     } finally {
       isInitializing.value = false;
+    }
+  }
+
+  Future<void> switchCamera() async {
+    if (!isReady.value || isCapturing.value || _cameras.length < 2) return;
+
+    final currentIndex = _cameras.indexWhere(
+      (item) => item.lensDirection == lensDirection.value,
+    );
+    final nextIndex = _cameras.indexWhere(
+      (item) => item.lensDirection != lensDirection.value,
+    );
+    if (nextIndex < 0) return;
+
+    isReady.value = false;
+
+    try {
+      final nextDescription = _cameras[nextIndex];
+      final previousController = _cameraController;
+
+      final nextController = camera.CameraController(
+        nextDescription,
+        camera.ResolutionPreset.high,
+        enableAudio: false,
+        imageFormatGroup: camera.ImageFormatGroup.jpeg,
+      );
+
+      await nextController.initialize();
+
+      final nextFlash = nextDescription.lensDirection ==
+              camera.CameraLensDirection.back
+          ? flashMode.value
+          : camera.FlashMode.off;
+
+      try {
+        await nextController.setFlashMode(nextFlash);
+      } on camera.CameraException {
+        await nextController.setFlashMode(camera.FlashMode.off);
+      }
+
+      _cameraController = nextController;
+      lensDirection.value = nextDescription.lensDirection;
+      if (nextDescription.lensDirection != camera.CameraLensDirection.back) {
+        flashMode.value = camera.FlashMode.off;
+      }
+
+      await previousController?.dispose();
+      isReady.value = true;
+    } on camera.CameraException catch (error) {
+      captureErrorMessage.value =
+          error.description ?? 'Kamera tidak dapat diganti.';
+      isReady.value = _cameraController?.value.isInitialized ?? false;
+    } catch (error) {
+      captureErrorMessage.value =
+          error.toString().replaceFirst('Exception: ', '');
+      isReady.value = _cameraController?.value.isInitialized ?? false;
     }
   }
 
