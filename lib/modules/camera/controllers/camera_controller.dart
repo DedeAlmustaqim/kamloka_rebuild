@@ -8,6 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../services/capture_service.dart';
 import '../services/device_orientation_service.dart';
 import '../../location/services/location_service.dart';
+import '../../gallery/services/gallery_service.dart';
 import '../services/watermark_service.dart';
 import '../../gallery/services/gallery_service.dart';
 
@@ -23,6 +24,7 @@ class CameraController extends GetxController {
   camera.CameraController? _cameraController;
   final CaptureService _captureService = CaptureService();
   final WatermarkService _watermarkService = WatermarkService();
+  final GalleryService _galleryService = GalleryService();
 
   camera.CameraController get cameraController => _cameraController!;
 
@@ -130,6 +132,14 @@ class CameraController extends GetxController {
       );
 
       lastCapturePath.value = watermarked.path;
+
+      isSaving.value = true;
+      try {
+        await _galleryService.saveImage(watermarked.path);
+      } finally {
+        isSaving.value = false;
+      }
+
       return watermarked.path;
     } on camera.CameraException catch (error) {
       captureErrorMessage.value =
