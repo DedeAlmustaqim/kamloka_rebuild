@@ -1,5 +1,6 @@
-import 'package:camera/camera.dart' as camera;
 import 'dart:io';
+
+import 'package:camera/camera.dart' as camera;
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -75,6 +76,15 @@ class _CameraPreview extends StatelessWidget {
               ),
             );
           },
+        ),
+        SafeArea(
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: const _FlashButton(),
+            ),
+          ),
         ),
         const SafeArea(
           child: Align(
@@ -189,6 +199,56 @@ class _CameraShutter extends GetView<CameraController> {
                       ),
                     ),
                   ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    });
+  }
+}
+
+class _FlashButton extends GetView<CameraController> {
+  const _FlashButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final mode = controller.flashMode.value;
+      final icon = switch (mode) {
+        camera.FlashMode.off => Icons.flash_off,
+        camera.FlashMode.auto => Icons.flash_auto,
+        camera.FlashMode.always => Icons.flash_on,
+        camera.FlashMode.torch => Icons.flash_on,
+      };
+      final label = switch (mode) {
+        camera.FlashMode.off => 'OFF',
+        camera.FlashMode.auto => 'AUTO',
+        camera.FlashMode.always => 'ON',
+        camera.FlashMode.torch => 'TORCH',
+      };
+
+      return Material(
+        color: Colors.black54,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: controller.cycleFlashMode,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, color: Colors.white, size: 19),
+                const SizedBox(width: 5),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             ),
