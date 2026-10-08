@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/camera_controller.dart';
-import '../services/capture_service.dart';
 
 class CollapsibleCameraControlPanel extends StatefulWidget {
   const CollapsibleCameraControlPanel({
