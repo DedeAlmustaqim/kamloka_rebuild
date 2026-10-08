@@ -245,12 +245,12 @@ class _CameraPreview extends StatelessWidget {
         ),
         SafeArea(
           child: Align(
-            alignment: Alignment.topRight,
+            alignment: Alignment.bottomRight,
             child: Padding(
               padding: const EdgeInsets.only(
-                top: 66,
                 right: 16,
-                left: 120,
+                bottom: 205,
+                left: 80,
               ),
               child: _LocationStatus(service: locationService),
             ),
