@@ -16,6 +16,7 @@ class CameraController extends GetxController {
   final isInitializing = true.obs;
   final isReady = false.obs;
   final isCapturing = false.obs;
+  final isSwitchingCamera = false.obs;
   final errorMessage = ''.obs;
   final captureErrorMessage = ''.obs;
   final lastCapturePath = ''.obs;
@@ -119,6 +120,7 @@ class CameraController extends GetxController {
     );
     if (nextIndex < 0) return;
 
+    isSwitchingCamera.value = true;
     isReady.value = false;
 
     try {
@@ -177,6 +179,8 @@ class CameraController extends GetxController {
       captureErrorMessage.value =
           error.toString().replaceFirst('Exception: ', '');
       isReady.value = _cameraController?.value.isInitialized ?? false;
+    } finally {
+      isSwitchingCamera.value = false;
     }
   }
 
