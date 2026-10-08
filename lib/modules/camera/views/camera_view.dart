@@ -124,8 +124,7 @@ class _CameraShutter extends GetView<CameraController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final isBusy =
-          controller.isCapturing.value || controller.isSaving.value;
+      final isBusy = controller.isCapturing.value;
       final error = controller.captureErrorMessage.value;
 
       return SafeArea(
@@ -150,10 +149,7 @@ class _CameraShutter extends GetView<CameraController> {
                     child: Text(
                       error,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                      ),
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
                     ),
                   ),
                 Row(
@@ -164,34 +160,32 @@ class _CameraShutter extends GetView<CameraController> {
                     GestureDetector(
                       onTap: isBusy ? null : controller.capturePhoto,
                       child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 150),
-                    opacity: isBusy ? 0.6 : 1,
-                    child: Container(
-                      width: 76,
-                      height: 76,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 4,
+                        duration: const Duration(milliseconds: 150),
+                        opacity: isBusy ? 0.6 : 1,
+                        child: Container(
+                          width: 76,
+                          height: 76,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 4),
+                          ),
+                          padding: const EdgeInsets.all(6),
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: isBusy
+                                ? const Padding(
+                                    padding: EdgeInsets.all(22),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.black,
+                                    ),
+                                  )
+                                : null,
+                          ),
                         ),
-                      ),
-                      padding: const EdgeInsets.all(6),
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: isBusy
-                            ? const Padding(
-                                padding: EdgeInsets.all(22),
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.black,
-                                ),
-                              )
-                            : null,
-                      ),
                       ),
                     ),
                   ],
