@@ -1,11 +1,8 @@
-import 'dart:io';
-
 import 'package:camera/camera.dart' as camera;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/camera_controller.dart';
-import 'photo_preview_view.dart';
 import '../../location/services/location_service.dart';
 
 class CameraView extends GetView<CameraController> {
@@ -124,7 +121,8 @@ class _CameraShutter extends GetView<CameraController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final isCapturing = controller.isCapturing.value;
+      final isBusy =
+          controller.isCapturing.value || controller.isSaving.value;
       final error = controller.captureErrorMessage.value;
 
       return SafeArea(
@@ -155,19 +153,11 @@ class _CameraShutter extends GetView<CameraController> {
                       ),
                     ),
                   ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const _CaptureThumbnail(),
-                    const SizedBox(width: 24),
-                    GestureDetector(
-                      onTap: isCapturing
-                          ? null
-                          : controller.capturePhoto,
-                      child: AnimatedOpacity(
+                GestureDetector(
+                  onTap: isBusy ? null : controller.capturePhoto,
+                  child: AnimatedOpacity(
                     duration: const Duration(milliseconds: 150),
-                    opacity: isCapturing ? 0.6 : 1,
+                    opacity: isBusy ? 0.6 : 1,
                     child: Container(
                       width: 76,
                       height: 76,
@@ -184,7 +174,7 @@ class _CameraShutter extends GetView<CameraController> {
                           color: Colors.white,
                           shape: BoxShape.circle,
                         ),
-                        child: isCapturing
+                        child: isBusy
                             ? const Padding(
                                 padding: EdgeInsets.all(22),
                                 child: CircularProgressIndicator(
@@ -195,63 +185,11 @@ class _CameraShutter extends GetView<CameraController> {
                             : null,
                       ),
                     ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
           ),
-        ),
-      );
-    });
-  }
-}
-
-class _CaptureThumbnail extends GetView<CameraController> {
-  const _CaptureThumbnail();
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final path = controller.lastCapturePath.value;
-
-      return GestureDetector(
-        onTap: path.isEmpty
-            ? null
-            : () => Get.to(
-                  () => PhotoPreviewView(filePath: path),
-                ),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          width: 54,
-          height: 54,
-          decoration: BoxDecoration(
-            color: Colors.black54,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: Colors.white,
-              width: 2,
-            ),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: path.isEmpty
-              ? const Icon(
-                  Icons.photo_outlined,
-                  color: Colors.white70,
-                  size: 25,
-                )
-              : Image.file(
-                  File(path),
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(
-                      Icons.broken_image_outlined,
-                      color: Colors.white70,
-                      size: 24,
-                    );
-                  },
-                ),
         ),
       );
     });
