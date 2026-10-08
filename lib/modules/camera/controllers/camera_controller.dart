@@ -27,6 +27,7 @@ class CameraController extends GetxController {
   final focusPoint = Rxn<Offset>();
   final exposureOffset = 0.0.obs;
   final timerSeconds = 0.obs;
+  final aspectRatio = CaptureAspectRatio.full.obs;
   final countdown = 0.obs;
   Timer? _countdownTimer;
   double _minExposure = 0.0;
@@ -317,6 +318,23 @@ class CameraController extends GetxController {
     timerSeconds.value = seconds;
   }
 
+  void cycleAspectRatio() {
+    if (!isReady.value || isCapturing.value) return;
+    aspectRatio.value = switch (aspectRatio.value) {
+      CaptureAspectRatio.full => CaptureAspectRatio.ratio16x9,
+      CaptureAspectRatio.ratio16x9 => CaptureAspectRatio.ratio4x3,
+      CaptureAspectRatio.ratio4x3 => CaptureAspectRatio.square,
+      CaptureAspectRatio.square => CaptureAspectRatio.full,
+    };
+  }
+
+  String get aspectRatioLabel => switch (aspectRatio.value) {
+    CaptureAspectRatio.full => 'FULL',
+    CaptureAspectRatio.ratio16x9 => '16:9',
+    CaptureAspectRatio.ratio4x3 => '4:3',
+    CaptureAspectRatio.square => '1:1',
+  };
+
   Future<void> _runCountdown() async {
     final seconds = timerSeconds.value;
     if (seconds <= 0) return;
@@ -357,6 +375,7 @@ class CameraController extends GetxController {
       final file = await _captureService.capture(
         cameraController,
         physicalOrientation: physicalOrientation,
+        aspectRatio: aspectRatio.value,
       );
 
       if (file == null) {
