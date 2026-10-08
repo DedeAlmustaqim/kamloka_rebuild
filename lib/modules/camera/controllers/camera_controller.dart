@@ -10,7 +10,6 @@ import '../services/device_orientation_service.dart';
 import '../../location/services/location_service.dart';
 import '../../gallery/services/gallery_service.dart';
 import '../services/watermark_service.dart';
-import '../../gallery/services/gallery_service.dart';
 
 class CameraController extends GetxController {
   final isInitializing = true.obs;
@@ -20,6 +19,7 @@ class CameraController extends GetxController {
   final captureErrorMessage = ''.obs;
   final lastCapturePath = ''.obs;
   final isSaving = false.obs;
+  final flashMode = camera.FlashMode.off.obs;
 
   camera.CameraController? _cameraController;
   final CaptureService _captureService = CaptureService();
@@ -75,6 +75,7 @@ class CameraController extends GetxController {
       _cameraController = controller;
 
       await controller.initialize();
+      await controller.setFlashMode(flashMode.value);
 
       isReady.value = true;
 
@@ -92,6 +93,25 @@ class CameraController extends GetxController {
           error.toString().replaceFirst('Exception: ', '');
     } finally {
       isInitializing.value = false;
+    }
+  }
+
+  Future<void> cycleFlashMode() async {
+    if (!isReady.value) return;
+
+    final next = switch (flashMode.value) {
+      camera.FlashMode.off => camera.FlashMode.auto,
+      camera.FlashMode.auto => camera.FlashMode.always,
+      camera.FlashMode.always => camera.FlashMode.off,
+      camera.FlashMode.torch => camera.FlashMode.off,
+    };
+
+    try {
+      await cameraController.setFlashMode(next);
+      flashMode.value = next;
+    } on camera.CameraException catch (error) {
+      captureErrorMessage.value =
+          error.description ?? 'Mode flash tidak dapat diubah.';
     }
   }
 
