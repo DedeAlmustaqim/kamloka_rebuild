@@ -126,6 +126,8 @@ class _CameraPreview extends StatelessWidget {
                   SizedBox(width: 8),
                   _TimerButton(),
                   SizedBox(width: 8),
+                  _AspectRatioButton(),
+                  SizedBox(width: 8),
                   _SwitchCameraButton(),
                 ],
               ),
@@ -205,6 +207,22 @@ class _CameraPreview extends StatelessWidget {
                     ),
                   ),
                 ),
+              ),
+            ),
+          );
+        }),
+        Obx(() {
+          final ratio = switch (Get.find<CameraController>().aspectRatio.value) {
+            CaptureAspectRatio.full => null,
+            CaptureAspectRatio.ratio16x9 => 9 / 16,
+            CaptureAspectRatio.ratio4x3 => 3 / 4,
+            CaptureAspectRatio.square => 1.0,
+          };
+          if (ratio == null) return const SizedBox.shrink();
+          return Positioned.fill(
+            child: IgnorePointer(
+              child: CustomPaint(
+                painter: _AspectRatioMaskPainter(ratio),
               ),
             ),
           );
@@ -462,6 +480,69 @@ class _TimerButton extends GetView<CameraController> {
       );
     });
   }
+}
+
+class _AspectRatioButton extends GetView<CameraController> {
+  const _AspectRatioButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() => Material(
+      color: controller.aspectRatio.value == CaptureAspectRatio.full
+          ? Colors.black54
+          : Colors.white24,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: controller.cycleAspectRatio,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.aspect_ratio_outlined, color: Colors.white, size: 18),
+              const SizedBox(width: 5),
+              Text(
+                controller.aspectRatioLabel,
+                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ));
+  }
+}
+
+class _AspectRatioMaskPainter extends CustomPainter {
+  const _AspectRatioMaskPainter(this.targetRatio);
+  final double targetRatio;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final screenRatio = size.width / size.height;
+    final cropSize = screenRatio > targetRatio
+        ? Size(size.height * targetRatio, size.height)
+        : Size(size.width, size.width / targetRatio);
+    final left = (size.width - cropSize.width) / 2;
+    final top = (size.height - cropSize.height) / 2;
+    final cropRect = Rect.fromLTWH(left, top, cropSize.width, cropSize.height);
+
+    final overlay = Paint()..color = Colors.black.withValues(alpha: 0.52);
+    final outside = Path()..addRect(Offset.zero & size);
+    final hole = Path()..addRect(cropRect);
+    canvas.drawPath(Path.combine(PathOperation.difference, outside, hole), overlay);
+
+    final border = Paint()
+      ..color = Colors.white.withValues(alpha: 0.8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawRect(cropRect, border);
+  }
+
+  @override
+  bool shouldRepaint(covariant _AspectRatioMaskPainter oldDelegate) =>
+      oldDelegate.targetRatio != targetRatio;
 }
 
 class _ExposureControl extends GetView<CameraController> {
