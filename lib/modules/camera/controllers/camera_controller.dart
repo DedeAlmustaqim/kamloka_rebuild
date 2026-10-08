@@ -26,6 +26,9 @@ class CameraController extends GetxController {
   final zoomLevel = 1.0.obs;
   final focusPoint = Rxn<Offset>();
   final exposureOffset = 0.0.obs;
+  final timerSeconds = 0.obs;
+  final countdown = 0.obs;
+  Timer? _countdownTimer;
   double _minExposure = 0.0;
   double _maxExposure = 0.0;
   double _minZoom = 1.0;
@@ -306,6 +309,38 @@ class CameraController extends GetxController {
     }
   }
 
+  Future<void> setTimer(int seconds) async {
+    if (seconds != 0 && seconds != 3 && seconds != 5 && seconds != 10) {
+      return;
+    }
+    if (isCapturing.value) return;
+    timerSeconds.value = seconds;
+  }
+
+  Future<void> _runCountdown() async {
+    final seconds = timerSeconds.value;
+    if (seconds <= 0) return;
+
+    countdown.value = seconds;
+    _countdownTimer?.cancel();
+
+    final completer = Completer<void>();
+    var remaining = seconds;
+
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      remaining--;
+      countdown.value = remaining;
+
+      if (remaining <= 0) {
+        timer.cancel();
+        _countdownTimer = null;
+        if (!completer.isCompleted) completer.complete();
+      }
+    });
+
+    await completer.future;
+  }
+
   Future<String?> capturePhoto() async {
     if (!isReady.value || isCapturing.value) {
       return null;
@@ -315,6 +350,7 @@ class CameraController extends GetxController {
     isCapturing.value = true;
 
     try {
+      await _runCountdown();
       final physicalOrientation =
           Get.find<DeviceOrientationService>().orientation.value;
 
@@ -374,6 +410,8 @@ class CameraController extends GetxController {
 
   @override
   void onClose() {
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
     _cameraController?.dispose();
     _cameraController = null;
     _captureService.dispose();
