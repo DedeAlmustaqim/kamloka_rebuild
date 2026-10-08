@@ -325,6 +325,16 @@ class CameraController extends GetxController {
     timerSeconds.value = seconds;
   }
 
+  void cycleTimer() {
+    if (isCapturing.value || isCountingDown.value) return;
+    timerSeconds.value = switch (timerSeconds.value) {
+      0 => 3,
+      3 => 5,
+      5 => 10,
+      _ => 0,
+    };
+  }
+
   void toggleGrid() {
     if (isCapturing.value) return;
     showGrid.toggle();
