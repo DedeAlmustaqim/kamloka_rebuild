@@ -379,9 +379,9 @@ class _ExposureControl extends GetView<CameraController> {
       final supported = max > min;
 
       return Positioned(
-        top: 120,
+        top: 180,
         right: 16,
-        bottom: 220,
+        bottom: 260,
         child: SafeArea(
           child: IgnorePointer(
             ignoring: !supported || controller.isCapturing.value,
@@ -390,7 +390,7 @@ class _ExposureControl extends GetView<CameraController> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
                 child: Container(
-                  width: 48,
+                  width: 44,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(22),
