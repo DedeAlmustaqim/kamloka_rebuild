@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:camera/camera.dart' as camera;
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -143,34 +144,6 @@ class CameraController extends GetxController {
     } finally {
       isCapturing.value = false;
     }
-  }
-
-  Future<bool> saveCapturedPhoto() async {
-    final path = lastCapturePath.value;
-
-    if (path.isEmpty || isSaving.value) {
-      return false;
-    }
-
-    isSaving.value = true;
-
-    try {
-      await _galleryService.saveImage(path);
-      return true;
-    } catch (error, stack) {
-      debugPrint('[KAMLOKA GALLERY] $error');
-      debugPrintStack(stackTrace: stack);
-      captureErrorMessage.value =
-          error.toString().replaceFirst('Exception: ', '');
-      return false;
-    } finally {
-      isSaving.value = false;
-    }
-  }
-
-  void clearCapture() {
-    lastCapturePath.value = '';
-    captureErrorMessage.value = '';
   }
 
   Future<void> retry() => initialize();
