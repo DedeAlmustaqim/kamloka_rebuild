@@ -183,7 +183,7 @@ class _CollapsibleCameraControlPanelState
     required VoidCallback? onTap,
     bool active = false,
   }) {
-    final disabled = c.isCapturing.value || c.isCountingDown.value;
+    final disabled = c.isCapturing.value || c.isCountingDown;
 
     return Opacity(
       opacity: disabled ? 0.45 : 1,
