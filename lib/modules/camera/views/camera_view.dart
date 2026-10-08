@@ -128,6 +128,8 @@ class _CameraPreview extends StatelessWidget {
                   SizedBox(width: 8),
                   _AspectRatioButton(),
                   SizedBox(width: 8),
+                  _GridButton(),
+                  SizedBox(width: 8),
                   _SwitchCameraButton(),
                 ],
               ),
@@ -539,6 +541,30 @@ class _GridPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _GridPainter oldDelegate) => false;
+}
+
+class _GridButton extends GetView<CameraController> {
+  const _GridButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() => Material(
+      color: controller.showGrid.value ? Colors.white24 : Colors.black54,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: controller.toggleGrid,
+        child: const Padding(
+          padding: EdgeInsets.all(9),
+          child: Icon(
+            Icons.grid_3x3,
+            color: Colors.white,
+            size: 19,
+          ),
+        ),
+      ),
+    ));
+  }
 }
 
 class _AspectRatioButton extends GetView<CameraController> {
