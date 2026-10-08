@@ -26,6 +26,7 @@ class CameraController extends GetxController {
   final zoomLevel = 1.0.obs;
   final focusPoint = Rxn<Offset>();
   final exposureOffset = 0.0.obs;
+  final isExposureExpanded = false.obs;
   final timerSeconds = 0.obs;
   final aspectRatio = CaptureAspectRatio.full.obs;
   final showGrid = false.obs;
@@ -208,6 +209,11 @@ class CameraController extends GetxController {
       _maxExposure = 0.0;
       exposureOffset.value = 0.0;
     }
+  }
+
+  void toggleExposureControl() {
+    if (_maxExposure <= _minExposure || isCapturing.value) return;
+    isExposureExpanded.toggle();
   }
 
   Future<void> setExposure(double value) async {
