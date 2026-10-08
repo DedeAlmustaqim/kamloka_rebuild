@@ -153,13 +153,25 @@ class WatermarkService {
     final detailsGap = sectionGap;
     final detailsHeight = detailsLineHeight * 2;
 
-    final contentHeight = topPadding +
-        headerHeight +
-        sectionGap +
-        addressHeight +
-        detailsGap +
-        detailsHeight +
-        bottomMargin;
+    // Landscape uses a two-zone composition:
+    // left = date/time, right = address + GPS details.
+    // This keeps the watermark visually balanced and much more compact.
+    final landscapeRightHeight =
+        addressHeight + detailsGap + detailsHeight;
+
+    final contentHeight = isPortrait
+        ? topPadding +
+            headerHeight +
+            sectionGap +
+            addressHeight +
+            detailsGap +
+            detailsHeight +
+            bottomMargin
+        : topPadding +
+            (headerHeight > landscapeRightHeight
+                ? headerHeight
+                : landscapeRightHeight) +
+            bottomMargin;
 
     final baseY = image.height - contentHeight;
 
@@ -223,74 +235,149 @@ class WatermarkService {
       );
     }
 
-    final addressY = contentTop + headerHeight + sectionGap;
-    final addressX = isPortrait
-        ? contentLeft
-        : contentLeft + (contentWidth * 0.29).round();
+    if (isPortrait) {
+      final addressY = contentTop + headerHeight + sectionGap;
 
-    for (var index = 0; index < addressLines.length; index++) {
+      for (var index = 0; index < addressLines.length; index++) {
+        _drawStrongText(
+          image,
+          addressLines[index],
+          font: textFont,
+          x: contentLeft,
+          y: addressY + (index * addressLineHeight),
+          color: white,
+          shadow: shadow,
+          shadowOffset: 1,
+        );
+      }
+
+      final detailsY = addressY + addressHeight + detailsGap;
+      final detailGap = (contentWidth * 0.04).round();
+      final detailWidth = ((contentWidth - detailGap) / 2).round();
+      final secondColumnX = contentLeft + detailWidth + detailGap;
+
       _drawStrongText(
         image,
-        addressLines[index],
+        _formatLatitude(data.latitude),
         font: textFont,
-        x: addressX,
-        y: addressY + (index * addressLineHeight),
+        x: contentLeft,
+        y: detailsY,
         color: white,
         shadow: shadow,
-        shadowOffset: isPortrait ? 1 : 2,
+        shadowOffset: 1,
+      );
+
+      _drawStrongText(
+        image,
+        _formatLongitude(data.longitude),
+        font: textFont,
+        x: secondColumnX,
+        y: detailsY,
+        color: white,
+        shadow: shadow,
+        shadowOffset: 1,
+      );
+
+      final metricsY = detailsY + detailsLineHeight;
+
+      _drawStrongText(
+        image,
+        _formatAccuracy(data.accuracy),
+        font: textFont,
+        x: contentLeft,
+        y: metricsY,
+        color: white,
+        shadow: shadow,
+        shadowOffset: 1,
+      );
+
+      _drawStrongText(
+        image,
+        _formatAltitude(data.altitude),
+        font: textFont,
+        x: secondColumnX,
+        y: metricsY,
+        color: white,
+        shadow: shadow,
+        shadowOffset: 1,
+      );
+    } else {
+      // Landscape: keep all secondary information in the right zone.
+      // The left zone is reserved for the visual date/time identity.
+      final rightX = contentLeft + (contentWidth * 0.34).round();
+      final rightWidth = contentRight - rightX;
+      final rightAddressLines = _wrapText(
+        address,
+        maxChars: wrapChars(rightWidth, large: true),
+      );
+      final rightAddressHeight =
+          rightAddressLines.length * addressLineHeight;
+
+      for (var index = 0; index < rightAddressLines.length; index++) {
+        _drawStrongText(
+          image,
+          rightAddressLines[index],
+          font: textFont,
+          x: rightX,
+          y: contentTop + (index * addressLineHeight),
+          color: white,
+          shadow: shadow,
+          shadowOffset: 2,
+        );
+      }
+
+      final detailsY =
+          contentTop + rightAddressHeight + detailsGap;
+      final detailGap = (rightWidth * 0.06).round();
+      final detailWidth = ((rightWidth - detailGap) / 2).round();
+      final secondColumnX = rightX + detailWidth + detailGap;
+
+      _drawStrongText(
+        image,
+        _formatLatitude(data.latitude),
+        font: textFont,
+        x: rightX,
+        y: detailsY,
+        color: white,
+        shadow: shadow,
+        shadowOffset: 2,
+      );
+
+      _drawStrongText(
+        image,
+        _formatLongitude(data.longitude),
+        font: textFont,
+        x: secondColumnX,
+        y: detailsY,
+        color: white,
+        shadow: shadow,
+        shadowOffset: 2,
+      );
+
+      final metricsY = detailsY + detailsLineHeight;
+
+      _drawStrongText(
+        image,
+        _formatAccuracy(data.accuracy),
+        font: textFont,
+        x: rightX,
+        y: metricsY,
+        color: white,
+        shadow: shadow,
+        shadowOffset: 2,
+      );
+
+      _drawStrongText(
+        image,
+        _formatAltitude(data.altitude),
+        font: textFont,
+        x: secondColumnX,
+        y: metricsY,
+        color: white,
+        shadow: shadow,
+        shadowOffset: 2,
       );
     }
-
-    final detailsY = addressY + addressHeight + detailsGap;
-    final detailGap = (contentWidth * 0.04).round();
-    final detailWidth = ((contentWidth - detailGap) / 2).round();
-    final secondColumnX = contentLeft + detailWidth + detailGap;
-
-    _drawStrongText(
-      image,
-      _formatLatitude(data.latitude),
-      font: textFont,
-      x: contentLeft,
-      y: detailsY,
-      color: white,
-      shadow: shadow,
-      shadowOffset: isPortrait ? 1 : 2,
-    );
-
-    _drawStrongText(
-      image,
-      _formatLongitude(data.longitude),
-      font: textFont,
-      x: secondColumnX,
-      y: detailsY,
-      color: white,
-      shadow: shadow,
-      shadowOffset: isPortrait ? 1 : 2,
-    );
-
-    final metricsY = detailsY + detailsLineHeight;
-
-    _drawStrongText(
-      image,
-      _formatAccuracy(data.accuracy),
-      font: textFont,
-      x: contentLeft,
-      y: metricsY,
-      color: white,
-      shadow: shadow,
-      shadowOffset: isPortrait ? 1 : 2,
-    );
-
-    _drawStrongText(
-      image,
-      _formatAltitude(data.altitude),
-      font: textFont,
-      x: secondColumnX,
-      y: metricsY,
-      color: white,
-      shadow: shadow,
-      shadowOffset: isPortrait ? 1 : 2,
-    );
 
     final outputPath = _outputPath(source.path);
     final outputFile = File(outputPath);
