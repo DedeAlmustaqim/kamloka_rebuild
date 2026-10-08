@@ -174,10 +174,11 @@ class _CameraPreview extends StatelessWidget {
             ),
           );
         }),
+        const _ExposureControl(),
         Positioned(
           left: 0,
           right: 0,
-          bottom: 124,
+          bottom: 182,
           child: IgnorePointer(
             child: Center(
               child: Obx(() {
@@ -357,6 +358,82 @@ class _FlashButton extends GetView<CameraController> {
                   ),
                 ),
               ],
+            ),
+          ),
+        ),
+      );
+    });
+  }
+}
+
+class _ExposureControl extends GetView<CameraController> {
+  const _ExposureControl();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final min = controller.minExposure;
+      final max = controller.maxExposure;
+      final value = controller.exposureOffset.value;
+      final supported = max > min;
+
+      return Positioned(
+        left: 24,
+        right: 24,
+        bottom: 116,
+        child: SafeArea(
+          child: Material(
+            color: Colors.black54,
+            borderRadius: BorderRadius.circular(18),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 4, 10, 4),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.wb_sunny_outlined,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  Expanded(
+                    child: Slider(
+                      value: supported ? value.clamp(min, max).toDouble() : 0,
+                      min: supported ? min : -1,
+                      max: supported ? max : 1,
+                      divisions: supported
+                          ? ((max - min) * 2).round().clamp(1, 100)
+                          : 1,
+                      onChanged: supported && !controller.isCapturing.value
+                          ? controller.setExposure
+                          : null,
+                    ),
+                  ),
+                  SizedBox(
+                    width: 42,
+                    child: Text(
+                      value >= 0
+                          ? '+${value.toStringAsFixed(1)}'
+                          : value.toStringAsFixed(1),
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Reset exposure',
+                    onPressed: supported && value.abs() > 0.01
+                        ? () => controller.setExposure(0)
+                        : null,
+                    icon: const Icon(
+                      Icons.refresh,
+                      color: Colors.white,
+                      size: 19,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -580,7 +657,7 @@ class _LoadingView extends StatelessWidget {
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
           SizedBox(height: 16),
-          Text('Menyiapkan kamera...'),
+          Text(message),
         ],
       ),
     );
