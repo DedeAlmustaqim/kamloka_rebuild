@@ -104,9 +104,6 @@ class CameraController extends GetxController {
   Future<void> switchCamera() async {
     if (!isReady.value || isCapturing.value || _cameras.length < 2) return;
 
-    final currentIndex = _cameras.indexWhere(
-      (item) => item.lensDirection == lensDirection.value,
-    );
     final nextIndex = _cameras.indexWhere(
       (item) => item.lensDirection != lensDirection.value,
     );
