@@ -21,6 +21,9 @@ class CameraController extends GetxController {
   final isSaving = false.obs;
   final flashMode = camera.FlashMode.off.obs;
   final lensDirection = camera.CameraLensDirection.back.obs;
+  final zoomLevel = 1.0.obs;
+  double _minZoom = 1.0;
+  double _maxZoom = 1.0;
 
   List<camera.CameraDescription> _cameras = const [];
   camera.CameraController? _cameraController;
@@ -81,6 +84,7 @@ class CameraController extends GetxController {
 
       await controller.initialize();
       await controller.setFlashMode(flashMode.value);
+      await _loadZoomRange(controller);
 
       isReady.value = true;
 
@@ -140,6 +144,7 @@ class CameraController extends GetxController {
       if (nextDescription.lensDirection != camera.CameraLensDirection.back) {
         flashMode.value = camera.FlashMode.off;
       }
+      await _loadZoomRange(nextController);
 
       await previousController?.dispose();
       isReady.value = true;
@@ -154,6 +159,38 @@ class CameraController extends GetxController {
     }
   }
 
+  Future<void> _loadZoomRange(camera.CameraController controller) async {
+    try {
+      _minZoom = await controller.getMinZoomLevel();
+      _maxZoom = await controller.getMaxZoomLevel();
+      final initialZoom = zoomLevel.value.clamp(_minZoom, _maxZoom);
+      await controller.setZoomLevel(initialZoom);
+      zoomLevel.value = initialZoom;
+    } on camera.CameraException catch (error) {
+      debugPrint('[KAMLOKA ZOOM] ${error.code}: ${error.description}');
+      _minZoom = 1.0;
+      _maxZoom = 1.0;
+      zoomLevel.value = 1.0;
+    }
+  }
+
+  Future<void> setZoom(double value) async {
+    if (!isReady.value || isCapturing.value) return;
+
+    final nextZoom = value.clamp(_minZoom, _maxZoom).toDouble();
+    if ((nextZoom - zoomLevel.value).abs() < 0.01) return;
+
+    try {
+      await cameraController.setZoomLevel(nextZoom);
+      zoomLevel.value = nextZoom;
+    } on camera.CameraException catch (error) {
+      captureErrorMessage.value =
+          error.description ?? 'Zoom tidak dapat diubah.';
+    }
+  }
+
+  double get minZoom => _minZoom;
+  double get maxZoom => _maxZoom;
   Future<void> cycleFlashMode() async {
     if (!isReady.value) return;
 
