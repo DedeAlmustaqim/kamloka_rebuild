@@ -291,7 +291,7 @@ class CameraController extends GetxController {
   double get minExposure => _minExposure;
   double get maxExposure => _maxExposure;
   Future<void> cycleFlashMode() async {
-    if (!isReady.value) return;
+    if (!isReady.value || isCapturing.value) return;
 
     final next = switch (flashMode.value) {
       camera.FlashMode.off => camera.FlashMode.auto,
