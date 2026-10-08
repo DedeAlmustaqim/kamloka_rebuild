@@ -21,7 +21,7 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(
+          SizedBox(
             height: 42,
             child: Center(child: _Brand()),
           ),
@@ -212,20 +212,10 @@ class _Brand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Text(
-      'KAMLOKA',
-      style: TextStyle(
-        color: Colors.white,
-        fontSize: 17,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 2.2,
-        shadows: [
-          Shadow(
-            color: Colors.black87,
-            blurRadius: 5,
-          ),
-        ],
-      ),
+    return Image.asset(
+      'assets/images/kamloka_typo_white.png',
+      height: 28,
+      fit: BoxFit.contain,
     );
   }
 }
