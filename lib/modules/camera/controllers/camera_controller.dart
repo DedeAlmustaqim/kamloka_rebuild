@@ -328,7 +328,7 @@ class CameraController extends GetxController {
   }
 
   void cycleTimer() {
-    if (isCapturing.value || isCountingDown.value) return;
+    if (isCapturing.value || isCountingDown) return;
     timerSeconds.value = switch (timerSeconds.value) {
       0 => 3,
       3 => 5,
