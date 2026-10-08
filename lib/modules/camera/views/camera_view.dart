@@ -67,11 +67,30 @@ class _CameraPreview extends StatelessWidget {
               screenAspectRatio,
             );
 
-            return ClipRect(
-              child: Transform.scale(
-                scale: scale,
-                child: Center(
-                  child: camera.CameraPreview(controller),
+            double baseZoom = 1.0;
+
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onScaleStart: (_) {
+                final zoom = Get.find<CameraController>().zoomLevel.value;
+                baseZoom = zoom;
+              },
+              onScaleUpdate: (details) {
+                final zoomController = Get.find<CameraController>();
+                if (details.scale == 1.0) return;
+
+                final nextZoom = baseZoom * details.scale;
+                zoomController.setZoom(nextZoom);
+              },
+              onDoubleTap: () {
+                Get.find<CameraController>().setZoom(1.0);
+              },
+              child: ClipRect(
+                child: Transform.scale(
+                  scale: scale,
+                  child: Center(
+                    child: camera.CameraPreview(controller),
+                  ),
                 ),
               ),
             );
@@ -106,6 +125,40 @@ class _CameraPreview extends StatelessWidget {
                   letterSpacing: 1.5,
                 ),
               ),
+            ),
+          ),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 124,
+          child: IgnorePointer(
+            child: Center(
+              child: Obx(() {
+                final zoom = Get.find<CameraController>().zoomLevel.value;
+                return AnimatedOpacity(
+                  opacity: zoom > 1.01 ? 1 : 0.72,
+                  duration: const Duration(milliseconds: 150),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Text(
+                      '${zoom.toStringAsFixed(1)}x',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                );
+              }),
             ),
           ),
         ),
