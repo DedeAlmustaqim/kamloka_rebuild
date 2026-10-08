@@ -63,7 +63,7 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
           label: 'Timer',
           state: c.timerSeconds.value == 0
               ? 'OFF'
-              : '\${c.timerSeconds.value}s',
+              : '${'${'}c.timerSeconds.value}s',
           onTap: c.cycleTimer,
         ));
   }
