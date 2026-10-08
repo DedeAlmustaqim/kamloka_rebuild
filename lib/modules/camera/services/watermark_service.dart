@@ -71,8 +71,7 @@ class WatermarkService {
 
     final isPortrait = image.height > image.width;
     final white = img.ColorRgb8(255, 255, 255);
-    final shadow = img.ColorRgba8(0, 0, 0, 190);
-    final panelColor = img.ColorRgba8(0, 0, 0, 51);
+    final shadow = img.ColorRgba8(0, 0, 0, 210);
 
     final local = data.dateTime.toLocal();
     final dayName = _dayName(local.weekday);
@@ -84,25 +83,18 @@ class WatermarkService {
         ? 'Alamat tidak tersedia'
         : data.address.trim();
 
-    final panelWidth =
-        (image.width * (isPortrait ? 0.92 : 0.93)).round();
-    final panelX = ((image.width - panelWidth) / 2).round();
     final horizontalPadding =
-        (image.width * (isPortrait ? 0.025 : 0.028)).round().clamp(16, 140).toInt();
-    final contentLeft = panelX + horizontalPadding;
-    final contentRight = panelX + panelWidth - horizontalPadding;
+        (image.width * (isPortrait ? 0.035 : 0.030)).round().clamp(18, 100).toInt();
+    final contentLeft = horizontalPadding;
+    final contentRight = image.width - horizontalPadding;
     final contentWidth = contentRight - contentLeft;
 
-    final topPadding =
-        (image.height * (isPortrait ? 0.018 : 0.022)).round().clamp(12, 80).toInt();
-    final sectionGap =
-        (image.height * (isPortrait ? 0.012 : 0.014)).round().clamp(8, 60).toInt();
-    final bottomPadding =
-        (image.height * (isPortrait ? 0.018 : 0.022)).round().clamp(12, 80).toInt();
     final bottomMargin =
-        (image.height * (isPortrait ? 0.022 : 0.012)).round().clamp(10, 80).toInt();
-    final radius =
-        (image.width * (isPortrait ? 0.022 : 0.018)).round().clamp(12, 70).toInt();
+        (image.height * (isPortrait ? 0.022 : 0.014)).round().clamp(12, 60).toInt();
+    final topPadding =
+        (image.height * (isPortrait ? 0.012 : 0.014)).round().clamp(8, 40).toInt();
+    final sectionGap =
+        (image.height * (isPortrait ? 0.005 : 0.006)).round().clamp(3, 14).toInt();
 
     final textFont = isPortrait ? img.arial14 : img.arial24;
     final timeFont = isPortrait ? img.arial24 : img.arial48;
@@ -114,9 +106,9 @@ class WatermarkService {
 
     if (logo != null) {
       final maxLogoWidth =
-          (image.width * (isPortrait ? 0.23 : 0.25)).round();
+          (image.width * (isPortrait ? 0.20 : 0.22)).round();
       final maxLogoHeight =
-          (image.height * (isPortrait ? 0.055 : 0.075)).round();
+          (image.height * (isPortrait ? 0.045 : 0.060)).round();
 
       final scale = [
         maxLogoWidth / logo.width,
@@ -133,52 +125,51 @@ class WatermarkService {
       return (width / charWidth).floor().clamp(24, 120).toInt();
     }
 
+    final addressWidth = isPortrait
+        ? contentWidth
+        : (contentWidth * 0.70).round();
+
     final addressLines = _wrapText(
       address,
-      maxChars: wrapChars(
-        isPortrait ? contentWidth : (contentWidth * 0.70).round(),
-        large: !isPortrait,
-      ),
+      maxChars: wrapChars(addressWidth, large: !isPortrait),
     );
 
-    final addressLineHeight = textFont.lineHeight + (isPortrait ? 3 : 7);
-    final detailsLineHeight = textFont.lineHeight + (isPortrait ? 5 : 9);
+    // Tight typography: the watermark should occupy as little photo area
+    // as possible while remaining readable.
+    final addressLineHeight = textFont.lineHeight + (isPortrait ? 0 : 2);
+    final detailsLineHeight = textFont.lineHeight + (isPortrait ? 1 : 3);
     final addressHeight = addressLines.length * addressLineHeight;
 
+    final headerTextHeight =
+        textFont.lineHeight +
+        timeFont.lineHeight +
+        dateFont.lineHeight;
+
     final headerHeight = [
-      timeFont.lineHeight + dateFont.lineHeight + textFont.lineHeight + 8,
+      headerTextHeight,
       logoHeight,
     ].reduce((a, b) => a > b ? a : b);
 
-    final detailsGap = isPortrait ? (sectionGap * 0.8).round() : sectionGap;
+    final detailsGap = sectionGap;
     final detailsHeight = detailsLineHeight * 2;
 
-    final panelHeight = topPadding +
+    final contentHeight = topPadding +
         headerHeight +
         sectionGap +
         addressHeight +
         detailsGap +
         detailsHeight +
-        bottomPadding;
+        bottomMargin;
 
-    final panelY = image.height - bottomMargin - panelHeight;
+    final baseY = image.height - contentHeight;
 
-    _fillRoundedRect(
-      image,
-      x1: panelX,
-      y1: panelY,
-      x2: panelX + panelWidth,
-      y2: panelY + panelHeight,
-      radius: radius,
-      color: panelColor,
-    );
+    // No rectangle/panel: watermark floats directly over the photo.
+    // A strong shadow keeps it readable on both light and dark backgrounds.
+    final contentTop = baseY + topPadding;
 
-    final contentTop = panelY + topPadding;
-
-    // Header: waktu di kiri, branding di kanan. Logo menjadi bagian panel.
     final dayY = contentTop;
-    final timeY = dayY + textFont.lineHeight + (isPortrait ? 2 : 4);
-    final dateY = timeY + timeFont.lineHeight + (isPortrait ? 3 : 6);
+    final timeY = dayY + textFont.lineHeight;
+    final dateY = timeY + timeFont.lineHeight;
 
     _drawStrongText(
       image,
@@ -232,29 +223,15 @@ class WatermarkService {
       );
     }
 
-    // Portrait: alamat full width agar tidak bertabrakan dengan tanggal.
-    // Landscape: alamat berada di kolom kanan, waktu tetap di kiri.
     final addressY = contentTop + headerHeight + sectionGap;
     final addressX = isPortrait
         ? contentLeft
         : contentLeft + (contentWidth * 0.29).round();
-    final addressWidth = isPortrait
-        ? contentWidth
-        : contentWidth - (contentWidth * 0.29).round();
 
-    final finalAddressLines = isPortrait
-        ? addressLines
-        : _wrapText(
-            address,
-            maxChars: wrapChars(addressWidth, large: true),
-          );
-    final finalAddressHeight =
-        finalAddressLines.length * addressLineHeight;
-
-    for (var index = 0; index < finalAddressLines.length; index++) {
+    for (var index = 0; index < addressLines.length; index++) {
       _drawStrongText(
         image,
-        finalAddressLines[index],
+        addressLines[index],
         font: textFont,
         x: addressX,
         y: addressY + (index * addressLineHeight),
@@ -264,7 +241,7 @@ class WatermarkService {
       );
     }
 
-    final detailsY = addressY + finalAddressHeight + detailsGap;
+    final detailsY = addressY + addressHeight + detailsGap;
     final detailGap = (contentWidth * 0.04).round();
     final detailWidth = ((contentWidth - detailGap) / 2).round();
     final secondColumnX = contentLeft + detailWidth + detailGap;
