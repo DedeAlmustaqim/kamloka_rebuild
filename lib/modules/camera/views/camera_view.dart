@@ -23,6 +23,10 @@ class CameraView extends GetView<CameraController> {
           return const _LoadingView();
         }
 
+        if (controller.isSwitchingCamera.value) {
+          return const _LoadingView(message: 'Mengganti kamera...');
+        }
+
         if (!controller.isReady.value) {
           return _ErrorView(
             message: controller.errorMessage.value,
@@ -560,11 +564,13 @@ class _LocationStatus extends StatelessWidget {
 }
 
 class _LoadingView extends StatelessWidget {
-  const _LoadingView();
+  const _LoadingView({this.message = 'Menyiapkan kamera...'});
+
+  final String message;
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
