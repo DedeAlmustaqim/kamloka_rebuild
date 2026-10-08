@@ -9,6 +9,7 @@ import '../services/capture_service.dart';
 import '../services/device_orientation_service.dart';
 import '../../location/services/location_service.dart';
 import '../services/watermark_service.dart';
+import '../../gallery/services/gallery_service.dart';
 
 class CameraController extends GetxController {
   final isInitializing = true.obs;
@@ -17,10 +18,12 @@ class CameraController extends GetxController {
   final errorMessage = ''.obs;
   final captureErrorMessage = ''.obs;
   final lastCapturePath = ''.obs;
+  final isSaving = false.obs;
 
   camera.CameraController? _cameraController;
   final CaptureService _captureService = CaptureService();
   final WatermarkService _watermarkService = WatermarkService();
+  final GalleryService _galleryService = GalleryService();
 
   camera.CameraController get cameraController => _cameraController!;
 
@@ -139,6 +142,29 @@ class CameraController extends GetxController {
       return null;
     } finally {
       isCapturing.value = false;
+    }
+  }
+
+  Future<bool> saveCapturedPhoto() async {
+    final path = lastCapturePath.value;
+
+    if (path.isEmpty || isSaving.value) {
+      return false;
+    }
+
+    isSaving.value = true;
+
+    try {
+      await _galleryService.saveImage(path);
+      return true;
+    } catch (error, stack) {
+      debugPrint('[KAMLOKA GALLERY] $error');
+      debugPrintStack(stackTrace: stack);
+      captureErrorMessage.value =
+          error.toString().replaceFirst('Exception: ', '');
+      return false;
+    } finally {
+      isSaving.value = false;
     }
   }
 
