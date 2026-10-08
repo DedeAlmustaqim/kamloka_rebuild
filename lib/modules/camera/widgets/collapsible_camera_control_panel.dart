@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 
 import '../controllers/camera_controller.dart';
 
-class CollapsibleCameraControlPanel extends StatefulWidget {
+class CollapsibleCameraControlPanel extends StatelessWidget {
   const CollapsibleCameraControlPanel({
     super.key,
     required this.controller,
@@ -12,92 +12,42 @@ class CollapsibleCameraControlPanel extends StatefulWidget {
 
   final CameraController controller;
 
-  @override
-  State<CollapsibleCameraControlPanel> createState() =>
-      _CollapsibleCameraControlPanelState();
-}
-
-class _CollapsibleCameraControlPanelState
-    extends State<CollapsibleCameraControlPanel> {
-  bool _expanded = false;
-
-  CameraController get c => widget.controller;
-
-  void _toggle() {
-    if (c.isCapturing.value || c.isCountingDown) return;
-    setState(() => _expanded = !_expanded);
-  }
+  CameraController get c => controller;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      margin: const EdgeInsets.fromLTRB(8, 4, 8, 0),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _header(),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeInOut,
-            alignment: Alignment.topCenter,
-            child: _expanded ? _controlsGrid() : const SizedBox.shrink(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _header() {
-    return SizedBox(
-      height: 54,
-      child: Row(
-        children: [
-          _iconButton(
-            _expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-            onTap: _toggle,
-          ),
-          const Expanded(
+          const SizedBox(
+            height: 42,
             child: Center(child: _Brand()),
           ),
-          const SizedBox(width: 40),
+          _toolbar(),
         ],
       ),
     );
   }
 
-  Widget _controlsGrid() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 2, 8, 10),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _row([
-            _ratioCell(),
-            _timerCell(),
-            _cameraCell(),
-          ]),
-          const SizedBox(height: 8),
-          _row([
-            _flashCell(),
-            _gridCell(),
-            _exposureCell(),
-          ]),
-        ],
-      ),
-    );
-  }
-
-  Widget _row(List<Widget> children) {
+  Widget _toolbar() {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final child in children) Expanded(child: child),
+        Expanded(child: _ratioCell()),
+        Expanded(child: _timerCell()),
+        Expanded(child: _cameraCell()),
+        Expanded(child: _flashCell()),
+        Expanded(child: _gridCell()),
+        Expanded(child: _exposureCell()),
       ],
     );
   }
 
   Widget _ratioCell() {
-    return Obx(() => _quickControl(
+    return Obx(() => _toolbarControl(
           icon: Icons.aspect_ratio_outlined,
           label: 'Ratio',
           state: c.aspectRatioLabel,
@@ -106,7 +56,7 @@ class _CollapsibleCameraControlPanelState
   }
 
   Widget _timerCell() {
-    return Obx(() => _quickControl(
+    return Obx(() => _toolbarControl(
           icon: c.timerSeconds.value == 0
               ? Icons.timer_off_outlined
               : Icons.timer_outlined,
@@ -119,7 +69,7 @@ class _CollapsibleCameraControlPanelState
   }
 
   Widget _cameraCell() {
-    return Obx(() => _quickControl(
+    return Obx(() => _toolbarControl(
           icon: Icons.cameraswitch_outlined,
           label: 'Camera',
           state: c.lensDirection.value == camera.CameraLensDirection.back
@@ -144,7 +94,8 @@ class _CollapsibleCameraControlPanelState
         camera.FlashMode.always => Icons.flash_on_outlined,
         camera.FlashMode.torch => Icons.flash_off_outlined,
       };
-      return _quickControl(
+
+      return _toolbarControl(
         icon: icon,
         label: 'Flash',
         state: state,
@@ -154,7 +105,7 @@ class _CollapsibleCameraControlPanelState
   }
 
   Widget _gridCell() {
-    return Obx(() => _quickControl(
+    return Obx(() => _toolbarControl(
           icon: c.showGrid.value ? Icons.grid_on : Icons.grid_off,
           label: 'Grid',
           state: c.showGrid.value ? 'ON' : 'OFF',
@@ -163,7 +114,7 @@ class _CollapsibleCameraControlPanelState
   }
 
   Widget _exposureCell() {
-    return Obx(() => _quickControl(
+    return Obx(() => _toolbarControl(
           icon: c.isExposureExpanded.value
               ? Icons.exposure_plus_1_outlined
               : Icons.exposure_outlined,
@@ -176,7 +127,7 @@ class _CollapsibleCameraControlPanelState
         ));
   }
 
-  Widget _quickControl({
+  Widget _toolbarControl({
     required IconData icon,
     required String label,
     required String state,
@@ -190,67 +141,65 @@ class _CollapsibleCameraControlPanelState
       child: GestureDetector(
         onTap: disabled ? null : onTap,
         behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 55,
-              height: 55,
-              decoration: BoxDecoration(
-                color: active
-                    ? Colors.white.withValues(alpha: 0.18)
-                    : Colors.white.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-                border: Border.all(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
                   color: active
-                      ? Colors.white70
-                      : Colors.white.withValues(alpha: 0.22),
+                      ? Colors.white.withValues(alpha: 0.18)
+                      : Colors.black.withValues(alpha: 0.18),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: active
+                        ? Colors.white70
+                        : Colors.white.withValues(alpha: 0.30),
+                  ),
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 20,
                 ),
               ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 21,
+              const SizedBox(height: 2),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w500,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black87,
+                      blurRadius: 3,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 10,
+              Text(
+                state,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black87,
+                      blurRadius: 3,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Text(
-              state,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _iconButton(
-    IconData icon, {
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.black54,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Icon(
-            icon,
-            color: Colors.white,
-            size: 25,
+            ],
           ),
         ),
       ),
