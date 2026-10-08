@@ -395,61 +395,6 @@ class WatermarkService {
   }
 
 
-  void _fillRoundedRect(
-    img.Image image, {
-    required int x1,
-    required int y1,
-    required int x2,
-    required int y2,
-    required int radius,
-    required img.Color color,
-  }) {
-    img.fillRect(
-      image,
-      x1: x1 + radius,
-      y1: y1,
-      x2: x2 - radius,
-      y2: y2,
-      color: color,
-    );
-    img.fillRect(
-      image,
-      x1: x1,
-      y1: y1 + radius,
-      x2: x2,
-      y2: y2 - radius,
-      color: color,
-    );
-    img.fillCircle(
-      image,
-      x: x1 + radius,
-      y: y1 + radius,
-      radius: radius,
-      color: color,
-    );
-    img.fillCircle(
-      image,
-      x: x2 - radius,
-      y: y1 + radius,
-      radius: radius,
-      color: color,
-    );
-    img.fillCircle(
-      image,
-      x: x1 + radius,
-      y: y2 - radius,
-      radius: radius,
-      color: color,
-    );
-    img.fillCircle(
-      image,
-      x: x2 - radius,
-      y: y2 - radius,
-      radius: radius,
-      color: color,
-    );
-  }
-
   void _drawStrongText(
     img.Image image,
     String text, {
@@ -537,15 +482,6 @@ class WatermarkService {
   String _formatAltitude(double? value) {
     if (value == null) return 'Alt --';
     return 'Alt ${value.toStringAsFixed(1)} m';
-  }
-
-  int _addressMaxChars({
-    required int width,
-    required double fontScale,
-  }) {
-    final baseFont = fontScale >= 1.0 ? 48 : 16;
-    final chars = (width / (baseFont * 0.58)).floor();
-    return chars.clamp(18, 90).toInt();
   }
 
   List<String> _wrapText(
