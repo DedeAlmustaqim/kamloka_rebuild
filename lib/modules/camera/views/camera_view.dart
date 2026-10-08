@@ -252,7 +252,19 @@ class _CameraPreview extends StatelessWidget {
                 bottom: 205,
                 left: 80,
               ),
-              child: _LocationStatus(service: locationService),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Image.asset(
+                    'assets/images/kamloka_typo_white.png',
+                    width: 120,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 7),
+                  _LocationStatus(service: locationService),
+                ],
+              ),
             ),
           ),
         ),
