@@ -22,6 +22,10 @@ class CameraController extends GetxController {
   final flashMode = camera.FlashMode.off.obs;
   final lensDirection = camera.CameraLensDirection.back.obs;
   final zoomLevel = 1.0.obs;
+  final focusPoint = Rxn<Offset>();
+  final exposureOffset = 0.0.obs;
+  double _minExposure = 0.0;
+  double _maxExposure = 0.0;
   double _minZoom = 1.0;
   double _maxZoom = 1.0;
 
@@ -85,6 +89,7 @@ class CameraController extends GetxController {
       await controller.initialize();
       await controller.setFlashMode(flashMode.value);
       await _loadZoomRange(controller);
+      await _loadExposureRange(controller);
 
       isReady.value = true;
 
@@ -145,6 +150,7 @@ class CameraController extends GetxController {
         flashMode.value = camera.FlashMode.off;
       }
       await _loadZoomRange(nextController);
+      await _loadExposureRange(nextController);
 
       await previousController?.dispose();
       isReady.value = true;
@@ -156,6 +162,75 @@ class CameraController extends GetxController {
       captureErrorMessage.value =
           error.toString().replaceFirst('Exception: ', '');
       isReady.value = _cameraController?.value.isInitialized ?? false;
+    }
+  }
+
+
+  Future<void> _loadExposureRange(
+    camera.CameraController controller,
+  ) async {
+    try {
+      _minExposure = await controller.getMinExposureOffset();
+      _maxExposure = await controller.getMaxExposureOffset();
+      final initial = exposureOffset.value.clamp(
+        _minExposure,
+        _maxExposure,
+      ).toDouble();
+      await controller.setExposureOffset(initial);
+      exposureOffset.value = initial;
+    } on camera.CameraException catch (error) {
+      debugPrint('[KAMLOKA EXPOSURE] ${error.code}: ${error.description}');
+      _minExposure = 0.0;
+      _maxExposure = 0.0;
+      exposureOffset.value = 0.0;
+    }
+  }
+
+  Future<void> setExposure(double value) async {
+    if (!isReady.value || isCapturing.value) return;
+
+    final next = value.clamp(_minExposure, _maxExposure).toDouble();
+
+    try {
+      await cameraController.setExposureOffset(next);
+      exposureOffset.value = next;
+    } on camera.CameraException catch (error) {
+      captureErrorMessage.value =
+          error.description ?? 'Exposure tidak dapat diubah.';
+    }
+  }
+
+  Future<void> setFocusAndExposure(Offset point) async {
+    if (!isReady.value || isCapturing.value) return;
+
+    final normalized = Offset(
+      point.dx.clamp(0.0, 1.0),
+      point.dy.clamp(0.0, 1.0),
+    );
+
+    try {
+      await Future.wait([
+        cameraController.setFocusPoint(normalized),
+        cameraController.setExposurePoint(normalized),
+      ]);
+      focusPoint.value = normalized;
+    } on camera.CameraException catch (error) {
+      captureErrorMessage.value =
+          error.description ?? 'Fokus tidak dapat diatur.';
+    }
+  }
+
+  Future<void> resetFocus() async {
+    if (!isReady.value) return;
+
+    try {
+      await Future.wait([
+        cameraController.setFocusPoint(null),
+        cameraController.setExposurePoint(null),
+      ]);
+      focusPoint.value = null;
+    } on camera.CameraException catch (error) {
+      debugPrint('[KAMLOKA FOCUS] ${error.code}: ${error.description}');
     }
   }
 
