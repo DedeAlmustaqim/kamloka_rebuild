@@ -114,41 +114,35 @@ class _CameraPreview extends StatelessWidget {
             );
           },
         ),
+        const _TopScrim(),
         SafeArea(
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  _FlashButton(),
-                  SizedBox(width: 8),
-                  _TimerButton(),
-                  SizedBox(width: 8),
-                  _AspectRatioButton(),
-                  SizedBox(width: 8),
-                  _GridButton(),
-                  SizedBox(width: 8),
-                  _SwitchCameraButton(),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SafeArea(
-          child: Align(
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: Text(
-                'KAMLOKA',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.5,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _BrandMark(),
+                const Spacer(),
+                Flexible(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        _FlashButton(),
+                        SizedBox(width: 6),
+                        _TimerButton(),
+                        SizedBox(width: 6),
+                        _AspectRatioButton(),
+                        SizedBox(width: 6),
+                        _GridButton(),
+                        SizedBox(width: 6),
+                        _SwitchCameraButton(),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
@@ -278,11 +272,16 @@ class _CameraPreview extends StatelessWidget {
           child: Align(
             alignment: Alignment.topRight,
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.only(
+                top: 66,
+                right: 16,
+                left: 120,
+              ),
               child: _LocationStatus(service: locationService),
             ),
           ),
         ),
+        const _BottomScrim(),
         const _CameraShutter(),
       ],
     );
@@ -300,6 +299,84 @@ class _CameraPreview extends StatelessWidget {
 }
 
 
+class _TopScrim extends StatelessWidget {
+  const _TopScrim();
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: Container(
+          height: 150,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black54,
+                Colors.transparent,
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BottomScrim extends StatelessWidget {
+  const _BottomScrim();
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: Container(
+          height: 190,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.bottomCenter,
+              end: Alignment.topCenter,
+              colors: [
+                Colors.black54,
+                Colors.transparent,
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BrandMark extends StatelessWidget {
+  const _BrandMark();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.only(top: 7),
+      child: Text(
+        'KAMLOKA',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 15,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.8,
+          shadows: [
+            Shadow(
+              color: Colors.black87,
+              blurRadius: 5,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _CameraShutter extends GetView<CameraController> {
   const _CameraShutter();
 
@@ -313,7 +390,7 @@ class _CameraShutter extends GetView<CameraController> {
         child: Align(
           alignment: Alignment.bottomCenter,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -338,18 +415,18 @@ class _CameraShutter extends GetView<CameraController> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const _CaptureThumbnail(),
-                    const SizedBox(width: 24),
+                    const SizedBox(width: 30),
                     GestureDetector(
                       onTap: isBusy ? null : controller.capturePhoto,
                       child: AnimatedOpacity(
                         duration: const Duration(milliseconds: 150),
                         opacity: isBusy ? 0.6 : 1,
                         child: Container(
-                          width: 76,
-                          height: 76,
+                          width: 72,
+                          height: 72,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 4),
+                            border: Border.all(color: Colors.white, width: 3.5),
                           ),
                           padding: const EdgeInsets.all(6),
                           child: Container(
