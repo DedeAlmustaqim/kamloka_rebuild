@@ -125,6 +125,10 @@ class CameraController extends GetxController {
       final nextDescription = _cameras[nextIndex];
       final previousController = _cameraController;
 
+      // Pastikan hanya satu controller kamera aktif saat switching.
+      _cameraController = null;
+      await previousController?.dispose();
+
       final nextController = camera.CameraController(
         nextDescription,
         camera.ResolutionPreset.high,
@@ -132,29 +136,39 @@ class CameraController extends GetxController {
         imageFormatGroup: camera.ImageFormatGroup.jpeg,
       );
 
-      await nextController.initialize();
-
-      final nextFlash = nextDescription.lensDirection ==
-              camera.CameraLensDirection.back
-          ? flashMode.value
-          : camera.FlashMode.off;
-
       try {
-        await nextController.setFlashMode(nextFlash);
-      } on camera.CameraException {
-        await nextController.setFlashMode(camera.FlashMode.off);
-      }
+        await nextController.initialize();
 
-      _cameraController = nextController;
-      lensDirection.value = nextDescription.lensDirection;
-      if (nextDescription.lensDirection != camera.CameraLensDirection.back) {
-        flashMode.value = camera.FlashMode.off;
-      }
-      await _loadZoomRange(nextController);
-      await _loadExposureRange(nextController);
+        // Kamera depan tidak diasumsikan memiliki flash.
+        final nextFlash = nextDescription.lensDirection ==
+                camera.CameraLensDirection.back
+            ? flashMode.value
+            : camera.FlashMode.off;
 
-      await previousController?.dispose();
-      isReady.value = true;
+        try {
+          await nextController.setFlashMode(nextFlash);
+        } on camera.CameraException catch (error) {
+          debugPrint(
+            '[KAMLOKA FLASH] ${error.code}: ${error.description}',
+          );
+          await nextController.setFlashMode(camera.FlashMode.off);
+        }
+
+        _cameraController = nextController;
+        lensDirection.value = nextDescription.lensDirection;
+
+        if (nextDescription.lensDirection != camera.CameraLensDirection.back) {
+          flashMode.value = camera.FlashMode.off;
+        }
+
+        focusPoint.value = null;
+        await _loadZoomRange(nextController);
+        await _loadExposureRange(nextController);
+        isReady.value = true;
+      } catch (_) {
+        await nextController.dispose();
+        rethrow;
+      }
     } on camera.CameraException catch (error) {
       captureErrorMessage.value =
           error.description ?? 'Kamera tidak dapat diganti.';
