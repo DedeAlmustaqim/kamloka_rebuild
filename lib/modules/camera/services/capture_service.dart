@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:camera/camera.dart' as camera;
 import 'package:image/image.dart' as img;
 import 'package:flutter/foundation.dart';
