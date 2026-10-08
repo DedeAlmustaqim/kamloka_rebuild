@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/camera_controller.dart';
+import '../services/capture_service.dart';
 import 'photo_preview_view.dart';
 import '../widgets/collapsible_camera_control_panel.dart';
 import '../../location/services/location_service.dart';
@@ -325,31 +326,6 @@ class _BottomScrim extends StatelessWidget {
   }
 }
 
-class _BrandMark extends StatelessWidget {
-  const _BrandMark();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.only(top: 7),
-      child: Text(
-        'KAMLOKA',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 15,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 1.8,
-          shadows: [
-            Shadow(
-              color: Colors.black87,
-              blurRadius: 5,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _CameraShutter extends GetView<CameraController> {
   const _CameraShutter();
@@ -432,118 +408,7 @@ class _CameraShutter extends GetView<CameraController> {
   }
 }
 
-class _FlashButton extends GetView<CameraController> {
-  const _FlashButton();
 
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final mode = controller.flashMode.value;
-      final icon = switch (mode) {
-        camera.FlashMode.off => Icons.flash_off,
-        camera.FlashMode.auto => Icons.flash_auto,
-        camera.FlashMode.always => Icons.flash_on,
-        camera.FlashMode.torch => Icons.flash_on,
-      };
-      final label = switch (mode) {
-        camera.FlashMode.off => 'OFF',
-        camera.FlashMode.auto => 'AUTO',
-        camera.FlashMode.always => 'ON',
-        camera.FlashMode.torch => 'TORCH',
-      };
-
-      return Material(
-        color: Colors.black54,
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: controller.cycleFlashMode,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, color: Colors.white, size: 19),
-                const SizedBox(width: 5),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    });
-  }
-}
-
-class _TimerButton extends GetView<CameraController> {
-  const _TimerButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final seconds = controller.timerSeconds.value;
-      final label = seconds == 0 ? 'OFF' : '${seconds}s';
-
-      return PopupMenuButton<int>(
-        enabled: controller.isReady.value && !controller.isCapturing.value,
-        onSelected: controller.setTimer,
-        offset: const Offset(0, 44),
-        color: Colors.black87,
-        itemBuilder: (context) => const [
-          PopupMenuItem<int>(
-            value: 0,
-            child: Text('Timer OFF', style: TextStyle(color: Colors.white)),
-          ),
-          PopupMenuItem<int>(
-            value: 3,
-            child: Text('3 detik', style: TextStyle(color: Colors.white)),
-          ),
-          PopupMenuItem<int>(
-            value: 5,
-            child: Text('5 detik', style: TextStyle(color: Colors.white)),
-          ),
-          PopupMenuItem<int>(
-            value: 10,
-            child: Text('10 detik', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-        child: Material(
-          color: seconds == 0 ? Colors.black54 : Colors.white24,
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  seconds == 0 ? Icons.timer_off_outlined : Icons.timer,
-                  color: Colors.white,
-                  size: 19,
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    });
-  }
-}
 
 class _GridOverlay extends StatelessWidget {
   const _GridOverlay();
@@ -594,61 +459,7 @@ class _GridPainter extends CustomPainter {
   bool shouldRepaint(covariant _GridPainter oldDelegate) => false;
 }
 
-class _GridButton extends GetView<CameraController> {
-  const _GridButton();
 
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() => Material(
-      color: controller.showGrid.value ? Colors.white24 : Colors.black54,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: controller.toggleGrid,
-        child: const Padding(
-          padding: EdgeInsets.all(9),
-          child: Icon(
-            Icons.grid_3x3,
-            color: Colors.white,
-            size: 19,
-          ),
-        ),
-      ),
-    ));
-  }
-}
-
-class _AspectRatioButton extends GetView<CameraController> {
-  const _AspectRatioButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() => Material(
-      color: controller.aspectRatio.value == CaptureAspectRatio.full
-          ? Colors.black54
-          : Colors.white24,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: controller.cycleAspectRatio,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.aspect_ratio_outlined, color: Colors.white, size: 18),
-              const SizedBox(width: 5),
-              Text(
-                controller.aspectRatioLabel,
-                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ));
-  }
-}
 
 class _AspectRatioMaskPainter extends CustomPainter {
   const _AspectRatioMaskPainter(this.targetRatio);
