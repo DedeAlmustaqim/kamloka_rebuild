@@ -24,7 +24,7 @@ class _CollapsibleCameraControlPanelState
   CameraController get c => widget.controller;
 
   void _toggle() {
-    if (c.isCapturing.value || c.isCountingDown.value) return;
+    if (c.isCapturing.value || c.isCountingDown) return;
     setState(() => _expanded = !_expanded);
   }
 
