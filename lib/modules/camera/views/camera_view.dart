@@ -71,6 +71,19 @@ class _CameraPreview extends StatelessWidget {
 
             return GestureDetector(
               behavior: HitTestBehavior.opaque,
+              onTapUp: (details) {
+                final box = context.findRenderObject() as RenderBox?;
+                if (box == null) return;
+
+                final local = box.globalToLocal(details.globalPosition);
+                final normalized = Offset(
+                  (local.dx / box.size.width).clamp(0.0, 1.0),
+                  (local.dy / box.size.height).clamp(0.0, 1.0),
+                );
+
+                Get.find<CameraController>()
+                    .setFocusAndExposure(normalized);
+              },
               onScaleStart: (_) {
                 final zoom = Get.find<CameraController>().zoomLevel.value;
                 baseZoom = zoom;
@@ -128,6 +141,35 @@ class _CameraPreview extends StatelessWidget {
             ),
           ),
         ),
+        Obx(() {
+          final point = Get.find<CameraController>().focusPoint.value;
+          if (point == null) return const SizedBox.shrink();
+
+          return Positioned(
+            left: point.dx * MediaQuery.sizeOf(context).width - 28,
+            top: point.dy * MediaQuery.sizeOf(context).height - 28,
+            child: IgnorePointer(
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 1.25, end: 1),
+                duration: const Duration(milliseconds: 220),
+                builder: (context, scale, child) =>
+                    Transform.scale(scale: scale, child: child),
+                child: const SizedBox(
+                  width: 56,
+                  height: 56,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      border: Border.fromBorderSide(
+                        BorderSide(color: Colors.white, width: 2),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
         Positioned(
           left: 0,
           right: 0,
