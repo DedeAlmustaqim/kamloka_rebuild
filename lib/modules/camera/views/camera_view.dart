@@ -690,6 +690,12 @@ class _LocationStatus extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
+            Image.asset(
+              'assets/images/kamloka_typo_white.png',
+              width: 92,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 7),
             const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
