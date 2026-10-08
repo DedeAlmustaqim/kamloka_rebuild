@@ -28,6 +28,7 @@ class CameraController extends GetxController {
   final exposureOffset = 0.0.obs;
   final timerSeconds = 0.obs;
   final aspectRatio = CaptureAspectRatio.full.obs;
+  final showGrid = false.obs;
   final countdown = 0.obs;
   Timer? _countdownTimer;
   double _minExposure = 0.0;
@@ -316,6 +317,11 @@ class CameraController extends GetxController {
     }
     if (isCapturing.value) return;
     timerSeconds.value = seconds;
+  }
+
+  void toggleGrid() {
+    if (isCapturing.value) return;
+    showGrid.toggle();
   }
 
   void cycleAspectRatio() {
