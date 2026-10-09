@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
-import 'modules/camera/bindings/camera_binding.dart';
-import 'modules/camera/views/camera_view.dart';
+import 'modules/splash/views/splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // KAMLOKA UI is intentionally portrait-only.
-  // Physical orientation is still tracked separately for camera capture.  
+  // Physical orientation is tracked separately for camera capture.
   await SystemChrome.setPreferredOrientations(const [
     DeviceOrientation.portraitUp,
   ]);
@@ -38,8 +37,7 @@ class KamlokaApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.black,
         useMaterial3: true,
       ),
-      initialBinding: CameraBinding(),
-      home: const CameraView(),
+      home: const SplashScreen(),
     );
   }
 }
