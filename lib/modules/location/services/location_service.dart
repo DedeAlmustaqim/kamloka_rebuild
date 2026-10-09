@@ -58,10 +58,16 @@ class LocationService extends GetxService {
         throw const _LocationPermissionDeniedForeverException();
       }
 
-      await _refreshCurrentPosition();
+      // GPS acquisition is independent from reverse geocoding. Start the
+      // position stream immediately so slow/offline internet cannot stall it.
+      await _refreshCurrentPosition(resolveAddress: false);
       _startStreams();
-
       _initialized = true;
+
+      final currentPosition = position.value;
+      if (currentPosition != null) {
+        unawaited(_reverseGeocode(currentPosition));
+      }
     } on _LocationServiceDisabledException {
       errorMessage.value = 'Layanan lokasi/GPS sedang dimatikan.';
     } on _LocationPermissionDeniedException {
@@ -129,7 +135,9 @@ class LocationService extends GetxService {
       final fallback = await Geolocator.getLastKnownPosition();
       if (fallback != null) {
         position.value = fallback;
-        await _reverseGeocode(fallback);
+        // Keep last-known GPS data available even if the address lookup
+        // cannot reach the network.
+        unawaited(_reverseGeocode(fallback));
       }
     } catch (error) {
       debugPrint('[KAMLOKA LOCATION] last known: $error');
