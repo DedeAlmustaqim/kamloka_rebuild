@@ -28,17 +28,3 @@ flutter:
   assets:
     - assets/images/kamloka_typo.png
     - assets/images/kamloka_typo_white.png
-
-flutter_native_splash:
-  color: "#FFFFFF"
-  color_dark: "#FFFFFF"
-  image: assets/icon/kamloka_typo.png
-  android: true
-  ios: false
-  web: false
-  fullscreen: false
-  android_gravity: center
-  android_12:
-    color: "#FFFFFF"
-    color_dark: "#FFFFFF"
-    icon_background_color: "#FFFFFF"
