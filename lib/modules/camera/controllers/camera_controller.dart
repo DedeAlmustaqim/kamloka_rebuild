@@ -57,7 +57,17 @@ class CameraController extends GetxController {
     errorMessage.value = '';
 
     try {
-      await Get.find<DeviceOrientationService>().init();
+      // Sensor orientation is helpful for capture processing, but must not
+      // block opening the camera preview.
+      unawaited(
+        Get.find<DeviceOrientationService>()
+            .init()
+            .timeout(const Duration(seconds: 2))
+            .catchError((Object error, StackTrace stack) {
+          debugPrint('[KAMLOKA ORIENTATION] init skipped: $error');
+          return Get.find<DeviceOrientationService>();
+        }),
+      );
 
       final permission = await Permission.camera.request();
 
@@ -95,12 +105,25 @@ class CameraController extends GetxController {
       _cameraController = controller;
 
       await controller.initialize();
-      await controller.setFlashMode(flashMode.value);
-      await _loadZoomRange(controller);
-      await _loadExposureRange(controller);
 
+      // Flash setup is best-effort: a device-specific flash issue should not
+      // keep a usable camera preview behind the loading screen.
+      try {
+        await controller.setFlashMode(flashMode.value);
+      } on camera.CameraException catch (error) {
+        debugPrint('[KAMLOKA FLASH] init: ${error.code}: ${error.description}');
+        flashMode.value = camera.FlashMode.off;
+      }
+
+      // Show the preview as soon as the camera is initialized. Capability
+      // queries and location/network work continue in the background.
       isReady.value = true;
-
+      unawaited(_loadZoomRange(controller).catchError((Object error) {
+        debugPrint('[KAMLOKA ZOOM] range init: $error');
+      }));
+      unawaited(_loadExposureRange(controller).catchError((Object error) {
+        debugPrint('[KAMLOKA EXPOSURE] range init: $error');
+      }));
       unawaited(Get.find<LocationService>().init());
     } on camera.CameraException catch (error, stack) {
       debugPrint(
