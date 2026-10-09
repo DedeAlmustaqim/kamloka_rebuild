@@ -22,9 +22,24 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_native_splash: ^2.4.6
 
 flutter:
   uses-material-design: true
   assets:
     - assets/images/kamloka_typo.png
     - assets/images/kamloka_typo_white.png
+
+flutter_native_splash:
+  color: "#101820"
+  color_dark: "#101820"
+  image: assets/images/kamloka_typo_white.png
+  android: true
+  ios: false
+  web: false
+  fullscreen: false
+  android_gravity: center
+  android_12:
+    color: "#101820"
+    color_dark: "#101820"
+    icon_background_color: "#101820"
