@@ -23,7 +23,7 @@ class WatermarkData {
 }
 
 class WatermarkService {
-  static const _logoAsset = 'assets/images/kamloka_typo.png';
+  static const _logoAsset = 'assets/images/kamloka_typo_white.png';
 
   img.Image? _logo;
   Future<img.Image?>? _logoLoading;
@@ -69,7 +69,7 @@ class WatermarkService {
       throw const FormatException('Foto tidak dapat diproses untuk watermark.');
     }
 
-    final isPortrait = image.height > image.width;
+    final layout = _WatermarkLayout.forImage(image.width, image.height);
     final white = img.ColorRgb8(255, 255, 255);
     final shadow = img.ColorRgba8(0, 0, 0, 210);
 
@@ -81,302 +81,146 @@ class WatermarkService {
         '${local.day.toString().padLeft(2, '0')} ${_monthName(local.month)} ${local.year}';
     final address = data.address.trim().isEmpty
         ? 'Alamat tidak tersedia'
-        : data.address.trim();
-
-    final horizontalPadding =
-        (image.width * (isPortrait ? 0.035 : 0.030)).round().clamp(18, 100).toInt();
-    final contentLeft = horizontalPadding;
-    final contentRight = image.width - horizontalPadding;
-    final contentWidth = contentRight - contentLeft;
-
-    final bottomMargin =
-        (image.height * (isPortrait ? 0.022 : 0.014)).round().clamp(12, 60).toInt();
-    final topPadding =
-        (image.height * (isPortrait ? 0.012 : 0.014)).round().clamp(8, 40).toInt();
-    final sectionGap =
-        (image.height * (isPortrait ? 0.005 : 0.006)).round().clamp(3, 14).toInt();
-
-    final textFont = isPortrait ? img.arial14 : img.arial24;
-    final timeFont = isPortrait ? img.arial24 : img.arial48;
-    final dateFont = isPortrait ? img.arial14 : img.arial24;
+        : data.address;
+    final detailText = _formatDetails(data);
 
     final logo = showBranding ? await _loadLogo() : null;
-    var logoWidth = 0;
-    var logoHeight = 0;
+    final logoSize = logo == null
+        ? null
+        : _scaledSize(
+            logo,
+            maxWidth: layout.logoMaxWidth,
+            maxHeight: layout.logoMaxHeight,
+          );
 
-    if (logo != null) {
-      final maxLogoWidth =
-          (image.width * (isPortrait ? 0.20 : 0.22)).round();
-      final maxLogoHeight =
-          (image.height * (isPortrait ? 0.045 : 0.060)).round();
+    if (layout.useSingleColumn) {
+      final addressLines = _wrapText(
+        address,
+        maxChars: _wrapChars(layout.contentWidth, layout.charWidth),
+      );
+      final detailLines = _wrapText(
+        detailText,
+        maxChars: _wrapChars(layout.contentWidth, layout.charWidth),
+      );
+      final headerHeight = _headerHeight(layout);
+      final addressHeight = addressLines.length * layout.textLineHeight;
+      final detailHeight = detailLines.length * layout.textLineHeight;
+      final contentHeight =
+          layout.topPadding +
+          headerHeight +
+          layout.sectionGap +
+          addressHeight +
+          layout.sectionGap +
+          detailHeight +
+          layout.bottomMargin;
+      final contentTop = image.height - contentHeight + layout.topPadding;
 
-      final scale = [
-        maxLogoWidth / logo.width,
-        maxLogoHeight / logo.height,
-        1.0,
-      ].reduce((a, b) => a < b ? a : b);
-
-      logoWidth = (logo.width * scale).round();
-      logoHeight = (logo.height * scale).round();
-    }
-
-    int wrapChars(int width, {required bool large}) {
-      final charWidth = large ? 13.0 : 8.0;
-      return (width / charWidth).floor().clamp(24, 120).toInt();
-    }
-
-    final addressWidth = isPortrait
-        ? contentWidth
-        : (contentWidth * 0.70).round();
-
-    final addressLines = _wrapText(
-      address,
-      maxChars: wrapChars(addressWidth, large: !isPortrait),
-    );
-
-    // Tight typography: the watermark should occupy as little photo area
-    // as possible while remaining readable.
-    final addressLineHeight = textFont.lineHeight + (isPortrait ? 0 : 2);
-    final detailsLineHeight = textFont.lineHeight + (isPortrait ? 1 : 3);
-    final addressHeight = addressLines.length * addressLineHeight;
-
-    final headerTextHeight =
-        textFont.lineHeight +
-        timeFont.lineHeight +
-        dateFont.lineHeight;
-
-    final headerHeight = [
-      headerTextHeight,
-      logoHeight,
-    ].reduce((a, b) => a > b ? a : b);
-
-    final detailsGap = sectionGap;
-    final detailsHeight = detailsLineHeight * 2;
-
-    // Landscape uses a two-zone composition:
-    // left = date/time, right = address + GPS details.
-    // This keeps the watermark visually balanced and much more compact.
-    final landscapeRightHeight =
-        addressHeight + detailsGap + detailsHeight;
-
-    final contentHeight = isPortrait
-        ? topPadding +
-            headerHeight +
-            sectionGap +
-            addressHeight +
-            detailsGap +
-            detailsHeight +
-            bottomMargin
-        : topPadding +
-            (headerHeight > landscapeRightHeight
-                ? headerHeight
-                : landscapeRightHeight) +
-            bottomMargin;
-
-    final baseY = image.height - contentHeight;
-
-    // No rectangle/panel: watermark floats directly over the photo.
-    // A strong shadow keeps it readable on both light and dark backgrounds.
-    final contentTop = baseY + topPadding;
-
-    final dayY = contentTop;
-    final timeY = dayY + textFont.lineHeight;
-    final dateY = timeY + timeFont.lineHeight;
-
-    _drawStrongText(
-      image,
-      dayName,
-      font: textFont,
-      x: contentLeft,
-      y: dayY,
-      color: white,
-      shadow: shadow,
-      shadowOffset: isPortrait ? 1 : 2,
-    );
-
-    _drawStrongText(
-      image,
-      timeText,
-      font: timeFont,
-      x: contentLeft,
-      y: timeY,
-      color: white,
-      shadow: shadow,
-      shadowOffset: isPortrait ? 1 : 2,
-    );
-
-    _drawStrongText(
-      image,
-      dateText,
-      font: dateFont,
-      x: contentLeft,
-      y: dateY,
-      color: white,
-      shadow: shadow,
-      shadowOffset: isPortrait ? 1 : 2,
-    );
-
-    if (logo != null && logoWidth > 0 && logoHeight > 0) {
-      final resizedLogo = img.copyResize(
-        logo,
-        width: logoWidth,
-        height: logoHeight,
+      _drawBottomScrim(image, contentTop - layout.scrimBleed);
+      _drawHeader(
+        image,
+        dayName: dayName,
+        timeText: timeText,
+        dateText: dateText,
+        x: layout.contentLeft,
+        y: contentTop,
+        layout: layout,
+        color: white,
+        shadow: shadow,
       );
 
-      final logoX = contentRight - logoWidth;
-      final logoY = contentTop + ((headerHeight - logoHeight) / 2).round();
-
-      img.compositeImage(
+      final addressY = contentTop + headerHeight + layout.sectionGap;
+      _drawTextLines(
         image,
-        resizedLogo,
-        dstX: logoX,
-        dstY: logoY,
-        blend: img.BlendMode.alpha,
+        addressLines,
+        font: layout.textFont,
+        x: layout.contentLeft,
+        y: addressY,
+        lineHeight: layout.textLineHeight,
+        color: white,
+        shadow: shadow,
+        shadowOffset: layout.shadowOffset,
       );
-    }
 
-    if (isPortrait) {
-      final addressY = contentTop + headerHeight + sectionGap;
-
-      for (var index = 0; index < addressLines.length; index++) {
-        _drawStrongText(
-          image,
-          addressLines[index],
-          font: textFont,
-          x: contentLeft,
-          y: addressY + (index * addressLineHeight),
-          color: white,
-          shadow: shadow,
-          shadowOffset: 1,
-        );
-      }
-
-      final detailsY = addressY + addressHeight + detailsGap;
-      final detailGap = (contentWidth * 0.04).round();
-      final detailWidth = ((contentWidth - detailGap) / 2).round();
-      final secondColumnX = contentLeft + detailWidth + detailGap;
-
-      _drawStrongText(
+      final detailsY = addressY + addressHeight + layout.sectionGap;
+      _drawTextLines(
         image,
-        _formatLatitude(data.latitude),
-        font: textFont,
-        x: contentLeft,
+        detailLines,
+        font: layout.textFont,
+        x: layout.contentLeft,
         y: detailsY,
+        lineHeight: layout.textLineHeight,
         color: white,
         shadow: shadow,
-        shadowOffset: 1,
-      );
-
-      _drawStrongText(
-        image,
-        _formatLongitude(data.longitude),
-        font: textFont,
-        x: secondColumnX,
-        y: detailsY,
-        color: white,
-        shadow: shadow,
-        shadowOffset: 1,
-      );
-
-      final metricsY = detailsY + detailsLineHeight;
-
-      _drawStrongText(
-        image,
-        _formatAccuracy(data.accuracy),
-        font: textFont,
-        x: contentLeft,
-        y: metricsY,
-        color: white,
-        shadow: shadow,
-        shadowOffset: 1,
-      );
-
-      _drawStrongText(
-        image,
-        _formatAltitude(data.altitude),
-        font: textFont,
-        x: secondColumnX,
-        y: metricsY,
-        color: white,
-        shadow: shadow,
-        shadowOffset: 1,
+        shadowOffset: layout.shadowOffset,
       );
     } else {
-      // Landscape: keep all secondary information in the right zone.
-      // The left zone is reserved for the visual date/time identity.
-      final rightX = contentLeft + (contentWidth * 0.34).round();
-      final rightWidth = contentRight - rightX;
-      final rightAddressLines = _wrapText(
+      final leftWidth = (layout.contentWidth * 0.32).round();
+      final rightX = layout.contentLeft + leftWidth + layout.columnGap;
+      final rightWidth = layout.contentRight - rightX;
+      final addressLines = _wrapText(
         address,
-        maxChars: wrapChars(rightWidth, large: true),
+        maxChars: _wrapChars(rightWidth, layout.charWidth),
       );
-      final rightAddressHeight =
-          rightAddressLines.length * addressLineHeight;
+      final detailLines = _wrapText(
+        detailText,
+        maxChars: _wrapChars(rightWidth, layout.charWidth),
+      );
+      final headerHeight = _headerHeight(layout);
+      final rightHeight =
+          (addressLines.length * layout.textLineHeight) +
+          layout.sectionGap +
+          (detailLines.length * layout.textLineHeight);
+      final bodyHeight = headerHeight > rightHeight
+          ? headerHeight
+          : rightHeight;
+      final contentHeight =
+          layout.topPadding + bodyHeight + layout.bottomMargin;
+      final contentTop = image.height - contentHeight + layout.topPadding;
 
-      for (var index = 0; index < rightAddressLines.length; index++) {
-        _drawStrongText(
-          image,
-          rightAddressLines[index],
-          font: textFont,
-          x: rightX,
-          y: contentTop + (index * addressLineHeight),
-          color: white,
-          shadow: shadow,
-          shadowOffset: 2,
-        );
-      }
+      _drawBottomScrim(image, contentTop - layout.scrimBleed);
+      _drawHeader(
+        image,
+        dayName: dayName,
+        timeText: timeText,
+        dateText: dateText,
+        x: layout.contentLeft,
+        y: contentTop,
+        layout: layout,
+        color: white,
+        shadow: shadow,
+      );
+
+      _drawTextLines(
+        image,
+        addressLines,
+        font: layout.textFont,
+        x: rightX,
+        y: contentTop,
+        lineHeight: layout.textLineHeight,
+        color: white,
+        shadow: shadow,
+        shadowOffset: layout.shadowOffset,
+      );
 
       final detailsY =
-          contentTop + rightAddressHeight + detailsGap;
-      final detailGap = (rightWidth * 0.06).round();
-      final detailWidth = ((rightWidth - detailGap) / 2).round();
-      final secondColumnX = rightX + detailWidth + detailGap;
-
-      _drawStrongText(
+          contentTop +
+          (addressLines.length * layout.textLineHeight) +
+          layout.sectionGap;
+      _drawTextLines(
         image,
-        _formatLatitude(data.latitude),
-        font: textFont,
+        detailLines,
+        font: layout.textFont,
         x: rightX,
         y: detailsY,
+        lineHeight: layout.textLineHeight,
         color: white,
         shadow: shadow,
-        shadowOffset: 2,
+        shadowOffset: layout.shadowOffset,
       );
+    }
 
-      _drawStrongText(
-        image,
-        _formatLongitude(data.longitude),
-        font: textFont,
-        x: secondColumnX,
-        y: detailsY,
-        color: white,
-        shadow: shadow,
-        shadowOffset: 2,
-      );
-
-      final metricsY = detailsY + detailsLineHeight;
-
-      _drawStrongText(
-        image,
-        _formatAccuracy(data.accuracy),
-        font: textFont,
-        x: rightX,
-        y: metricsY,
-        color: white,
-        shadow: shadow,
-        shadowOffset: 2,
-      );
-
-      _drawStrongText(
-        image,
-        _formatAltitude(data.altitude),
-        font: textFont,
-        x: secondColumnX,
-        y: metricsY,
-        color: white,
-        shadow: shadow,
-        shadowOffset: 2,
-      );
+    if (logo != null && logoSize != null) {
+      _drawLogo(image, logo, logoSize, layout);
     }
 
     final outputPath = _outputPath(source.path);
@@ -394,6 +238,155 @@ class WatermarkService {
     return camera.XFile(outputPath);
   }
 
+  void _drawHeader(
+    img.Image image, {
+    required String dayName,
+    required String timeText,
+    required String dateText,
+    required int x,
+    required int y,
+    required _WatermarkLayout layout,
+    required img.Color color,
+    required img.Color shadow,
+  }) {
+    _drawStrongText(
+      image,
+      dayName,
+      font: layout.textFont,
+      x: x,
+      y: y,
+      color: color,
+      shadow: shadow,
+      shadowOffset: layout.shadowOffset,
+    );
+
+    final timeY = y + layout.textLineHeight;
+    _drawStrongText(
+      image,
+      timeText,
+      font: layout.timeFont,
+      x: x,
+      y: timeY,
+      color: color,
+      shadow: shadow,
+      shadowOffset: layout.shadowOffset,
+    );
+
+    _drawStrongText(
+      image,
+      dateText,
+      font: layout.textFont,
+      x: x,
+      y: timeY + layout.timeFont.lineHeight,
+      color: color,
+      shadow: shadow,
+      shadowOffset: layout.shadowOffset,
+    );
+  }
+
+  void _drawTextLines(
+    img.Image image,
+    List<String> lines, {
+    required img.BitmapFont font,
+    required int x,
+    required int y,
+    required int lineHeight,
+    required img.Color color,
+    required img.Color shadow,
+    required int shadowOffset,
+  }) {
+    for (var index = 0; index < lines.length; index++) {
+      _drawStrongText(
+        image,
+        lines[index],
+        font: font,
+        x: x,
+        y: y + (index * lineHeight),
+        color: color,
+        shadow: shadow,
+        shadowOffset: shadowOffset,
+      );
+    }
+  }
+
+  void _drawLogo(
+    img.Image image,
+    img.Image logo,
+    _ImageSize size,
+    _WatermarkLayout layout,
+  ) {
+    final resizedLogo = img.copyResize(
+      logo,
+      width: size.width,
+      height: size.height,
+    );
+
+    img.compositeImage(
+      image,
+      resizedLogo,
+      dstX: layout.contentRight - size.width,
+      dstY: layout.logoTop,
+      blend: img.BlendMode.alpha,
+    );
+  }
+
+  void _drawBottomScrim(img.Image image, int fromY) {
+    final startY = fromY.clamp(0, image.height - 1).toInt();
+    final scrimHeight = image.height - startY;
+    if (scrimHeight <= 0) return;
+
+    const bands = 48;
+    final bandHeight = (scrimHeight / bands)
+        .ceil()
+        .clamp(1, image.height)
+        .toInt();
+
+    for (var index = 0; index < bands; index++) {
+      final y1 = startY + (index * bandHeight);
+      if (y1 >= image.height) break;
+
+      final y2 = (y1 + bandHeight - 1).clamp(y1, image.height - 1).toInt();
+      final progress = index / (bands - 1);
+      final alpha = (26 + (progress * 134)).round().clamp(26, 160).toInt();
+
+      img.fillRect(
+        image,
+        x1: 0,
+        y1: y1,
+        x2: image.width - 1,
+        y2: y2,
+        color: img.ColorRgba8(0, 0, 0, alpha),
+      );
+    }
+  }
+
+  int _headerHeight(_WatermarkLayout layout) {
+    return layout.textLineHeight +
+        layout.timeFont.lineHeight +
+        layout.textFont.lineHeight;
+  }
+
+  int _wrapChars(int width, double charWidth) {
+    return (width / charWidth).floor().clamp(18, 160).toInt();
+  }
+
+  _ImageSize? _scaledSize(
+    img.Image source, {
+    required int maxWidth,
+    required int maxHeight,
+  }) {
+    if (source.width <= 0 || source.height <= 0) return null;
+
+    final widthScale = maxWidth / source.width;
+    final heightScale = maxHeight / source.height;
+    final scale = widthScale < heightScale ? widthScale : heightScale;
+    if (scale <= 0) return null;
+
+    return _ImageSize(
+      (source.width * scale).round().clamp(1, maxWidth).toInt(),
+      (source.height * scale).round().clamp(1, maxHeight).toInt(),
+    );
+  }
 
   void _drawStrongText(
     img.Image image,
@@ -415,22 +408,8 @@ class WatermarkService {
       y: y + shadowOffset,
       color: shadow,
     );
-    img.drawString(
-      image,
-      text,
-      font: font,
-      x: x + 1,
-      y: y,
-      color: color,
-    );
-    img.drawString(
-      image,
-      text,
-      font: font,
-      x: x,
-      y: y,
-      color: color,
-    );
+    img.drawString(image, text, font: font, x: x + 1, y: y, color: color);
+    img.drawString(image, text, font: font, x: x, y: y, color: color);
   }
 
   String _dayName(int weekday) {
@@ -466,12 +445,12 @@ class WatermarkService {
 
   String _formatLatitude(double? value) {
     if (value == null) return 'Lat --';
-    return 'Lat ${value.toStringAsFixed(6)}°';
+    return 'Lat ${value.toStringAsFixed(6)} deg';
   }
 
   String _formatLongitude(double? value) {
     if (value == null) return 'Long --';
-    return 'Long ${value.toStringAsFixed(6)}°';
+    return 'Long ${value.toStringAsFixed(6)} deg';
   }
 
   String _formatAccuracy(double? value) {
@@ -484,10 +463,16 @@ class WatermarkService {
     return 'Alt ${value.toStringAsFixed(1)} m';
   }
 
-  List<String> _wrapText(
-    String value, {
-    required int maxChars,
-  }) {
+  String _formatDetails(WatermarkData data) {
+    return [
+      _formatLatitude(data.latitude),
+      _formatLongitude(data.longitude),
+      _formatAccuracy(data.accuracy),
+      _formatAltitude(data.altitude),
+    ].join(' | ');
+  }
+
+  List<String> _wrapText(String value, {required int maxChars}) {
     final words = value.split(RegExp(r'\s+'));
     final lines = <String>[];
     var current = '';
@@ -504,7 +489,7 @@ class WatermarkService {
         lines.add(current);
       }
 
-      // Kata panjang tidak dipotong; alamat harus tetap utuh.
+      // Alamat harus tetap lengkap. Baris boleh bertambah, teks tidak dipotong.
       current = word;
     }
 
@@ -527,4 +512,82 @@ class WatermarkService {
     final directory = inputPath.substring(0, inputPath.length - name.length);
     return '$directory${baseName}_watermarked.jpg';
   }
+}
+
+class _WatermarkLayout {
+  const _WatermarkLayout({
+    required this.contentLeft,
+    required this.contentRight,
+    required this.contentWidth,
+    required this.topPadding,
+    required this.bottomMargin,
+    required this.sectionGap,
+    required this.columnGap,
+    required this.scrimBleed,
+    required this.logoTop,
+    required this.logoMaxWidth,
+    required this.logoMaxHeight,
+    required this.textFont,
+    required this.timeFont,
+    required this.textLineHeight,
+    required this.charWidth,
+    required this.shadowOffset,
+    required this.useSingleColumn,
+  });
+
+  factory _WatermarkLayout.forImage(int width, int height) {
+    final shortSide = width < height ? width : height;
+    final ratio = width / height;
+    final isWide = ratio >= 1.35;
+    final padding = (shortSide * 0.035).round().clamp(18, 120).toInt();
+    final contentWidth = width - (padding * 2);
+    final textFont = shortSide >= 1200 ? img.arial24 : img.arial14;
+    final timeFont = shortSide >= 1200 ? img.arial48 : img.arial24;
+    final textLineHeight = textFont.lineHeight + (shortSide >= 1200 ? 4 : 2);
+
+    return _WatermarkLayout(
+      contentLeft: padding,
+      contentRight: width - padding,
+      contentWidth: contentWidth,
+      topPadding: (shortSide * 0.022).round().clamp(10, 48).toInt(),
+      bottomMargin: (shortSide * 0.028).round().clamp(14, 60).toInt(),
+      sectionGap: (shortSide * 0.012).round().clamp(6, 22).toInt(),
+      columnGap: (contentWidth * 0.045).round().clamp(18, 80).toInt(),
+      scrimBleed: (shortSide * 0.055).round().clamp(24, 110).toInt(),
+      logoTop: (shortSide * 0.035).round().clamp(18, 100).toInt(),
+      logoMaxWidth: (width * (isWide ? 0.22 : 0.30)).round(),
+      logoMaxHeight: (shortSide * (isWide ? 0.11 : 0.085)).round(),
+      textFont: textFont,
+      timeFont: timeFont,
+      textLineHeight: textLineHeight,
+      charWidth: shortSide >= 1200 ? 13.0 : 8.0,
+      shadowOffset: shortSide >= 1200 ? 2 : 1,
+      useSingleColumn: !isWide,
+    );
+  }
+
+  final int contentLeft;
+  final int contentRight;
+  final int contentWidth;
+  final int topPadding;
+  final int bottomMargin;
+  final int sectionGap;
+  final int columnGap;
+  final int scrimBleed;
+  final int logoTop;
+  final int logoMaxWidth;
+  final int logoMaxHeight;
+  final img.BitmapFont textFont;
+  final img.BitmapFont timeFont;
+  final int textLineHeight;
+  final double charWidth;
+  final int shadowOffset;
+  final bool useSingleColumn;
+}
+
+class _ImageSize {
+  const _ImageSize(this.width, this.height);
+
+  final int width;
+  final int height;
 }

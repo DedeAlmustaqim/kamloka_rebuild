@@ -68,10 +68,7 @@ class _CameraPreview extends StatelessWidget {
             // separately by DeviceOrientationService/capture processing.
             final previewAspectRatio = 1 / sensorAspectRatio;
 
-            final scale = _coverScale(
-              previewAspectRatio,
-              screenAspectRatio,
-            );
+            final scale = _coverScale(previewAspectRatio, screenAspectRatio);
 
             double baseZoom = 1.0;
 
@@ -87,8 +84,7 @@ class _CameraPreview extends StatelessWidget {
                   (local.dy / box.size.height).clamp(0.0, 1.0),
                 );
 
-                Get.find<CameraController>()
-                    .setFocusAndExposure(normalized);
+                Get.find<CameraController>().setFocusAndExposure(normalized);
               },
               onScaleStart: (_) {
                 final zoom = Get.find<CameraController>().zoomLevel.value;
@@ -107,9 +103,7 @@ class _CameraPreview extends StatelessWidget {
               child: ClipRect(
                 child: Transform.scale(
                   scale: scale,
-                  child: Center(
-                    child: camera.CameraPreview(controller),
-                  ),
+                  child: Center(child: camera.CameraPreview(controller)),
                 ),
               ),
             );
@@ -169,12 +163,7 @@ class _CameraPreview extends StatelessWidget {
                       color: Colors.white,
                       fontSize: 96,
                       fontWeight: FontWeight.w800,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black87,
-                          blurRadius: 12,
-                        ),
-                      ],
+                      shadows: [Shadow(color: Colors.black87, blurRadius: 12)],
                     ),
                   ),
                 ),
@@ -187,24 +176,18 @@ class _CameraPreview extends StatelessWidget {
             return const SizedBox.shrink();
           }
           return const Positioned.fill(
-            child: IgnorePointer(
-              child: _GridOverlay(),
-            ),
+            child: IgnorePointer(child: _GridOverlay()),
           );
         }),
         Obx(() {
-          final ratio = switch (Get.find<CameraController>().aspectRatio.value) {
-            CaptureAspectRatio.full => null,
-            CaptureAspectRatio.ratio16x9 => 9 / 16,
-            CaptureAspectRatio.ratio4x3 => 3 / 4,
-            CaptureAspectRatio.square => 1.0,
-          };
+          final ratio = _visibleAspectRatio(
+            Get.find<CameraController>().aspectRatio.value,
+            MediaQuery.sizeOf(context),
+          );
           if (ratio == null) return const SizedBox.shrink();
           return Positioned.fill(
             child: IgnorePointer(
-              child: CustomPaint(
-                painter: _AspectRatioMaskPainter(ratio),
-              ),
+              child: CustomPaint(painter: _AspectRatioMaskPainter(ratio)),
             ),
           );
         }),
@@ -247,18 +230,14 @@ class _CameraPreview extends StatelessWidget {
           child: Align(
             alignment: Alignment.bottomRight,
             child: Padding(
-              padding: const EdgeInsets.only(
-                right: 16,
-                bottom: 205,
-                left: 80,
-              ),
+              padding: const EdgeInsets.only(right: 16, bottom: 205, left: 80),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Image.asset(
                     'assets/images/kamloka_typo_white.png',
-                    width: 120,
+                    width: 150,
                     fit: BoxFit.contain,
                   ),
                   const SizedBox(height: 7),
@@ -283,8 +262,20 @@ class _CameraPreview extends StatelessWidget {
         ? cameraRatio / screenRatio
         : screenRatio / cameraRatio;
   }
-}
 
+  double? _visibleAspectRatio(CaptureAspectRatio aspectRatio, Size size) {
+    final landscapeRatio = switch (aspectRatio) {
+      CaptureAspectRatio.full => null,
+      CaptureAspectRatio.ratio16x9 => 16 / 9,
+      CaptureAspectRatio.ratio4x3 => 4 / 3,
+      CaptureAspectRatio.square => 1.0,
+    };
+
+    if (landscapeRatio == null) return null;
+
+    return size.width >= size.height ? landscapeRatio : 1 / landscapeRatio;
+  }
+}
 
 class _TopScrim extends StatelessWidget {
   const _TopScrim();
@@ -300,10 +291,7 @@ class _TopScrim extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Colors.black54,
-                Colors.transparent,
-              ],
+              colors: [Colors.black54, Colors.transparent],
             ),
           ),
         ),
@@ -326,10 +314,7 @@ class _BottomScrim extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.bottomCenter,
               end: Alignment.topCenter,
-              colors: [
-                Colors.black54,
-                Colors.transparent,
-              ],
+              colors: [Colors.black54, Colors.transparent],
             ),
           ),
         ),
@@ -337,7 +322,6 @@ class _BottomScrim extends StatelessWidget {
     );
   }
 }
-
 
 class _CameraShutter extends GetView<CameraController> {
   const _CameraShutter();
@@ -374,10 +358,9 @@ class _CameraShutter extends GetView<CameraController> {
                     ),
                   ),
                 Row(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     const _CaptureThumbnail(),
-                    const SizedBox(width: 30),
+                    const Spacer(),
                     GestureDetector(
                       onTap: isBusy ? null : controller.capturePhoto,
                       child: AnimatedOpacity(
@@ -409,6 +392,8 @@ class _CameraShutter extends GetView<CameraController> {
                         ),
                       ),
                     ),
+                    const Spacer(),
+                    const SizedBox(width: 54, height: 54),
                   ],
                 ),
               ],
@@ -420,17 +405,12 @@ class _CameraShutter extends GetView<CameraController> {
   }
 }
 
-
-
 class _GridOverlay extends StatelessWidget {
   const _GridOverlay();
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _GridPainter(),
-      size: Size.infinite,
-    );
+    return CustomPaint(painter: _GridPainter(), size: Size.infinite);
   }
 }
 
@@ -471,8 +451,6 @@ class _GridPainter extends CustomPainter {
   bool shouldRepaint(covariant _GridPainter oldDelegate) => false;
 }
 
-
-
 class _AspectRatioMaskPainter extends CustomPainter {
   const _AspectRatioMaskPainter(this.targetRatio);
   final double targetRatio;
@@ -490,7 +468,10 @@ class _AspectRatioMaskPainter extends CustomPainter {
     final overlay = Paint()..color = Colors.black.withValues(alpha: 0.52);
     final outside = Path()..addRect(Offset.zero & size);
     final hole = Path()..addRect(cropRect);
-    canvas.drawPath(Path.combine(PathOperation.difference, outside, hole), overlay);
+    canvas.drawPath(
+      Path.combine(PathOperation.difference, outside, hole),
+      overlay,
+    );
 
     final border = Paint()
       ..color = Colors.white.withValues(alpha: 0.8)
@@ -523,7 +504,7 @@ class _ExposureControl extends GetView<CameraController> {
 
       return Positioned(
         top: 210,
-        right: 10,
+        right: 20,
         child: SafeArea(
           child: IgnorePointer(
             ignoring: disabled,
@@ -545,8 +526,8 @@ class _ExposureControl extends GetView<CameraController> {
                       GestureDetector(
                         onTap: controller.toggleExposureControl,
                         child: SizedBox(
-                          width: 30,
-                          height: 30,
+                          width: 44,
+                          height: 44,
                           child: Center(
                             child: Icon(
                               Icons.wb_sunny_outlined,
@@ -568,8 +549,7 @@ class _ExposureControl extends GetView<CameraController> {
                                 thumbShape: const RoundSliderThumbShape(
                                   enabledThumbRadius: 6,
                                 ),
-                                overlayShape:
-                                    const RoundSliderOverlayShape(
+                                overlayShape: const RoundSliderOverlayShape(
                                   overlayRadius: 10,
                                 ),
                                 activeTrackColor: Colors.white,
@@ -594,17 +574,14 @@ class _ExposureControl extends GetView<CameraController> {
                           value.abs() < 0.05
                               ? '0'
                               : value > 0
-                                  ? value.toStringAsFixed(1)
-                                  : value.toStringAsFixed(1),
+                              ? value.toStringAsFixed(1)
+                              : value.toStringAsFixed(1),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 9,
                             fontWeight: FontWeight.w700,
                             shadows: [
-                              Shadow(
-                                color: Colors.black87,
-                                blurRadius: 3,
-                              ),
+                              Shadow(color: Colors.black87, blurRadius: 3),
                             ],
                           ),
                         ),
@@ -663,8 +640,7 @@ class _CaptureThumbnail extends GetView<CameraController> {
               : Image.file(
                   File(path),
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Icon(
+                  errorBuilder: (context, error, stackTrace) => const Icon(
                     Icons.broken_image_outlined,
                     color: Colors.white70,
                     size: 24,
@@ -682,11 +658,7 @@ class _LocationStatus extends StatelessWidget {
   final LocationService service;
 
   static const _shadow = [
-    Shadow(
-      color: Colors.black87,
-      blurRadius: 4,
-      offset: Offset(0, 1),
-    ),
+    Shadow(color: Colors.black87, blurRadius: 4, offset: Offset(0, 1)),
   ];
 
   @override
@@ -702,12 +674,6 @@ class _LocationStatus extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Image.asset(
-              'assets/images/kamloka_typo_white.png',
-              width: 92,
-              fit: BoxFit.contain,
-            ),
-            const SizedBox(height: 7),
             const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -747,6 +713,8 @@ class _LocationStatus extends StatelessWidget {
                 child: Text(
                   service.address.value,
                   textAlign: TextAlign.right,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 13,
@@ -769,7 +737,7 @@ class _LocationStatus extends StatelessWidget {
             ],
             const SizedBox(height: 3),
             Text(
-              'Akurasi ${service.accuracyText} • Alt ${service.altitudeText}',
+              'Akurasi ${service.accuracyText} | Alt ${service.altitudeText}',
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 12,
@@ -833,10 +801,7 @@ class _LoadingView extends StatelessWidget {
 }
 
 class _ErrorView extends StatelessWidget {
-  const _ErrorView({
-    required this.message,
-    required this.onRetry,
-  });
+  const _ErrorView({required this.message, required this.onRetry});
 
   final String message;
   final VoidCallback onRetry;
@@ -854,17 +819,11 @@ class _ErrorView extends StatelessWidget {
             const Text(
               'Kamera tidak dapat digunakan',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
             if (message.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-              ),
+              Text(message, textAlign: TextAlign.center),
             ],
             const SizedBox(height: 20),
             FilledButton.icon(

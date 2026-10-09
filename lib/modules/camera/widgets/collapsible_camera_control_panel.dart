@@ -5,10 +5,7 @@ import 'package:get/get.dart';
 import '../controllers/camera_controller.dart';
 
 class CollapsibleCameraControlPanel extends StatelessWidget {
-  const CollapsibleCameraControlPanel({
-    super.key,
-    required this.controller,
-  });
+  const CollapsibleCameraControlPanel({super.key, required this.controller});
 
   final CameraController controller;
 
@@ -38,36 +35,40 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
   }
 
   Widget _ratioCell() {
-    return Obx(() => _toolbarControl(
-          icon: Icons.aspect_ratio_outlined,
-          label: 'Ratio',
-          state: c.aspectRatioLabel,
-          onTap: c.cycleAspectRatio,
-        ));
+    return Obx(
+      () => _toolbarControl(
+        icon: Icons.aspect_ratio_outlined,
+        label: 'Ratio',
+        state: c.aspectRatioLabel,
+        onTap: c.cycleAspectRatio,
+      ),
+    );
   }
 
   Widget _timerCell() {
-    return Obx(() => _toolbarControl(
-          icon: c.timerSeconds.value == 0
-              ? Icons.timer_off_outlined
-              : Icons.timer_outlined,
-          label: 'Timer',
-          state: c.timerSeconds.value == 0
-              ? 'OFF'
-              : c.timerSeconds.value.toString() + 's',
-          onTap: c.cycleTimer,
-        ));
+    return Obx(
+      () => _toolbarControl(
+        icon: c.timerSeconds.value == 0
+            ? Icons.timer_off_outlined
+            : Icons.timer_outlined,
+        label: 'Timer',
+        state: c.timerSeconds.value == 0 ? 'OFF' : '${c.timerSeconds.value}s',
+        onTap: c.cycleTimer,
+      ),
+    );
   }
 
   Widget _cameraCell() {
-    return Obx(() => _toolbarControl(
-          icon: Icons.cameraswitch_outlined,
-          label: 'Camera',
-          state: c.lensDirection.value == camera.CameraLensDirection.back
-              ? 'Back'
-              : 'Front',
-          onTap: c.switchCamera,
-        ));
+    return Obx(
+      () => _toolbarControl(
+        icon: Icons.cameraswitch_outlined,
+        label: 'Camera',
+        state: c.lensDirection.value == camera.CameraLensDirection.back
+            ? 'Back'
+            : 'Front',
+        onTap: c.switchCamera,
+      ),
+    );
   }
 
   Widget _flashCell() {
@@ -96,26 +97,30 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
   }
 
   Widget _gridCell() {
-    return Obx(() => _toolbarControl(
-          icon: c.showGrid.value ? Icons.grid_on : Icons.grid_off,
-          label: 'Grid',
-          state: c.showGrid.value ? 'ON' : 'OFF',
-          onTap: c.toggleGrid,
-        ));
+    return Obx(
+      () => _toolbarControl(
+        icon: c.showGrid.value ? Icons.grid_on : Icons.grid_off,
+        label: 'Grid',
+        state: c.showGrid.value ? 'ON' : 'OFF',
+        onTap: c.toggleGrid,
+      ),
+    );
   }
 
   Widget _exposureCell() {
-    return Obx(() => _toolbarControl(
-          icon: c.isExposureExpanded.value
-              ? Icons.exposure_plus_1_outlined
-              : Icons.exposure_outlined,
-          label: 'Exposure',
-          state: c.isExposureExpanded.value
-              ? c.exposureOffset.value.toStringAsFixed(1)
-              : 'AUTO',
-          active: c.isExposureExpanded.value,
-          onTap: c.toggleExposureControl,
-        ));
+    return Obx(
+      () => _toolbarControl(
+        icon: c.isExposureExpanded.value
+            ? Icons.exposure_plus_1_outlined
+            : Icons.exposure_outlined,
+        label: 'Exposure',
+        state: c.isExposureExpanded.value
+            ? c.exposureOffset.value.toStringAsFixed(1)
+            : 'AUTO',
+        active: c.isExposureExpanded.value,
+        onTap: c.toggleExposureControl,
+      ),
+    );
   }
 
   Widget _toolbarControl({
@@ -151,11 +156,7 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
                         : Colors.white.withValues(alpha: 0.30),
                   ),
                 ),
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 20,
-                ),
+                child: Icon(icon, color: Colors.white, size: 20),
               ),
               const SizedBox(height: 2),
               Text(
@@ -166,12 +167,7 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
                   color: Colors.white70,
                   fontSize: 9,
                   fontWeight: FontWeight.w500,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black87,
-                      blurRadius: 3,
-                    ),
-                  ],
+                  shadows: [Shadow(color: Colors.black87, blurRadius: 3)],
                 ),
               ),
               Text(
@@ -182,31 +178,13 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
                   color: Colors.white,
                   fontSize: 9,
                   fontWeight: FontWeight.w700,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black87,
-                      blurRadius: 3,
-                    ),
-                  ],
+                  shadows: [Shadow(color: Colors.black87, blurRadius: 3)],
                 ),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class _Brand extends StatelessWidget {
-  const _Brand();
-
-  @override
-  Widget build(BuildContext context) {
-    return Image.asset(
-      'assets/images/kamloka_typo_white.png',
-      height: 28,
-      fit: BoxFit.contain,
     );
   }
 }

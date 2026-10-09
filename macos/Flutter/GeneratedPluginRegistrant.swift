@@ -5,12 +5,12 @@
 import FlutterMacOS
 import Foundation
 
-import geocoding_darwin
+import gal
 import geolocator_apple
 import package_info_plus
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
-  GeocodingDarwinPlugin.register(with: registry.registrar(forPlugin: "GeocodingDarwinPlugin"))
+  GalPlugin.register(with: registry.registrar(forPlugin: "GalPlugin"))
   GeolocatorPlugin.register(with: registry.registrar(forPlugin: "GeolocatorPlugin"))
   FPPPackageInfoPlusPlugin.register(with: registry.registrar(forPlugin: "FPPPackageInfoPlusPlugin"))
 }
