@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../pro/services/pro_access_service.dart';
+
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
@@ -252,14 +254,78 @@ class KamlokaProScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 14),
+              Obx(() {
+                final pro = Get.find<ProAccessService>();
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF263640),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.white12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        pro.isPro.value
+                            ? Icons.verified_rounded
+                            : Icons.lock_outline_rounded,
+                        color: pro.isPro.value
+                            ? const Color(0xFF8BE0B0)
+                            : const Color(0xFFFFD479),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              pro.isPro.value
+                                  ? 'KAMLOKA Pro aktif'
+                                  : 'Versi Gratis aktif',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              pro.isPro.value
+                                  ? 'Akses premium tersedia.'
+                                  : 'Pembelian dan aktivasi Pro belum tersedia.',
+                              style: const TextStyle(
+                                color: SettingsScreen._muted,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+              const SizedBox(height: 20),
               const Text(
-                'Fitur premium sedang direncanakan. Detail fitur, harga, dan skema pembayaran akan ditentukan sebelum diluncurkan.',
+                'Fitur berikut disiapkan untuk tahap pengembangan selanjutnya. Belum ada fitur premium yang dijual atau dikunci pada versi ini.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: SettingsScreen._muted,
                   fontSize: 14,
                   height: 1.6,
                 ),
+              ),
+              const SizedBox(height: 18),
+              _ProFeatureRow(
+                title: 'Template watermark premium',
+                feature: KamlokaFeature.premiumWatermarkTemplates,
+              ),
+              const SizedBox(height: 10),
+              _ProFeatureRow(
+                title: 'Kustomisasi watermark lanjutan',
+                feature: KamlokaFeature.advancedWatermarkCustomization,
               ),
               const Spacer(),
               FilledButton(
@@ -276,5 +342,56 @@ class KamlokaProScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+
+class _ProFeatureRow extends StatelessWidget {
+  const _ProFeatureRow({
+    required this.title,
+    required this.feature,
+  });
+
+  final String title;
+  final KamlokaFeature feature;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final available = Get.find<ProAccessService>().hasAccess(feature);
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        decoration: BoxDecoration(
+          color: SettingsScreen._surface,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              available ? Icons.check_circle_outline : Icons.lock_outline,
+              color: available ? const Color(0xFF8BE0B0) : Colors.white54,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Text(
+              available ? 'Aktif' : 'Segera hadir',
+              style: TextStyle(
+                color: available ? const Color(0xFF8BE0B0) : SettingsScreen._muted,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 }
