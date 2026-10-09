@@ -72,7 +72,7 @@ class SettingsScreen extends StatelessWidget {
             child: const Column(
               children: [
                 _InfoTile(
-                  icon: Icons.watermark_outlined,
+                  icon: Icons.layers_outlined,
                   title: 'Watermark foto',
                   subtitle: 'Otomatis ditambahkan saat foto diproses',
                 ),
