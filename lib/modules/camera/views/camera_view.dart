@@ -10,6 +10,7 @@ import '../services/capture_service.dart';
 import 'photo_preview_view.dart';
 import '../widgets/collapsible_camera_control_panel.dart';
 import '../../location/services/location_service.dart';
+import '../../settings/views/settings_screen.dart';
 
 class CameraView extends GetView<CameraController> {
   const CameraView({super.key});
@@ -393,7 +394,29 @@ class _CameraShutter extends GetView<CameraController> {
                       ),
                     ),
                     const Spacer(),
-                    const SizedBox(width: 54, height: 54),
+                    SizedBox(
+                      width: 54,
+                      height: 54,
+                      child: IconButton(
+                        tooltip: 'Pengaturan',
+                        onPressed: isBusy
+                            ? null
+                            : () => Get.to(
+                                  () => const SettingsScreen(),
+                                  transition: Transition.cupertino,
+                                ),
+                        icon: const Icon(
+                          Icons.settings_rounded,
+                          color: Colors.white,
+                          size: 27,
+                        ),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.black38,
+                          foregroundColor: Colors.white,
+                          shape: const CircleBorder(),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ],
