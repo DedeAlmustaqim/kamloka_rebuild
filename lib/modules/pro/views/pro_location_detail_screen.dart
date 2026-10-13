@@ -154,6 +154,11 @@ class _ProLocationDetailScreenState extends State<ProLocationDetailScreen> {
     if (confirmed != true) return;
     await _database.deletePhoto(photo.id);
     await _photoStorage.deleteManagedPhoto(photo.filePath);
+    final remaining = await _database.listPhotos(widget.location.id);
+    await _database.reorderPhotos(
+      widget.location.id,
+      remaining.map((item) => item.id).toList(),
+    );
     if (mounted) setState(_reload);
   }
 
