@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../camera/controllers/camera_controller.dart';
 import '../../location/services/location_service.dart';
 import '../models/documented_photo.dart';
 import '../models/trip.dart';
