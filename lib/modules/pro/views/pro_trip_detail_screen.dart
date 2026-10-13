@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import 'package:get/get.dart';
@@ -241,12 +239,54 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
               Text('Lokasi kunjungan', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
               if (locations.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Text(
-                    'Belum ada lokasi. Tambahkan lokasi pertama untuk mulai mendokumentasikan kegiatan.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: ProTheme.secondaryText),
+                Container(
+                  padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
+                  decoration: BoxDecoration(
+                    color: ProTheme.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: ProTheme.border),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 62,
+                        height: 62,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFFF2C8),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.add_location_alt_outlined,
+                          size: 29,
+                          color: ProTheme.primaryDark,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      const Text(
+                        'Belum ada lokasi',
+                        style: TextStyle(
+                          color: ProTheme.text,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Tambahkan lokasi pertama agar foto dan catatan kegiatan tersusun rapi.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: ProTheme.secondaryText,
+                          fontSize: 13,
+                          height: 1.45,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: _isAddingLocation ? null : _addLocation,
+                        icon: const Icon(Icons.add_location_alt_outlined),
+                        label: const Text('Tambah lokasi pertama'),
+                      ),
+                    ],
                   ),
                 )
               else
