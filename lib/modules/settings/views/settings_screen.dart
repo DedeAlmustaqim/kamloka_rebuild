@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../pro/services/pro_access_service.dart';
+import '../../pro/views/pro_trips_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -327,7 +328,21 @@ class KamlokaProScreen extends StatelessWidget {
                 title: 'Kustomisasi watermark lanjutan',
                 feature: KamlokaFeature.advancedWatermarkCustomization,
               ),
-              const Spacer(),
+              const SizedBox(height: 18),
+              OutlinedButton.icon(
+                onPressed: () => Get.to(
+                  () => const ProTripsScreen(),
+                  transition: Transition.cupertino,
+                ),
+                icon: const Icon(Icons.assignment_outlined),
+                label: const Text('Kelola Perjalanan Dinas'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  side: const BorderSide(color: Colors.white24),
+                ),
+              ),
+              const SizedBox(height: 10),
               FilledButton(
                 onPressed: Get.back,
                 style: FilledButton.styleFrom(
