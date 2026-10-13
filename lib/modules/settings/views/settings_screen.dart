@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../pro/services/pro_access_service.dart';
 import '../../pro/views/pro_trips_screen.dart';
+import '../../pro/theme/pro_theme.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -228,54 +229,84 @@ class KamlokaProScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: SettingsScreen._background,
-      appBar: AppBar(
-        backgroundColor: SettingsScreen._background,
-        foregroundColor: Colors.white,
-        title: const Text('KAMLOKA Pro'),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    return ProTheme.apply(
+      Scaffold(
+        appBar: AppBar(title: const Text('KAMLOKA Pro')),
+        body: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
             children: [
-              const Spacer(),
-              const Icon(Icons.workspace_premium_rounded,
-                  size: 76, color: Color(0xFFFFD479)),
-              const SizedBox(height: 24),
-              const Text(
-                'Lebih banyak kemungkinan dengan KAMLOKA Pro',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 23,
-                  fontWeight: FontWeight.w800,
+              Container(
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFE69A),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 54,
+                      height: 54,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.72),
+                        borderRadius: BorderRadius.circular(17),
+                      ),
+                      child: const Icon(
+                        Icons.photo_camera_back_outlined,
+                        size: 29,
+                        color: ProTheme.text,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Dokumentasi lapangan, lebih teratur.',
+                      style: TextStyle(
+                        color: ProTheme.text,
+                        fontSize: 25,
+                        height: 1.15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 9),
+                    const Text(
+                      'Kelompokkan perjalanan, lokasi, dan foto menjadi laporan yang siap dibagikan.',
+                      style: TextStyle(
+                        color: ProTheme.text,
+                        fontSize: 14,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 18),
               Obx(() {
                 final pro = Get.find<ProAccessService>();
                 return Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF263640),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white12),
+                    color: ProTheme.surface,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: ProTheme.border),
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        pro.isPro.value
-                            ? Icons.verified_rounded
-                            : Icons.lock_outline_rounded,
-                        color: pro.isPro.value
-                            ? const Color(0xFF8BE0B0)
-                            : const Color(0xFFFFD479),
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: pro.isPro.value
+                              ? const Color(0xFFE3F4E8)
+                              : const Color(0xFFF0F1EC),
+                          borderRadius: BorderRadius.circular(13),
+                        ),
+                        child: Icon(
+                          pro.isPro.value
+                              ? Icons.verified_rounded
+                              : Icons.info_outline_rounded,
+                          color: pro.isPro.value ? ProTheme.green : ProTheme.secondaryText,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -283,22 +314,21 @@ class KamlokaProScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              pro.isPro.value
-                                  ? 'KAMLOKA Pro aktif'
-                                  : 'Versi Gratis aktif',
+                              pro.isPro.value ? 'KAMLOKA Pro aktif' : 'Status akses',
                               style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
+                                color: ProTheme.text,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
-                            const SizedBox(height: 3),
+                            const SizedBox(height: 4),
                             Text(
                               pro.isPro.value
-                                  ? 'Akses premium tersedia.'
-                                  : 'Pembelian dan aktivasi Pro belum tersedia.',
+                                  ? 'Akses premium tersedia di perangkat ini.'
+                                  : 'Fitur perjalanan dapat dicoba pada versi ini. Pembelian belum tersedia.',
                               style: const TextStyle(
-                                color: SettingsScreen._muted,
+                                color: ProTheme.secondaryText,
                                 fontSize: 12,
+                                height: 1.4,
                               ),
                             ),
                           ],
@@ -308,17 +338,21 @@ class KamlokaProScreen extends StatelessWidget {
                   ),
                 );
               }),
-              const SizedBox(height: 20),
+              const SizedBox(height: 26),
               const Text(
-                'Fitur berikut disiapkan untuk tahap pengembangan selanjutnya. Belum ada fitur premium yang dijual atau dikunci pada versi ini.',
-                textAlign: TextAlign.center,
+                'Yang sedang disiapkan',
                 style: TextStyle(
-                  color: SettingsScreen._muted,
-                  fontSize: 14,
-                  height: 1.6,
+                  color: ProTheme.text,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 6),
+              const Text(
+                'Fitur premium berikut belum dijual atau dikunci pada versi ini.',
+                style: TextStyle(color: ProTheme.secondaryText, fontSize: 13, height: 1.45),
+              ),
+              const SizedBox(height: 14),
               _ProFeatureRow(
                 title: 'Template watermark premium',
                 feature: KamlokaFeature.premiumWatermarkTemplates,
@@ -328,29 +362,19 @@ class KamlokaProScreen extends StatelessWidget {
                 title: 'Kustomisasi watermark lanjutan',
                 feature: KamlokaFeature.advancedWatermarkCustomization,
               ),
-              const SizedBox(height: 18),
-              OutlinedButton.icon(
+              const SizedBox(height: 26),
+              FilledButton.icon(
                 onPressed: () => Get.to(
                   () => const ProTripsScreen(),
                   transition: Transition.cupertino,
                 ),
-                icon: const Icon(Icons.assignment_outlined),
-                label: const Text('Kelola Perjalanan Dinas'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  side: const BorderSide(color: Colors.white24),
-                ),
+                icon: const Icon(Icons.route_outlined),
+                label: const Text('Buka dokumentasi perjalanan'),
               ),
-              const SizedBox(height: 10),
-              FilledButton(
+              const SizedBox(height: 8),
+              TextButton(
                 onPressed: Get.back,
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: SettingsScreen._background,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                ),
-                child: const Text('Mengerti'),
+                child: const Text('Kembali ke pengaturan'),
               ),
             ],
           ),
@@ -359,7 +383,6 @@ class KamlokaProScreen extends StatelessWidget {
     );
   }
 }
-
 
 class _ProFeatureRow extends StatelessWidget {
   const _ProFeatureRow({
@@ -375,33 +398,35 @@ class _ProFeatureRow extends StatelessWidget {
     return Obx(() {
       final available = Get.find<ProAccessService>().hasAccess(feature);
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
         decoration: BoxDecoration(
-          color: SettingsScreen._surface,
-          borderRadius: BorderRadius.circular(14),
+          color: ProTheme.surface,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: ProTheme.border),
         ),
         child: Row(
           children: [
             Icon(
-              available ? Icons.check_circle_outline : Icons.lock_outline,
-              color: available ? const Color(0xFF8BE0B0) : Colors.white54,
+              available ? Icons.check_circle_outline_rounded : Icons.schedule_rounded,
+              color: available ? ProTheme.green : ProTheme.secondaryText,
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 title,
                 style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
+                  color: ProTheme.text,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
+            const SizedBox(width: 8),
             Text(
-              available ? 'Aktif' : 'Segera hadir',
+              available ? 'Aktif' : 'Direncanakan',
               style: TextStyle(
-                color: available ? const Color(0xFF8BE0B0) : SettingsScreen._muted,
+                color: available ? ProTheme.green : ProTheme.secondaryText,
                 fontSize: 11,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
