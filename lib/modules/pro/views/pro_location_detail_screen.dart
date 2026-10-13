@@ -210,47 +210,141 @@ class _ProLocationDetailScreenState extends State<ProLocationDetailScreen> {
                                 ? Image.file(File(photo.filePath), fit: BoxFit.cover)
                                 : const Center(child: Text('File foto tidak ditemukan')),
                           ),
-                          CheckboxListTile(
-                            value: photo.includeInReport,
-                            onChanged: (value) async {
-                              await _database.setPhotoIncludedInReport(photo.id, value ?? false);
-                              if (mounted) setState(_reload);
-                            },
-                            title: Text(photo.caption?.isNotEmpty == true ? photo.caption! : 'Tanpa keterangan'),
-                            subtitle: Text(
-                              photo.capturedAt == null
-                                  ? 'Waktu pengambilan tidak tersedia'
-                                  : _dateTimeLabel(photo.capturedAt!),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 14, 8, 12),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(8),
+                                    onTap: () => _editCaption(photo),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 4, bottom: 4, right: 8),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            photo.caption?.isNotEmpty == true
+                                                ? photo.caption!
+                                                : 'Tambah keterangan foto',
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              color: photo.caption?.isNotEmpty == true
+                                                  ? ProTheme.text
+                                                  : ProTheme.secondaryText,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 5),
+                                          Text(
+                                            photo.capturedAt == null
+                                                ? 'Waktu tidak tersedia'
+                                                : _dateTimeLabel(photo.capturedAt!),
+                                            style: const TextStyle(
+                                              color: ProTheme.secondaryText,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                          if (photo.address?.isNotEmpty == true) ...[
+                                            const SizedBox(height: 5),
+                                            Text(
+                                              photo.address!,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                color: ProTheme.secondaryText,
+                                                fontSize: 12,
+                                                height: 1.35,
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Checkbox(
+                                      value: photo.includeInReport,
+                                      onChanged: (value) async {
+                                        await _database.setPhotoIncludedInReport(
+                                          photo.id,
+                                          value ?? false,
+                                        );
+                                        if (mounted) setState(_reload);
+                                      },
+                                    ),
+                                    const Text(
+                                      'PDF',
+                                      style: TextStyle(
+                                        color: ProTheme.secondaryText,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                PopupMenuButton<String>(
+                                  tooltip: 'Pilihan foto',
+                                  onSelected: (value) {
+                                    if (value == 'caption') _editCaption(photo);
+                                    if (value == 'up') _movePhoto(photo, -1);
+                                    if (value == 'down') _movePhoto(photo, 1);
+                                    if (value == 'delete') _deletePhoto(photo);
+                                  },
+                                  itemBuilder: (_) => [
+                                    const PopupMenuItem(
+                                      value: 'caption',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.edit_outlined, size: 18),
+                                          SizedBox(width: 10),
+                                          Text('Ubah keterangan'),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'up',
+                                      enabled: photo.sortOrder > 0,
+                                      child: const Row(
+                                        children: [
+                                          Icon(Icons.arrow_upward_rounded, size: 18),
+                                          SizedBox(width: 10),
+                                          Text('Pindahkan ke atas'),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'down',
+                                      enabled: photo.sortOrder < photos.length - 1,
+                                      child: const Row(
+                                        children: [
+                                          Icon(Icons.arrow_downward_rounded, size: 18),
+                                          SizedBox(width: 10),
+                                          Text('Pindahkan ke bawah'),
+                                        ],
+                                      ),
+                                    ),
+                                    const PopupMenuItem(
+                                      value: 'delete',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.delete_outline_rounded, color: ProTheme.danger, size: 18),
+                                          SizedBox(width: 10),
+                                          Text('Hapus foto'),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                  icon: const Icon(Icons.more_vert_rounded),
+                                ),
+                              ],
                             ),
-                            controlAffinity: ListTileControlAffinity.leading,
-                          ),
-                          ButtonBar(
-                            children: [
-                              TextButton.icon(
-                                onPressed: photo.sortOrder <= 0
-                                    ? null
-                                    : () => _movePhoto(photo, -1),
-                                icon: const Icon(Icons.arrow_upward),
-                                label: const Text('Naik'),
-                              ),
-                              TextButton.icon(
-                                onPressed: photo.sortOrder >= photos.length - 1
-                                    ? null
-                                    : () => _movePhoto(photo, 1),
-                                icon: const Icon(Icons.arrow_downward),
-                                label: const Text('Turun'),
-                              ),
-                              TextButton.icon(
-                                onPressed: () => _editCaption(photo),
-                                icon: const Icon(Icons.edit_outlined),
-                                label: const Text('Keterangan'),
-                              ),
-                              TextButton.icon(
-                                onPressed: () => _deletePhoto(photo),
-                                icon: const Icon(Icons.delete_outline),
-                                label: const Text('Hapus'),
-                              ),
-                            ],
                           ),
                         ],
                       ),
