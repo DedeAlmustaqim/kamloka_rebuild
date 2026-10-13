@@ -10,6 +10,7 @@ import '../models/trip.dart';
 import '../models/visit_location.dart';
 import '../services/pro_database_service.dart';
 import '../services/pro_photo_storage_service.dart';
+import '../theme/pro_theme.dart';
 import 'pro_camera_capture_screen.dart';
 
 class ProLocationDetailScreen extends StatefulWidget {
@@ -145,9 +146,10 @@ class _ProLocationDetailScreenState extends State<ProLocationDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dokumentasi Lokasi'),
+    return ProTheme.apply(
+      Scaffold(
+        appBar: AppBar(
+          title: const Text('Dokumentasi lokasi'),
         actions: [
           IconButton(
             tooltip: 'Ambil foto',
@@ -184,8 +186,8 @@ class _ProLocationDetailScreenState extends State<ProLocationDetailScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              Text('FOTO DOKUMENTASI (${photos.length})',
-                  style: Theme.of(context).textTheme.labelLarge),
+              Text('Foto dokumentasi (${photos.length})',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
               if (photos.isEmpty)
                 const Padding(
@@ -193,7 +195,7 @@ class _ProLocationDetailScreenState extends State<ProLocationDetailScreen> {
                   child: Text(
                     'Belum ada foto untuk lokasi ini. Ambil foto untuk menambah dokumentasi.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white60),
+                    style: TextStyle(color: ProTheme.secondaryText),
                   ),
                 )
               else
@@ -257,7 +259,7 @@ class _ProLocationDetailScreenState extends State<ProLocationDetailScreen> {
           );
         },
       ),
-    );
+    ));
   }
 }
 
