@@ -238,7 +238,6 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                 ),
               ),
               const SizedBox(height: 26),
-              const SizedBox(height: 16),
               Text('Lokasi kunjungan', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
               if (locations.isEmpty)
@@ -247,7 +246,7 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                   child: Text(
                     'Belum ada lokasi. Tambahkan lokasi pertama untuk mulai mendokumentasikan kegiatan.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white60),
+                    style: TextStyle(color: ProTheme.secondaryText),
                   ),
                 )
               else
@@ -263,23 +262,39 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            IconButton(
-                              tooltip: 'Naikkan urutan',
-                              visualDensity: VisualDensity.compact,
-                              onPressed: location.sortOrder <= 0
-                                  ? null
-                                  : () => _moveLocation(location, -1),
-                              icon: const Icon(Icons.arrow_upward, size: 18),
+                            PopupMenuButton<String>(
+                              tooltip: 'Atur urutan lokasi',
+                              onSelected: (value) {
+                                if (value == 'up') _moveLocation(location, -1);
+                                if (value == 'down') _moveLocation(location, 1);
+                              },
+                              itemBuilder: (_) => [
+                                PopupMenuItem(
+                                  value: 'up',
+                                  enabled: location.sortOrder > 0,
+                                  child: const Row(
+                                    children: [
+                                      Icon(Icons.arrow_upward_rounded, size: 18),
+                                      SizedBox(width: 10),
+                                      Text('Pindahkan ke atas'),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'down',
+                                  enabled: location.sortOrder < locations.length - 1,
+                                  child: const Row(
+                                    children: [
+                                      Icon(Icons.arrow_downward_rounded, size: 18),
+                                      SizedBox(width: 10),
+                                      Text('Pindahkan ke bawah'),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              icon: const Icon(Icons.more_vert_rounded),
                             ),
-                            IconButton(
-                              tooltip: 'Turunkan urutan',
-                              visualDensity: VisualDensity.compact,
-                              onPressed: location.sortOrder >= locations.length - 1
-                                  ? null
-                                  : () => _moveLocation(location, 1),
-                              icon: const Icon(Icons.arrow_downward, size: 18),
-                            ),
-                            const Icon(Icons.chevron_right),
+                            const Icon(Icons.chevron_right_rounded, color: ProTheme.secondaryText),
                           ],
                         ),
                         onTap: () async {
@@ -385,7 +400,7 @@ class _AddLocationDialogState extends State<_AddLocationDialog> {
                 style: Theme.of(context)
                     .textTheme
                     .bodySmall
-                    ?.copyWith(color: Colors.white60),
+                    ?.copyWith(color: ProTheme.secondaryText),
               ),
             ),
             TextField(
