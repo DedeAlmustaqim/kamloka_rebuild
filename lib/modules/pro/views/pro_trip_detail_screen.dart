@@ -37,6 +37,19 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
     _locationsFuture = _database.listLocations(widget.trip.id);
   }
 
+  Future<void> _moveLocation(VisitLocation location, int offset) async {
+    final locations = await _database.listLocations(widget.trip.id);
+    final currentIndex = locations.indexWhere((item) => item.id == location.id);
+    final targetIndex = currentIndex + offset;
+    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= locations.length) return;
+
+    final orderedIds = locations.map((item) => item.id).toList();
+    final movedId = orderedIds.removeAt(currentIndex);
+    orderedIds.insert(targetIndex, movedId);
+    await _database.reorderLocations(widget.trip.id, orderedIds);
+    if (mounted) setState(_reload);
+  }
+
   Future<void> _exportPdf() async {
     if (_isExporting) return;
     setState(() => _isExporting = true);
@@ -219,7 +232,28 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        trailing: const Icon(Icons.chevron_right),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              tooltip: 'Naikkan urutan',
+                              visualDensity: VisualDensity.compact,
+                              onPressed: location.sortOrder <= 0
+                                  ? null
+                                  : () => _moveLocation(location, -1),
+                              icon: const Icon(Icons.arrow_upward, size: 18),
+                            ),
+                            IconButton(
+                              tooltip: 'Turunkan urutan',
+                              visualDensity: VisualDensity.compact,
+                              onPressed: location.sortOrder >= locations.length - 1
+                                  ? null
+                                  : () => _moveLocation(location, 1),
+                              icon: const Icon(Icons.arrow_downward, size: 18),
+                            ),
+                            const Icon(Icons.chevron_right),
+                          ],
+                        ),
                         onTap: () async {
                           await Get.to(() => ProLocationDetailScreen(
                                 trip: widget.trip,
