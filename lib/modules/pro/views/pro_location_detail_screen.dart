@@ -150,14 +150,7 @@ class _ProLocationDetailScreenState extends State<ProLocationDetailScreen> {
       Scaffold(
         appBar: AppBar(
           title: const Text('Dokumentasi lokasi'),
-        actions: [
-          IconButton(
-            tooltip: 'Ambil foto',
-            onPressed: _isTakingPhoto ? null : _takePhoto,
-            icon: const Icon(Icons.camera_alt_outlined),
-          ),
-        ],
-      ),
+        ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _isTakingPhoto ? null : _takePhoto,
         icon: _isTakingPhoto
@@ -178,24 +171,137 @@ class _ProLocationDetailScreenState extends State<ProLocationDetailScreen> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
             children: [
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.location_on_outlined),
-                  title: Text(widget.location.name),
-                  subtitle: Text(widget.location.address ?? 'Alamat tidak tersedia'),
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: ProTheme.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: ProTheme.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'LOKASI KUNJUNGAN',
+                      style: TextStyle(
+                        color: ProTheme.primaryDark,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    const SizedBox(height: 9),
+                    Text(
+                      widget.location.name,
+                      style: const TextStyle(
+                        color: ProTheme.text,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.location_on_outlined, size: 18, color: ProTheme.secondaryText),
+                        const SizedBox(width: 7),
+                        Expanded(
+                          child: Text(
+                            widget.location.address ?? 'Alamat belum tersedia',
+                            style: const TextStyle(
+                              color: ProTheme.secondaryText,
+                              fontSize: 13,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 12),
-              Text('Foto dokumentasi (${photos.length})',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Foto dokumentasi',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: ProTheme.surface,
+                      borderRadius: BorderRadius.circular(9),
+                      border: Border.all(color: ProTheme.border),
+                    ),
+                    child: Text(
+                      '${photos.length} foto',
+                      style: const TextStyle(
+                        color: ProTheme.secondaryText,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 8),
+              const Text(
+                'Pilih foto yang akan dimasukkan ke laporan PDF. Ketuk keterangan pada foto untuk mengubahnya.',
+                style: TextStyle(color: ProTheme.secondaryText, fontSize: 12, height: 1.45),
+              ),
+              const SizedBox(height: 12),
               if (photos.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(28),
-                  child: Text(
-                    'Belum ada foto untuk lokasi ini. Ambil foto untuk menambah dokumentasi.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: ProTheme.secondaryText),
+                Container(
+                  padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
+                  decoration: BoxDecoration(
+                    color: ProTheme.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: ProTheme.border),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 62,
+                        height: 62,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFFF2C8),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.add_a_photo_outlined,
+                          size: 28,
+                          color: ProTheme.primaryDark,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      const Text(
+                        'Belum ada foto',
+                        style: TextStyle(
+                          color: ProTheme.text,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Ambil foto pertama untuk mulai mendokumentasikan lokasi ini.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: ProTheme.secondaryText,
+                          fontSize: 13,
+                          height: 1.45,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: _isTakingPhoto ? null : _takePhoto,
+                        icon: const Icon(Icons.camera_alt_outlined),
+                        label: const Text('Ambil foto pertama'),
+                      ),
+                    ],
                   ),
                 )
               else
