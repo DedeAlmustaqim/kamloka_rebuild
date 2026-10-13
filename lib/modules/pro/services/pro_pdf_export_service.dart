@@ -101,7 +101,7 @@ class ProPdfExportService {
           );
         }
 
-        final imageBytes = await _preparePdfImage(await file.readAsBytes());
+        final imageBytes = _preparePdfImage(await file.readAsBytes());
         final image = pw.MemoryImage(imageBytes);
         final caption = photo.caption?.trim().isNotEmpty == true
             ? photo.caption!.trim()
@@ -161,7 +161,7 @@ class ProPdfExportService {
     return document.save();
   }
 
-  Future<Uint8List> _preparePdfImage(Uint8List bytes) async {
+  Uint8List _preparePdfImage(Uint8List bytes) {
     final decoded = img.decodeImage(bytes);
     if (decoded == null) {
       throw const FormatException('Salah satu foto tidak dapat dibaca untuk PDF.');
