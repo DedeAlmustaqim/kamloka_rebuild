@@ -69,85 +69,34 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
   }
 
   Future<void> _addLocation() async {
-    final nameController = TextEditingController();
-    final notesController = TextEditingController();
     final locationService = Get.find<LocationService>();
     final currentPosition = locationService.position.value;
     final currentAddress = locationService.address.value.trim();
 
-    final result = await showDialog<bool>(
+    // The dialog owns its text controllers and disposes them with its State.
+    // This avoids disposing controllers while the dialog route is still closing.
+    final result = await showDialog<_NewLocationInput>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Tambah lokasi kunjungan'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                autofocus: true,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  labelText: 'Nama lokasi *',
-                  hintText: 'Contoh: Ruas jalan Desa Sumber Garunggung',
-                ),
-              ),
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  currentAddress.isEmpty ? 'Alamat GPS belum tersedia.' : currentAddress,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white60),
-                ),
-              ),
-              TextField(
-                controller: notesController,
-                maxLines: 2,
-                decoration: const InputDecoration(labelText: 'Catatan lokasi (opsional)'),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Batal'),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (nameController.text.trim().isEmpty) {
-                Get.snackbar('Nama lokasi wajib diisi', 'Masukkan nama lokasi kunjungan.');
-                return;
-              }
-              Navigator.of(dialogContext).pop(true);
-            },
-            child: const Text('Simpan'),
-          ),
-        ],
+      builder: (_) => _AddLocationDialog(currentAddress: currentAddress),
+    );
+    if (result == null) return;
+
+    final existing = await _database.listLocations(widget.trip.id);
+    await _database.saveLocation(
+      VisitLocation(
+        id: _uuid.v4(),
+        tripId: widget.trip.id,
+        name: result.name,
+        address: currentAddress.isEmpty ? null : currentAddress,
+        latitude: currentPosition?.latitude,
+        longitude: currentPosition?.longitude,
+        visitedAt: DateTime.now(),
+        notes: _nullableText(result.notes),
+        sortOrder: existing.length,
+        createdAt: DateTime.now(),
       ),
     );
-
-    if (result == true) {
-      final existing = await _database.listLocations(widget.trip.id);
-      await _database.saveLocation(
-        VisitLocation(
-          id: _uuid.v4(),
-          tripId: widget.trip.id,
-          name: nameController.text.trim(),
-          address: currentAddress.isEmpty ? null : currentAddress,
-          latitude: currentPosition?.latitude,
-          longitude: currentPosition?.longitude,
-          visitedAt: DateTime.now(),
-          notes: _nullableText(notesController.text),
-          sortOrder: existing.length,
-          createdAt: DateTime.now(),
-        ),
-      );
-      if (mounted) setState(_reload);
-    }
-
-    nameController.dispose();
-    notesController.dispose();
+    if (mounted) setState(_reload);
   }
 
   @override
@@ -278,3 +227,109 @@ String? _nullableText(String value) {
   final trimmed = value.trim();
   return trimmed.isEmpty ? null : trimmed;
 }
+
+class _NewLocationInput {
+  const _NewLocationInput({required this.name, required this.notes});
+
+  final String name;
+  final String notes;
+}
+
+class _AddLocationDialog extends StatefulWidget {
+  const _AddLocationDialog({required this.currentAddress});
+
+  final String currentAddress;
+
+  @override
+  State<_AddLocationDialog> createState() => _AddLocationDialogState();
+}
+
+class _AddLocationDialogState extends State<_AddLocationDialog> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _notesController;
+  String? _nameError;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+    _notesController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      setState(() => _nameError = 'Nama lokasi wajib diisi.');
+      return;
+    }
+
+    Navigator.of(context).pop(
+      _NewLocationInput(name: name, notes: _notesController.text),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Tambah lokasi kunjungan'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _nameController,
+              autofocus: true,
+              textCapitalization: TextCapitalization.sentences,
+              onChanged: (_) {
+                if (_nameError != null) setState(() => _nameError = null);
+              },
+              decoration: InputDecoration(
+                labelText: 'Nama lokasi *',
+                hintText: 'Contoh: Ruas jalan Desa Sumber Garunggung',
+                errorText: _nameError,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                widget.currentAddress.isEmpty
+                    ? 'Alamat GPS belum tersedia.'
+                    : widget.currentAddress,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: Colors.white60),
+              ),
+            ),
+            TextField(
+              controller: _notesController,
+              maxLines: 2,
+              decoration: const InputDecoration(
+                labelText: 'Catatan lokasi (opsional)',
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Batal'),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: const Text('Simpan'),
+        ),
+      ],
+    );
+  }
+}
+
