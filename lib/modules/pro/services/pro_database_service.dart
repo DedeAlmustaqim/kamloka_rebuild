@@ -169,6 +169,17 @@ class ProDatabaseService extends GetxService {
     return rows.map(DocumentedPhoto.fromMap).toList(growable: false);
   }
 
+  Future<List<DocumentedPhoto>> listPhotosForTrip(String tripId) async {
+    final db = await database;
+    final rows = await db.rawQuery(
+      'SELECT p.* FROM documented_photos p '
+      'INNER JOIN visit_locations l ON l.id = p.location_id '
+      'WHERE l.trip_id = ? ORDER BY l.sort_order ASC, p.sort_order ASC',
+      [tripId],
+    );
+    return rows.map(DocumentedPhoto.fromMap).toList(growable: false);
+  }
+
   Future<void> deletePhoto(String id) async {
     final db = await database;
     await db.delete('documented_photos', where: 'id = ?', whereArgs: [id]);
