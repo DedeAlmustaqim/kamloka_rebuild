@@ -8,17 +8,18 @@ import '../../pro/theme/pro_theme.dart';
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
-  static const Color _background = Color(0xFF101820);
-  static const Color _surface = Color(0xFF1B2933);
-  static const Color _muted = Color(0xFFACB8C1);
+  static const Color _background = ProTheme.background;
+  static const Color _surface = ProTheme.surface;
+  static const Color _muted = ProTheme.secondaryText;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _background,
+    return ProTheme.apply(
+      Scaffold(
+        backgroundColor: _background,
       appBar: AppBar(
         backgroundColor: _background,
-        foregroundColor: Colors.white,
+        foregroundColor: ProTheme.text,
         elevation: 0,
         title: const Text('Pengaturan',
             style: TextStyle(fontWeight: FontWeight.w700)),
@@ -38,7 +39,7 @@ class SettingsScreen extends StatelessWidget {
                   width: 54,
                   height: 54,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: ProTheme.text,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(Icons.camera_alt_rounded,
@@ -51,7 +52,7 @@ class SettingsScreen extends StatelessWidget {
                     children: [
                       Text('KAMLOKA',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: ProTheme.text,
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 1,
@@ -80,7 +81,7 @@ class SettingsScreen extends StatelessWidget {
                   title: 'Watermark foto',
                   subtitle: 'Otomatis ditambahkan saat foto diproses',
                 ),
-                Divider(height: 1, indent: 58, color: Color(0xFF34434D)),
+                Divider(height: 1, indent: 58, color: ProTheme.border),
                 _InfoTile(
                   icon: Icons.photo_library_outlined,
                   title: 'Penyimpanan',
@@ -107,14 +108,14 @@ class SettingsScreen extends StatelessWidget {
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF354654), Color(0xFF202F3A)],
+                    colors: [Color(0xFFFFE69A), Color(0xFFFFF2C8)],
                   ),
-                  border: Border.all(color: Colors.white12),
+                  border: Border.all(color: ProTheme.border),
                 ),
                 child: const Row(
                   children: [
                     Icon(Icons.workspace_premium_rounded,
-                        color: Color(0xFFFFD479), size: 34),
+                        color: ProTheme.primaryDark, size: 34),
                     SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -122,7 +123,7 @@ class SettingsScreen extends StatelessWidget {
                         children: [
                           Text('KAMLOKA Pro',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: ProTheme.text,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
                               )),
@@ -134,7 +135,7 @@ class SettingsScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_right_rounded, color: Colors.white70),
+                    Icon(Icons.chevron_right_rounded, color: ProTheme.secondaryText),
                   ],
                 ),
               ),
@@ -152,16 +153,16 @@ class SettingsScreen extends StatelessWidget {
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               leading: const Icon(Icons.info_outline_rounded,
-                  color: Colors.white70),
+                  color: ProTheme.secondaryText),
               title: const Text('Tentang KAMLOKA',
                   style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w600)),
+                      color: ProTheme.text, fontWeight: FontWeight.w600)),
               subtitle: const Text(
                 'Informasi aplikasi dan pengembang',
                 style: TextStyle(color: _muted, fontSize: 12),
               ),
               trailing: const Icon(Icons.chevron_right_rounded,
-                  color: Colors.white54),
+                  color: ProTheme.secondaryText),
               onTap: () => showAboutDialog(
                 context: context,
                 applicationName: 'KAMLOKA',
@@ -173,11 +174,12 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 28),
           const Center(
             child: Text('KAMLOKA • Kamera Lokasi',
-                style: TextStyle(color: Colors.white38, fontSize: 11)),
+                style: TextStyle(color: ProTheme.secondaryText, fontSize: 11)),
           ),
         ],
       ),
-    );
+      ),
+    ));
   }
 }
 
@@ -215,9 +217,9 @@ class _InfoTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-      leading: Icon(icon, color: Colors.white70),
+      leading: Icon(icon, color: ProTheme.secondaryText),
       title: Text(title,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+          style: const TextStyle(color: ProTheme.text, fontWeight: FontWeight.w600)),
       subtitle: Text(subtitle,
           style: const TextStyle(color: SettingsScreen._muted, fontSize: 12)),
     );
