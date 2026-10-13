@@ -126,6 +126,19 @@ class _ProLocationDetailScreenState extends State<ProLocationDetailScreen> {
     if (mounted) setState(_reload);
   }
 
+  Future<void> _movePhoto(DocumentedPhoto photo, int offset) async {
+    final photos = await _database.listPhotos(widget.location.id);
+    final currentIndex = photos.indexWhere((item) => item.id == photo.id);
+    final targetIndex = currentIndex + offset;
+    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= photos.length) return;
+
+    final orderedIds = photos.map((item) => item.id).toList();
+    final movedId = orderedIds.removeAt(currentIndex);
+    orderedIds.insert(targetIndex, movedId);
+    await _database.reorderPhotos(widget.location.id, orderedIds);
+    if (mounted) setState(_reload);
+  }
+
   Future<void> _deletePhoto(DocumentedPhoto photo) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -225,6 +238,20 @@ class _ProLocationDetailScreenState extends State<ProLocationDetailScreen> {
                           ),
                           ButtonBar(
                             children: [
+                              TextButton.icon(
+                                onPressed: photo.sortOrder <= 0
+                                    ? null
+                                    : () => _movePhoto(photo, -1),
+                                icon: const Icon(Icons.arrow_upward),
+                                label: const Text('Naik'),
+                              ),
+                              TextButton.icon(
+                                onPressed: photo.sortOrder >= photos.length - 1
+                                    ? null
+                                    : () => _movePhoto(photo, 1),
+                                icon: const Icon(Icons.arrow_downward),
+                                label: const Text('Turun'),
+                              ),
                               TextButton.icon(
                                 onPressed: () => _editCaption(photo),
                                 icon: const Icon(Icons.edit_outlined),
