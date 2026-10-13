@@ -139,28 +139,105 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
             children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(widget.trip.title, style: Theme.of(context).textTheme.titleLarge),
-                      const SizedBox(height: 6),
-                      Text(widget.trip.purpose),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${_dateLabel(widget.trip.startDate)} – ${_dateLabel(widget.trip.endDate)}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: ProTheme.secondaryText),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: ProTheme.surface,
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(color: ProTheme.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF2C8),
+                        borderRadius: BorderRadius.circular(9),
                       ),
-                      if (widget.trip.assignmentNumber?.isNotEmpty == true) ...[
-                        const SizedBox(height: 4),
-                        Text('Surat tugas: ${widget.trip.assignmentNumber}'),
-                      ],
+                      child: const Text(
+                        'RINGKASAN PERJALANAN',
+                        style: TextStyle(
+                          color: ProTheme.primaryDark,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.7,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      widget.trip.title,
+                      style: const TextStyle(
+                        color: ProTheme.text,
+                        fontSize: 22,
+                        height: 1.2,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.trip.purpose,
+                      style: const TextStyle(
+                        color: ProTheme.secondaryText,
+                        fontSize: 14,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+                      decoration: BoxDecoration(
+                        color: ProTheme.background,
+                        borderRadius: BorderRadius.circular(11),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.calendar_month_outlined,
+                            size: 16,
+                            color: ProTheme.secondaryText,
+                          ),
+                          const SizedBox(width: 7),
+                          Text(
+                            _dateLabel(widget.trip.startDate) + ' – ' + _dateLabel(widget.trip.endDate),
+                            style: const TextStyle(
+                              color: ProTheme.text,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (widget.trip.assignmentNumber?.isNotEmpty == true) ...[
+                      const SizedBox(height: 14),
+                      const Divider(),
+                      const SizedBox(height: 10),
+                      const Row(
+                        children: [
+                          Icon(Icons.description_outlined, size: 17, color: ProTheme.secondaryText),
+                          SizedBox(width: 8),
+                          Text(
+                            'Nomor surat tugas',
+                            style: TextStyle(color: ProTheme.secondaryText, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        widget.trip.assignmentNumber!,
+                        style: const TextStyle(
+                          color: ProTheme.text,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ],
-                  ),
+                  ],
                 ),
               ),
+              const SizedBox(height: 26),
               const SizedBox(height: 16),
               Text('Lokasi kunjungan', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
