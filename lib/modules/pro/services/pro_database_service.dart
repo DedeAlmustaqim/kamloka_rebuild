@@ -100,11 +100,16 @@ class ProDatabaseService extends GetxService {
 
   Future<void> saveTrip(Trip trip) async {
     final db = await database;
-    await db.insert(
+    final values = trip.toMap();
+    final updated = await db.update(
       'trips',
-      trip.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
+      values,
+      where: 'id = ?',
+      whereArgs: [trip.id],
     );
+    if (updated == 0) {
+      await db.insert('trips', values);
+    }
   }
 
   Future<Trip?> getTrip(String id) async {
@@ -126,11 +131,16 @@ class ProDatabaseService extends GetxService {
 
   Future<void> saveLocation(VisitLocation location) async {
     final db = await database;
-    await db.insert(
+    final values = location.toMap();
+    final updated = await db.update(
       'visit_locations',
-      location.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
+      values,
+      where: 'id = ?',
+      whereArgs: [location.id],
     );
+    if (updated == 0) {
+      await db.insert('visit_locations', values);
+    }
   }
 
   Future<List<VisitLocation>> listLocations(String tripId) async {
@@ -151,11 +161,16 @@ class ProDatabaseService extends GetxService {
 
   Future<void> savePhoto(DocumentedPhoto photo) async {
     final db = await database;
-    await db.insert(
+    final values = photo.toMap();
+    final updated = await db.update(
       'documented_photos',
-      photo.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
+      values,
+      where: 'id = ?',
+      whereArgs: [photo.id],
     );
+    if (updated == 0) {
+      await db.insert('documented_photos', values);
+    }
   }
 
   Future<List<DocumentedPhoto>> listPhotos(String locationId) async {
