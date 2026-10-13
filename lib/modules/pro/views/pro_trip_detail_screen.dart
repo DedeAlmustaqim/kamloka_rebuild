@@ -10,6 +10,7 @@ import '../models/trip.dart';
 import '../models/visit_location.dart';
 import '../services/pro_database_service.dart';
 import '../services/pro_pdf_export_service.dart';
+import '../theme/pro_theme.dart';
 import 'pro_location_detail_screen.dart';
 
 class ProTripDetailScreen extends StatefulWidget {
@@ -101,9 +102,10 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detail Perjalanan'),
+    return ProTheme.apply(
+      Scaffold(
+        appBar: AppBar(
+          title: const Text('Detail perjalanan'),
         actions: [
           IconButton(
             tooltip: 'Ekspor dokumentasi PDF',
@@ -149,7 +151,7 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                       const SizedBox(height: 8),
                       Text(
                         '${_dateLabel(widget.trip.startDate)} – ${_dateLabel(widget.trip.endDate)}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white60),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: ProTheme.secondaryText),
                       ),
                       if (widget.trip.assignmentNumber?.isNotEmpty == true) ...[
                         const SizedBox(height: 4),
@@ -160,7 +162,7 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              Text('LOKASI KUNJUNGAN', style: Theme.of(context).textTheme.labelLarge),
+              Text('Lokasi kunjungan', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
               if (locations.isEmpty)
                 const Padding(
@@ -216,7 +218,7 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
           );
         },
       ),
-    );
+    ));
   }
 }
 
