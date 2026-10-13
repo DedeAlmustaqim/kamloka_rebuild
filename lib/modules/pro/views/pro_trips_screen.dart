@@ -113,28 +113,7 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
   Widget build(BuildContext context) {
     return ProTheme.apply(
       Scaffold(
-        appBar: AppBar(
-          title: const Text('Perjalanan Saya'),
-          actions: [
-            IconButton(
-              tooltip: 'Buat perjalanan',
-              onPressed: _isCreating ? null : _createTrip,
-              icon: const Icon(Icons.add_rounded),
-            ),
-            const SizedBox(width: 6),
-          ],
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _isCreating ? null : _createTrip,
-          icon: _isCreating
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.add_rounded),
-          label: Text(_isCreating ? 'Menyimpan...' : 'Perjalanan Baru'),
-        ),
+        appBar: AppBar(title: const Text('Perjalanan Saya')),
         body: FutureBuilder<List<Trip>>(
           future: _tripsFuture,
           builder: (context, snapshot) {
@@ -177,6 +156,7 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
                   _SummaryCard(
                     count: trips.length,
                     onCreate: _isCreating ? null : _createTrip,
+                    isCreating: _isCreating,
                   ),
                   const SizedBox(height: 28),
                   Row(
@@ -203,7 +183,7 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
                   ),
                   const SizedBox(height: 12),
                   if (trips.isEmpty)
-                    _EmptyTrips(onCreate: _createTrip)
+                    const _EmptyTrips()
                   else
                     ...trips.map(
                       (trip) => Padding(
@@ -232,10 +212,15 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
 }
 
 class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.count, required this.onCreate});
+  const _SummaryCard({
+    required this.count,
+    required this.onCreate,
+    required this.isCreating,
+  });
 
   final int count;
   final VoidCallback? onCreate;
+  final bool isCreating;
 
   @override
   Widget build(BuildContext context) {
@@ -281,14 +266,22 @@ class _SummaryCard extends StatelessWidget {
               ],
             ),
           ),
-          IconButton.filled(
-            tooltip: 'Buat perjalanan',
+          const SizedBox(width: 8),
+          FilledButton(
             onPressed: onCreate,
-            style: IconButton.styleFrom(
+            style: FilledButton.styleFrom(
               backgroundColor: ProTheme.text,
               foregroundColor: Colors.white,
+              minimumSize: const Size(0, 44),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
             ),
-            icon: const Icon(Icons.add_rounded),
+            child: isCreating
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : const Text('Buat'),
           ),
         ],
       ),
@@ -439,9 +432,7 @@ class _MetaChip extends StatelessWidget {
 }
 
 class _EmptyTrips extends StatelessWidget {
-  const _EmptyTrips({required this.onCreate});
-
-  final VoidCallback onCreate;
+  const _EmptyTrips();
 
   @override
   Widget build(BuildContext context) {
@@ -486,12 +477,7 @@ class _EmptyTrips extends StatelessWidget {
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 18),
-          FilledButton.icon(
-            onPressed: onCreate,
-            icon: const Icon(Icons.add_rounded),
-            label: const Text('Buat perjalanan pertama'),
-          ),
+
         ],
       ),
     );
