@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/trip.dart';
+import '../services/pro_photo_storage_service.dart';
 import '../services/pro_database_service.dart';
 import 'pro_trip_detail_screen.dart';
 
@@ -181,6 +182,11 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
       ),
     );
     if (confirmed == true) {
+      final photos = await _database.listPhotosForTrip(trip.id);
+      final storage = Get.find<ProPhotoStorageService>();
+      for (final photo in photos) {
+        await storage.deleteManagedPhoto(photo.filePath);
+      }
       await _database.deleteTrip(trip.id);
       if (mounted) setState(_reload);
     }
