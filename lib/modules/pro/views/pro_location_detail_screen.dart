@@ -97,31 +97,12 @@ class _ProLocationDetailScreenState extends State<ProLocationDetailScreen> {
   }
 
   Future<void> _editCaption(DocumentedPhoto photo) async {
-    final controller = TextEditingController(text: photo.caption ?? '');
-    final result = await showDialog<String?>(
+    final result = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Keterangan foto'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLines: 3,
-          textCapitalization: TextCapitalization.sentences,
-          decoration: const InputDecoration(
-            hintText: 'Contoh: Kondisi objek saat monitoring',
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('Simpan'),
-          ),
-        ],
-      ),
+      builder: (_) => _EditCaptionDialog(initialCaption: photo.caption ?? ''),
     );
-    controller.dispose();
     if (result == null) return;
+
     await _database.updatePhotoCaption(photo.id, result);
     if (mounted) setState(_reload);
   }
@@ -284,4 +265,56 @@ String _dateTimeLabel(DateTime dateTime) {
   final local = dateTime.toLocal();
   return '${local.day.toString().padLeft(2, '0')}/${local.month.toString().padLeft(2, '0')}/${local.year} '
       '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+}
+
+
+class _EditCaptionDialog extends StatefulWidget {
+  const _EditCaptionDialog({required this.initialCaption});
+
+  final String initialCaption;
+
+  @override
+  State<_EditCaptionDialog> createState() => _EditCaptionDialogState();
+}
+
+class _EditCaptionDialogState extends State<_EditCaptionDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialCaption);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Keterangan foto'),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        maxLines: 3,
+        textCapitalization: TextCapitalization.sentences,
+        decoration: const InputDecoration(
+          hintText: 'Contoh: Kondisi objek saat monitoring',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Batal'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
+          child: const Text('Simpan'),
+        ),
+      ],
+    );
+  }
 }
