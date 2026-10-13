@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 
@@ -6,6 +9,7 @@ import '../../location/services/location_service.dart';
 import '../models/trip.dart';
 import '../models/visit_location.dart';
 import '../services/pro_database_service.dart';
+import '../services/pro_pdf_export_service.dart';
 import 'pro_location_detail_screen.dart';
 
 class ProTripDetailScreen extends StatefulWidget {
@@ -21,6 +25,7 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
   final _database = Get.find<ProDatabaseService>();
   final _uuid = const Uuid();
   late Future<List<VisitLocation>> _locationsFuture;
+  bool _isExporting = false;
 
   @override
   void initState() {
@@ -30,6 +35,24 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
 
   void _reload() {
     _locationsFuture = _database.listLocations(widget.trip.id);
+  }
+
+  Future<void> _exportPdf() async {
+    if (_isExporting) return;
+    setState(() => _isExporting = true);
+    try {
+      final file = await ProPdfExportService(_database).exportTrip(widget.trip);
+      await Printing.sharePdf(
+        bytes: await file.readAsBytes(),
+        filename: file.uri.pathSegments.last,
+      );
+    } catch (error) {
+      if (mounted) {
+        Get.snackbar('PDF belum dapat dibuat', error.toString());
+      }
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
   }
 
   Future<void> _addLocation() async {
@@ -117,7 +140,22 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Detail Perjalanan')),
+      appBar: AppBar(
+        title: const Text('Detail Perjalanan'),
+        actions: [
+          IconButton(
+            tooltip: 'Ekspor dokumentasi PDF',
+            onPressed: _isExporting ? null : _exportPdf,
+            icon: _isExporting
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.picture_as_pdf_outlined),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addLocation,
         icon: const Icon(Icons.add_location_alt_outlined),
