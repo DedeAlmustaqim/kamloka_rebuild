@@ -32,6 +32,7 @@ class CameraController extends GetxController {
   final focusPoint = Rxn<Offset>();
   final exposureOffset = 0.0.obs;
   final isExposureExpanded = false.obs;
+  final isControlPanelExpanded = false.obs;
   final timerSeconds = 0.obs;
   final aspectRatio = CaptureAspectRatio.full.obs;
   final showGrid = false.obs;
