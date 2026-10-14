@@ -8,7 +8,7 @@
         android:maxSdkVersion="29"
         tools:replace="android:maxSdkVersion" />
     <application
-        android:label="kamloka"
+        android:label="Kamloka"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity
