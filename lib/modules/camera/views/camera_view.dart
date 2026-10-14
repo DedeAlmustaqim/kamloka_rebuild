@@ -20,7 +20,7 @@ class CameraView extends GetView<CameraController> {
     final locationService = Get.find<LocationService>();
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFFF5F6F3),
       body: Obx(() {
         if (controller.isInitializing.value) {
           return const _LoadingView();
@@ -136,7 +136,7 @@ class _CameraPreview extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.rectangle,
                       border: Border.fromBorderSide(
-                        BorderSide(color: Colors.white, width: 2),
+                        BorderSide(color: Color(0xFFFFC107), width: 2.5),
                       ),
                     ),
                   ),
@@ -210,13 +210,14 @@ class _CameraPreview extends StatelessWidget {
                       vertical: 5,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black54,
+                      color: Colors.white.withValues(alpha: 0.92),
+                      border: Border.all(color: const Color(0xFFE2E6E0)),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Text(
                       '${zoom.toStringAsFixed(1)}x',
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: Color(0xFF202522),
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
@@ -292,7 +293,7 @@ class _TopScrim extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Colors.black54, Colors.transparent],
+              colors: [Color(0xCCFFFFFF), Colors.transparent],
             ),
           ),
         ),
@@ -315,7 +316,7 @@ class _BottomScrim extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.bottomCenter,
               end: Alignment.topCenter,
-              colors: [Colors.black54, Colors.transparent],
+              colors: [Color(0xCCFFFFFF), Colors.transparent],
             ),
           ),
         ),
@@ -349,13 +350,14 @@ class _CameraShutter extends GetView<CameraController> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black54,
+                      color: Colors.white.withValues(alpha: 0.96),
+                      border: Border.all(color: const Color(0xFFE2E6E0)),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       error,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                      style: const TextStyle(color: Color(0xFF202522), fontSize: 12),
                     ),
                   ),
                 Row(
@@ -372,12 +374,12 @@ class _CameraShutter extends GetView<CameraController> {
                           height: 72,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 3.5),
+                            border: Border.all(color: const Color(0xFFFFC107), width: 3.5),
                           ),
                           padding: const EdgeInsets.all(6),
                           child: Container(
                             decoration: const BoxDecoration(
-                              color: Colors.white,
+                              color: const Color(0xFFFFC107),
                               shape: BoxShape.circle,
                             ),
                             child: isBusy
@@ -385,7 +387,7 @@ class _CameraShutter extends GetView<CameraController> {
                                     padding: EdgeInsets.all(22),
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: Colors.black,
+                                      color: Color(0xFF292B25),
                                     ),
                                   )
                                 : null,
@@ -407,12 +409,12 @@ class _CameraShutter extends GetView<CameraController> {
                                 ),
                         icon: const Icon(
                           Icons.settings_rounded,
-                          color: Colors.white,
+                          color: Color(0xFF202522),
                           size: 27,
                         ),
                         style: IconButton.styleFrom(
-                          backgroundColor: Colors.black38,
-                          foregroundColor: Colors.white,
+                          backgroundColor: Colors.white.withValues(alpha: 0.92),
+                          foregroundColor: const Color(0xFF202522),
                           shape: const CircleBorder(),
                         ),
                       ),
@@ -536,7 +538,7 @@ class _ExposureControl extends GetView<CameraController> {
               curve: Curves.easeOut,
               alignment: Alignment.topCenter,
               child: Material(
-                color: Colors.black54,
+                color: Colors.white.withValues(alpha: 0.94),
                 borderRadius: BorderRadius.circular(18),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -575,10 +577,10 @@ class _ExposureControl extends GetView<CameraController> {
                                 overlayShape: const RoundSliderOverlayShape(
                                   overlayRadius: 10,
                                 ),
-                                activeTrackColor: Colors.white,
-                                inactiveTrackColor: Colors.white38,
-                                thumbColor: Colors.white,
-                                overlayColor: Colors.white24,
+                                activeTrackColor: const Color(0xFFFFC107),
+                                inactiveTrackColor: const Color(0xFFCFD4CE),
+                                thumbColor: const Color(0xFF292B25),
+                                overlayColor: const Color(0x33FFC107),
                               ),
                               child: Slider(
                                 value: value.clamp(min, max).toDouble(),
@@ -600,7 +602,7 @@ class _ExposureControl extends GetView<CameraController> {
                               ? value.toStringAsFixed(1)
                               : value.toStringAsFixed(1),
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: const Color(0xFF202522),
                             fontSize: 9,
                             fontWeight: FontWeight.w700,
                             shadows: [
@@ -614,7 +616,7 @@ class _ExposureControl extends GetView<CameraController> {
                               : null,
                           child: Icon(
                             Icons.refresh,
-                            color: Colors.white.withValues(
+                            color: const Color(0xFF202522).withValues(
                               alpha: value.abs() > 0.01 ? 0.85 : 0.3,
                             ),
                             size: 14,
@@ -649,15 +651,15 @@ class _CaptureThumbnail extends GetView<CameraController> {
           width: 54,
           height: 54,
           decoration: BoxDecoration(
-            color: Colors.black54,
+            color: Colors.white.withValues(alpha: 0.94),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.white, width: 2),
+            border: Border.all(color: const Color(0xFFE2E6E0), width: 1.5),
           ),
           clipBehavior: Clip.antiAlias,
           child: path.isEmpty
               ? const Icon(
                   Icons.photo_outlined,
-                  color: Colors.white70,
+                  color: const Color(0xFF68716B),
                   size: 25,
                 )
               : Image.file(
@@ -665,7 +667,7 @@ class _CaptureThumbnail extends GetView<CameraController> {
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) => const Icon(
                     Icons.broken_image_outlined,
-                    color: Colors.white70,
+                    color: const Color(0xFF68716B),
                     size: 24,
                   ),
                 ),
@@ -703,14 +705,14 @@ class _LocationStatus extends StatelessWidget {
                 Icon(
                   Icons.location_on,
                   size: 21,
-                  color: Colors.white,
-                  shadows: _shadow,
+                  color: const Color(0xFF202522),
+                  shadows: const [],
                 ),
                 SizedBox(width: 5),
                 Text(
                   'GPS',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: const Color(0xFF202522),
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.5,
@@ -723,7 +725,7 @@ class _LocationStatus extends StatelessWidget {
             Text(
               service.coordinateText,
               style: const TextStyle(
-                color: Colors.white,
+                color: const Color(0xFF202522),
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 shadows: _shadow,
@@ -752,7 +754,7 @@ class _LocationStatus extends StatelessWidget {
               const Text(
                 'Mencari alamat...',
                 style: TextStyle(
-                  color: Colors.white70,
+                  color: const Color(0xFF68716B),
                   fontSize: 11,
                   shadows: _shadow,
                 ),
@@ -762,7 +764,7 @@ class _LocationStatus extends StatelessWidget {
             Text(
               'Akurasi ${service.accuracyText} | Alt ${service.altitudeText}',
               style: const TextStyle(
-                color: Colors.white,
+                color: const Color(0xFF202522),
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
                 shadows: _shadow,
@@ -787,7 +789,7 @@ class _LocationStatus extends StatelessWidget {
                 ? error
                 : (isEnabled ? 'Mencari GPS...' : 'GPS mati'),
             style: const TextStyle(
-              color: Colors.white,
+              color: const Color(0xFF202522),
               fontSize: 14,
               fontWeight: FontWeight.w700,
               shadows: _shadow,
