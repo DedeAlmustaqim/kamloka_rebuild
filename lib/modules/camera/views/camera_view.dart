@@ -1208,7 +1208,7 @@ class _LocationStatus extends StatelessWidget {
   final LocationService service;
 
   static const _shadow = [
-    Shadow(color: Colors.black87, blurRadius: 4, offset: Offset(0, 1)),
+    Shadow(color: Colors.black87, blurRadius: 3, offset: Offset(0, 1)),
   ];
 
   @override
@@ -1229,7 +1229,7 @@ class _LocationStatus extends StatelessWidget {
               children: [
                 Icon(
                   Icons.location_on,
-                  size: 21,
+                  size: 19,
                   color: Colors.white,
                   shadows: _shadow,
                 ),
@@ -1238,7 +1238,7 @@ class _LocationStatus extends StatelessWidget {
                   'GPS',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.5,
                     shadows: _shadow,
@@ -1246,20 +1246,21 @@ class _LocationStatus extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Text(
               service.coordinateText,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.w600,
+                letterSpacing: 0.1,
                 shadows: _shadow,
               ),
             ),
             if (service.address.value.isNotEmpty) ...[
-              const SizedBox(height: 3),
+              const SizedBox(height: 2),
               ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 280),
+                constraints: const BoxConstraints(maxWidth: 260),
                 child: Text(
                   service.address.value,
                   textAlign: TextAlign.right,
@@ -1267,9 +1268,9 @@ class _LocationStatus extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    height: 1.15,
+                    height: 1.2,
                     shadows: _shadow,
                   ),
                 ),
@@ -1290,7 +1291,7 @@ class _LocationStatus extends StatelessWidget {
               'Akurasi ${service.accuracyText} | Alt ${service.altitudeText}',
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w500,
                 shadows: _shadow,
               ),
