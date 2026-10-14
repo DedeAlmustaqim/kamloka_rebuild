@@ -161,10 +161,10 @@ class _CameraPreview extends StatelessWidget {
                   child: Text(
                     value.toString(),
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: const Color(0xFF202522),
                       fontSize: 96,
                       fontWeight: FontWeight.w800,
-                      shadows: [Shadow(color: Colors.black87, blurRadius: 12)],
+                      shadows: [Shadow(color: Colors.white, blurRadius: 12)],
                     ),
                   ),
                 ),
@@ -238,7 +238,7 @@ class _CameraPreview extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Image.asset(
-                    'assets/images/kamloka_typo_white.png',
+                    'assets/images/kamloka_typo.png',
                     width: 150,
                     fit: BoxFit.contain,
                   ),
@@ -490,7 +490,7 @@ class _AspectRatioMaskPainter extends CustomPainter {
     final top = (size.height - cropSize.height) / 2;
     final cropRect = Rect.fromLTWH(left, top, cropSize.width, cropSize.height);
 
-    final overlay = Paint()..color = Colors.black.withValues(alpha: 0.52);
+    final overlay = Paint()..color = Colors.white.withValues(alpha: 0.58);
     final outside = Path()..addRect(Offset.zero & size);
     final hole = Path()..addRect(cropRect);
     canvas.drawPath(
@@ -499,7 +499,7 @@ class _AspectRatioMaskPainter extends CustomPainter {
     );
 
     final border = Paint()
-      ..color = Colors.white.withValues(alpha: 0.8)
+      ..color = const Color(0xFFFFC107)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
     canvas.drawRect(cropRect, border);
@@ -682,9 +682,7 @@ class _LocationStatus extends StatelessWidget {
 
   final LocationService service;
 
-  static const _shadow = [
-    Shadow(color: Colors.black87, blurRadius: 4, offset: Offset(0, 1)),
-  ];
+  static const _shadow = <Shadow>[];
 
   @override
   Widget build(BuildContext context) {
@@ -741,7 +739,7 @@ class _LocationStatus extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: const Color(0xFF202522),
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     height: 1.15,
