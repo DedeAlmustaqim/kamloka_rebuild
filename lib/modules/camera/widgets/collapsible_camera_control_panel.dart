@@ -5,9 +5,16 @@ import 'package:get/get.dart';
 import '../controllers/camera_controller.dart';
 
 class CollapsibleCameraControlPanel extends StatelessWidget {
-  const CollapsibleCameraControlPanel({super.key, required this.controller});
+  const CollapsibleCameraControlPanel({
+    super.key,
+    required this.controller,
+    this.toggleOnly = false,
+    this.panelOnly = false,
+  });
 
   final CameraController controller;
+  final bool toggleOnly;
+  final bool panelOnly;
 
   CameraController get c => controller;
 
@@ -15,40 +22,48 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       final expanded = c.isControlPanelExpanded.value;
-      return Container(
-        margin: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (expanded) ...[
-              _toolbar(),
-              const SizedBox(height: 6),
-            ],
-            Align(
-              alignment: Alignment.topCenter,
-              child: Material(
-                color: Colors.black.withValues(alpha: 0.38),
-                shape: const CircleBorder(
-                  side: BorderSide(color: Colors.white54, width: 1),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: IconButton(
-                  tooltip: expanded ? 'Tutup kontrol kamera' : 'Buka kontrol kamera',
-                  visualDensity: VisualDensity.compact,
-                  constraints: const BoxConstraints.tightFor(width: 42, height: 42),
-                  onPressed: c.isCapturing.value || c.isCountingDown
-                      ? null
-                      : c.isControlPanelExpanded.toggle,
-                  icon: Icon(
-                    expanded ? Icons.keyboard_arrow_up_rounded : Icons.tune_rounded,
-                    color: Colors.white,
-                    size: 22,
-                  ),
-                ),
-              ),
-            ),
-          ],
+      final toggle = Material(
+        color: Colors.black.withValues(alpha: 0.38),
+        shape: const CircleBorder(
+          side: BorderSide(color: Colors.white54, width: 1),
         ),
+        clipBehavior: Clip.antiAlias,
+        child: IconButton(
+          tooltip: expanded ? 'Tutup kontrol kamera' : 'Buka kontrol kamera',
+          visualDensity: VisualDensity.compact,
+          constraints: const BoxConstraints.tightFor(width: 42, height: 42),
+          onPressed: c.isCapturing.value || c.isCountingDown
+              ? null
+              : c.isControlPanelExpanded.toggle,
+          icon: Icon(
+            expanded ? Icons.keyboard_arrow_up_rounded : Icons.tune_rounded,
+            color: Colors.white,
+            size: 22,
+          ),
+        ),
+      );
+
+      if (toggleOnly) return toggle;
+      if (panelOnly) {
+        if (!expanded) return const SizedBox.shrink();
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.38),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white24),
+          ),
+          child: _toolbar(),
+        );
+      }
+
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (expanded) ...[_toolbar(), const SizedBox(height: 6)],
+          toggle,
+        ],
       );
     });
   }
