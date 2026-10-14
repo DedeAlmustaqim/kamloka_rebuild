@@ -374,7 +374,7 @@ class KamlokaProScreen extends StatelessWidget {
                             Text(
                               pro.isPro.value
                                   ? 'Akses premium tersedia di perangkat ini.'
-                                  : 'Fitur perjalanan dapat dicoba pada versi ini. Pembelian belum tersedia.',
+                                  : 'Aktifkan akses PRO untuk membuka dokumentasi perjalanan. Pembelian belum tersedia.',
                               style: const TextStyle(
                                 color: ProTheme.secondaryText,
                                 fontSize: 12,
