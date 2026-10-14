@@ -25,6 +25,7 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
   final _uuid = const Uuid();
   late Future<List<VisitLocation>> _locationsFuture;
   bool _isExporting = false;
+  bool _isAddingLocation = false;
 
   @override
   void initState() {
@@ -68,34 +69,41 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
   }
 
   Future<void> _addLocation() async {
-    final locationService = Get.find<LocationService>();
-    final currentPosition = locationService.position.value;
-    final currentAddress = locationService.address.value.trim();
+    if (_isAddingLocation) return;
+    setState(() => _isAddingLocation = true);
 
-    // The dialog owns its text controllers and disposes them with its State.
-    // This avoids disposing controllers while the dialog route is still closing.
-    final result = await showDialog<_NewLocationInput>(
-      context: context,
-      builder: (_) => _AddLocationDialog(currentAddress: currentAddress),
-    );
-    if (result == null) return;
+    try {
+      final locationService = Get.find<LocationService>();
+      final currentPosition = locationService.position.value;
+      final currentAddress = locationService.address.value.trim();
 
-    final existing = await _database.listLocations(widget.trip.id);
-    await _database.saveLocation(
-      VisitLocation(
-        id: _uuid.v4(),
-        tripId: widget.trip.id,
-        name: result.name,
-        address: currentAddress.isEmpty ? null : currentAddress,
-        latitude: currentPosition?.latitude,
-        longitude: currentPosition?.longitude,
-        visitedAt: DateTime.now(),
-        notes: _nullableText(result.notes),
-        sortOrder: existing.length,
-        createdAt: DateTime.now(),
-      ),
-    );
-    if (mounted) setState(_reload);
+      // The dialog owns its text controllers and disposes them with its State.
+      // This avoids disposing controllers while the dialog route is still closing.
+      final result = await showDialog<_NewLocationInput>(
+        context: context,
+        builder: (_) => _AddLocationDialog(currentAddress: currentAddress),
+      );
+      if (result == null) return;
+
+      final existing = await _database.listLocations(widget.trip.id);
+      await _database.saveLocation(
+        VisitLocation(
+          id: _uuid.v4(),
+          tripId: widget.trip.id,
+          name: result.name,
+          address: currentAddress.isEmpty ? null : currentAddress,
+          latitude: currentPosition?.latitude,
+          longitude: currentPosition?.longitude,
+          visitedAt: DateTime.now(),
+          notes: _nullableText(result.notes),
+          sortOrder: existing.length,
+          createdAt: DateTime.now(),
+        ),
+      );
+      if (mounted) setState(_reload);
+    } finally {
+      if (mounted) setState(() => _isAddingLocation = false);
+    }
   }
 
   @override
@@ -119,7 +127,7 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _addLocation,
+        onPressed: _isAddingLocation ? null : _addLocation,
         icon: const Icon(Icons.add_location_alt_outlined),
         label: const Text('Tambah Lokasi'),
       ),
