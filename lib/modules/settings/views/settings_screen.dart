@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -90,6 +91,53 @@ class SettingsScreen extends StatelessWidget {
               ],
             ),
           ),
+          if (kDebugMode) ...[
+            const SizedBox(height: 28),
+            const _SectionLabel('MODE DEVELOPER'),
+            const SizedBox(height: 10),
+            Container(
+              decoration: BoxDecoration(
+                color: _surface,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: ProTheme.border),
+              ),
+              child: Obx(() {
+                final access = Get.find<ProAccessService>();
+                return SwitchListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 5,
+                  ),
+                  secondary: Icon(
+                    access.isPro.value
+                        ? Icons.workspace_premium_rounded
+                        : Icons.developer_mode_rounded,
+                    color: access.isPro.value
+                        ? ProTheme.primaryDark
+                        : ProTheme.secondaryText,
+                  ),
+                  title: Text(
+                    access.isPro.value ? 'Mode PRO aktif' : 'Mode Gratis aktif',
+                    style: const TextStyle(
+                      color: ProTheme.text,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  subtitle: const Text(
+                    'Sementara untuk pengujian fitur. Hanya tampil pada debug build.',
+                    style: TextStyle(
+                      color: _muted,
+                      fontSize: 12,
+                      height: 1.4,
+                    ),
+                  ),
+                  value: access.isPro.value,
+                  activeThumbColor: ProTheme.primaryDark,
+                  onChanged: access.setDeveloperProOverride,
+                );
+              }),
+            ),
+          ],
           const SizedBox(height: 28),
           const _SectionLabel('TINGKATKAN PENGALAMAN'),
           const SizedBox(height: 10),
