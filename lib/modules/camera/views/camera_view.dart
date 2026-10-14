@@ -12,6 +12,7 @@ import '../widgets/collapsible_camera_control_panel.dart';
 import '../../location/services/location_service.dart';
 import '../../settings/views/settings_screen.dart';
 import '../../pro/views/pro_trips_screen.dart';
+import '../../pro/services/pro_access_service.dart';
 
 class CameraView extends GetView<CameraController> {
   const CameraView({super.key});
@@ -337,15 +338,99 @@ class _BottomScrim extends StatelessWidget {
 class _FieldDocumentationButton extends StatelessWidget {
   const _FieldDocumentationButton();
 
+  Future<void> _openDocumentation(BuildContext context) async {
+    final access = Get.find<ProAccessService>();
+    if (access.isPro.value) {
+      Get.to(
+        () => const ProTripsScreen(),
+        transition: Transition.cupertino,
+      );
+      return;
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: Container(
+          width: 64,
+          height: 64,
+          decoration: const BoxDecoration(
+            color: Color(0xFFFFF2C8),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.assignment_outlined,
+            color: Color(0xFF6A5200),
+            size: 32,
+          ),
+        ),
+        title: const Text(
+          'Dokumentasi Lapangan',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Catat kegiatan lapangan dengan lebih terstruktur melalui KAMLOKA Pro.',
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 18),
+            _DocumentationBenefit(
+              icon: Icons.route_outlined,
+              text: 'Kelola perjalanan dan kegiatan',
+            ),
+            SizedBox(height: 12),
+            _DocumentationBenefit(
+              icon: Icons.add_location_alt_outlined,
+              text: 'Susun lokasi kunjungan, foto, dan catatan',
+            ),
+            SizedBox(height: 12),
+            _DocumentationBenefit(
+              icon: Icons.picture_as_pdf_outlined,
+              text: 'Ekspor dokumentasi menjadi laporan PDF',
+            ),
+            SizedBox(height: 18),
+            Text(
+              'Fitur ini tersedia untuk pengguna KAMLOKA Pro.',
+              style: TextStyle(
+                color: Color(0xFF68716B),
+                fontSize: 12,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actionsAlignment: MainAxisAlignment.spaceBetween,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Nanti'),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              Get.to(
+                () => const KamlokaProScreen(),
+                transition: Transition.cupertino,
+              );
+            },
+            icon: const Icon(Icons.workspace_premium_outlined, size: 18),
+            label: const Text('Kenali Pro'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => Get.to(
-          () => const ProTripsScreen(),
-          transition: Transition.cupertino,
-        ),
+        onTap: () => _openDocumentation(context),
         borderRadius: BorderRadius.circular(24),
         child: Container(
           padding: const EdgeInsets.fromLTRB(12, 9, 9, 9),
@@ -401,6 +486,36 @@ class _FieldDocumentationButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _DocumentationBenefit extends StatelessWidget {
+  const _DocumentationBenefit({
+    required this.icon,
+    required this.text,
+  });
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 19, color: const Color(0xFF6A5200)),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
