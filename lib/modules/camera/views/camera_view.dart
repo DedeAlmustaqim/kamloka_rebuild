@@ -11,6 +11,7 @@ import 'photo_preview_view.dart';
 import '../widgets/collapsible_camera_control_panel.dart';
 import '../../location/services/location_service.dart';
 import '../../settings/views/settings_screen.dart';
+import '../../pro/views/pro_trips_screen.dart';
 
 class CameraView extends GetView<CameraController> {
   const CameraView({super.key});
@@ -114,6 +115,15 @@ class _CameraPreview extends StatelessWidget {
         SafeArea(
           child: CollapsibleCameraControlPanel(
             controller: Get.find<CameraController>(),
+          ),
+        ),
+        SafeArea(
+          child: Align(
+            alignment: Alignment.topRight,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 58, right: 14),
+              child: _FieldDocumentationButton(),
+            ),
           ),
         ),
         Obx(() {
@@ -317,6 +327,77 @@ class _BottomScrim extends StatelessWidget {
               end: Alignment.topCenter,
               colors: [Colors.black54, Colors.transparent],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FieldDocumentationButton extends StatelessWidget {
+  const _FieldDocumentationButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => Get.to(
+          () => const ProTripsScreen(),
+          transition: Transition.cupertino,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(12, 9, 9, 9),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFFE2E6E0)),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 12,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.assignment_outlined,
+                color: Color(0xFF202522),
+                size: 20,
+              ),
+              SizedBox(width: 7),
+              Text(
+                'Dokumentasi',
+                style: TextStyle(
+                  color: Color(0xFF202522),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              SizedBox(width: 8),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Color(0xFFFFC107),
+                  borderRadius: BorderRadius.all(Radius.circular(6)),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  child: Text(
+                    'PRO',
+                    style: TextStyle(
+                      color: Color(0xFF292B25),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
