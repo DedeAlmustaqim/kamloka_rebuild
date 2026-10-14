@@ -13,6 +13,9 @@ import '../../location/services/location_service.dart';
 import '../../settings/views/settings_screen.dart';
 import '../../pro/views/pro_trips_screen.dart';
 import '../../pro/services/pro_access_service.dart';
+import '../../pro/models/trip.dart';
+import '../../pro/models/visit_location.dart';
+import '../../pro/services/pro_database_service.dart';
 
 class CameraView extends GetView<CameraController> {
   const CameraView({super.key});
@@ -124,6 +127,15 @@ class _CameraPreview extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.only(top: 58, right: 14),
               child: _FieldDocumentationButton(),
+            ),
+          ),
+        ),
+        SafeArea(
+          child: Align(
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 58, left: 14),
+              child: _DocumentationLocationButton(),
             ),
           ),
         ),
@@ -857,6 +869,295 @@ class _CaptureThumbnail extends GetView<CameraController> {
         ),
       );
     });
+  }
+}
+
+class _DocumentationLocationButton extends StatelessWidget {
+  const _DocumentationLocationButton();
+
+  Future<void> _openSelector(BuildContext context) async {
+    final cameraController = Get.find<CameraController>();
+    final database = Get.find<ProDatabaseService>();
+
+    try {
+      final trips = await database.listTrips();
+      final options = <_DocumentationLocationOption>[];
+      for (final trip in trips) {
+        final locations = await database.listLocations(trip.id);
+        options.addAll(
+          locations.map(
+            (location) => _DocumentationLocationOption(
+              trip: trip,
+              location: location,
+            ),
+          ),
+        );
+      }
+
+      if (!context.mounted) return;
+      final choice = await showModalBottomSheet<_DocumentationLocationChoice>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => _DocumentationLocationSheet(
+          options: options,
+          selectedLocationId:
+              cameraController.selectedDocumentationLocation.value?.id,
+        ),
+      );
+
+      if (choice != null) {
+        cameraController.selectedDocumentationLocation.value = choice.location;
+      }
+    } catch (error) {
+      if (context.mounted) {
+        Get.snackbar(
+          'Lokasi dokumentasi tidak dapat dimuat',
+          error.toString(),
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final selected =
+          Get.find<CameraController>().selectedDocumentationLocation.value;
+      return Material(
+        color: Colors.black.withValues(alpha: 0.62),
+        borderRadius: BorderRadius.circular(22),
+        child: InkWell(
+          onTap: () => _openSelector(context),
+          borderRadius: BorderRadius.circular(22),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 210),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    selected == null
+                        ? Icons.add_location_alt_outlined
+                        : Icons.location_on,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 7),
+                  Flexible(
+                    child: Text(
+                      selected?.name ?? 'Pilih lokasi foto',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(
+                    Icons.expand_more_rounded,
+                    color: Colors.white70,
+                    size: 17,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+  }
+}
+
+class _DocumentationLocationOption {
+  const _DocumentationLocationOption({
+    required this.trip,
+    required this.location,
+  });
+
+  final Trip trip;
+  final VisitLocation location;
+}
+
+class _DocumentationLocationChoice {
+  const _DocumentationLocationChoice(this.location);
+
+  final VisitLocation? location;
+}
+
+class _DocumentationLocationSheet extends StatelessWidget {
+  const _DocumentationLocationSheet({
+    required this.options,
+    required this.selectedLocationId,
+  });
+
+  final List<_DocumentationLocationOption> options;
+  final String? selectedLocationId;
+
+  @override
+  Widget build(BuildContext context) {
+    final height = MediaQuery.sizeOf(context).height * 0.72;
+    return Container(
+      height: height,
+      decoration: const BoxDecoration(
+        color: Color(0xFFF8F9F7),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 12, 14),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Pilih lokasi dokumentasi',
+                          style: TextStyle(
+                            color: Color(0xFF202820),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Foto tetap masuk ke album KAMLOKA.',
+                          style: TextStyle(
+                            color: Color(0xFF68716B),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFFE7EAE6),
+                child: Icon(Icons.camera_alt_outlined, color: Color(0xFF39433B)),
+              ),
+              title: const Text(
+                'Kamera biasa',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              subtitle: const Text('Simpan ke album tanpa mengaitkan lokasi kunjungan'),
+              trailing: selectedLocationId == null
+                  ? const Icon(Icons.check_circle, color: Color(0xFF28784B))
+                  : null,
+              onTap: () => Navigator.of(context).pop(
+                const _DocumentationLocationChoice(null),
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: options.isEmpty
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.location_off_outlined,
+                              size: 42,
+                              color: Color(0xFF68716B),
+                            ),
+                            SizedBox(height: 12),
+                            Text(
+                              'Belum ada lokasi kunjungan',
+                              style: TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              'Buat perjalanan dan tambahkan lokasi melalui tombol Dokumentasi Lapangan.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Color(0xFF68716B),
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 20),
+                      itemCount: options.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 5),
+                      itemBuilder: (context, index) {
+                        final option = options[index];
+                        final selected =
+                            option.location.id == selectedLocationId;
+                        return Card(
+                          elevation: 0,
+                          color: selected
+                              ? const Color(0xFFE5F2E8)
+                              : Colors.white,
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: selected
+                                  ? const Color(0xFFC7E5CF)
+                                  : const Color(0xFFFFF2C8),
+                              child: Icon(
+                                Icons.location_on_outlined,
+                                color: selected
+                                    ? const Color(0xFF28784B)
+                                    : const Color(0xFF6A5200),
+                              ),
+                            ),
+                            title: Text(
+                              option.location.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(option.trip.title),
+                                if (option.location.address?.isNotEmpty == true)
+                                  Text(
+                                    option.location.address!,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                              ],
+                            ),
+                            trailing: selected
+                                ? const Icon(
+                                    Icons.check_circle,
+                                    color: Color(0xFF28784B),
+                                  )
+                                : const Icon(Icons.chevron_right_rounded),
+                            onTap: () => Navigator.of(context).pop(
+                              _DocumentationLocationChoice(option.location),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
