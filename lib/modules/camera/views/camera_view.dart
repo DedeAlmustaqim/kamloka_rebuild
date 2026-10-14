@@ -230,24 +230,40 @@ class _CameraPreview extends StatelessWidget {
             ),
           ),
         ),
-        SafeArea(
-          child: Align(
-            alignment: Alignment.bottomRight,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 16, bottom: 205, left: 80),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Image.asset(
-                    'assets/images/kamloka_typo_white.png',
-                    width: 150,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(height: 7),
-                  _LocationStatus(service: locationService),
-                ],
-              ),
+        Positioned(
+          left: 14,
+          right: 14,
+          bottom: 245,
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    CollapsibleCameraControlPanel(
+                      controller: Get.find<CameraController>(),
+                    ),
+                    const Spacer(),
+                    Flexible(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Image.asset(
+                            'assets/images/kamloka_typo_white.png',
+                            width: 132,
+                            fit: BoxFit.contain,
+                          ),
+                          const SizedBox(height: 5),
+                          _LocationStatus(service: locationService),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
@@ -290,33 +306,26 @@ class _CameraTopControls extends StatelessWidget {
   Widget build(BuildContext context) {
     return Align(
       alignment: Alignment.topCenter,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CollapsibleCameraControlPanel(controller: controller),
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Expanded(
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: _DocumentationLocationButton(),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Flexible(
-                  child: Align(
-                    alignment: Alignment.topRight,
-                    child: _FieldDocumentationButton(),
-                  ),
-                ),
-              ],
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Expanded(
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: _DocumentationLocationButton(),
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: 10),
+            Flexible(
+              child: Align(
+                alignment: Alignment.topRight,
+                child: _FieldDocumentationButton(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
