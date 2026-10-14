@@ -243,7 +243,15 @@ class _CameraPreview extends StatelessWidget {
                     fit: BoxFit.contain,
                   ),
                   const SizedBox(height: 7),
-                  _LocationStatus(service: locationService),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.92),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFE2E6E0)),
+                    ),
+                    child: _LocationStatus(service: locationService),
+                  ),
                 ],
               ),
             ),
@@ -556,7 +564,7 @@ class _ExposureControl extends GetView<CameraController> {
                           child: Center(
                             child: Icon(
                               Icons.wb_sunny_outlined,
-                              color: Colors.white,
+                              color: const Color(0xFF202522),
                               size: 18,
                             ),
                           ),
@@ -605,9 +613,7 @@ class _ExposureControl extends GetView<CameraController> {
                             color: const Color(0xFF202522),
                             fontSize: 9,
                             fontWeight: FontWeight.w700,
-                            shadows: [
-                              Shadow(color: Colors.black87, blurRadius: 3),
-                            ],
+                            shadows: const [],
                           ),
                         ),
                         GestureDetector(
@@ -714,7 +720,7 @@ class _LocationStatus extends StatelessWidget {
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.5,
-                    shadows: _shadow,
+                    shadows: const [],
                   ),
                 ),
               ],
@@ -726,7 +732,7 @@ class _LocationStatus extends StatelessWidget {
                 color: const Color(0xFF202522),
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                shadows: _shadow,
+                shadows: const [],
               ),
             ),
             if (service.address.value.isNotEmpty) ...[
@@ -743,7 +749,7 @@ class _LocationStatus extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     height: 1.15,
-                    shadows: _shadow,
+                    shadows: const [],
                   ),
                 ),
               ),
@@ -754,7 +760,7 @@ class _LocationStatus extends StatelessWidget {
                 style: TextStyle(
                   color: const Color(0xFF68716B),
                   fontSize: 11,
-                  shadows: _shadow,
+                  shadows: const [],
                 ),
               ),
             ],
@@ -765,7 +771,7 @@ class _LocationStatus extends StatelessWidget {
                 color: const Color(0xFF202522),
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                shadows: _shadow,
+                shadows: const [],
               ),
             ),
           ],
@@ -778,8 +784,8 @@ class _LocationStatus extends StatelessWidget {
           Icon(
             isEnabled ? Icons.gps_fixed : Icons.gps_off,
             size: 20,
-            color: Colors.white,
-            shadows: _shadow,
+            color: const Color(0xFF202522),
+            shadows: const [],
           ),
           const SizedBox(width: 5),
           Text(
@@ -790,7 +796,7 @@ class _LocationStatus extends StatelessWidget {
               color: const Color(0xFF202522),
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              shadows: _shadow,
+              shadows: const [],
             ),
           ),
         ],
