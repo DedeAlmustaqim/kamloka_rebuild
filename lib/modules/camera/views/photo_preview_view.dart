@@ -14,7 +14,7 @@ class PhotoPreviewView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFFF5F6F3),
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -29,7 +29,7 @@ class PhotoPreviewView extends StatelessWidget {
                   return const Center(
                     child: Text(
                       'Foto tidak dapat ditampilkan.',
-                      style: TextStyle(color: Colors.white70),
+                      style: TextStyle(color: Color(0xFF68716B)), 
                     ),
                   );
                 },
@@ -42,11 +42,11 @@ class PhotoPreviewView extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Material(
-                  color: Colors.black54,
+                  color: Colors.white.withValues(alpha: 0.94),
                   shape: const CircleBorder(),
                   child: IconButton(
                     onPressed: Get.back,
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: const Icon(Icons.close, color: Color(0xFF202522)), 
                     tooltip: 'Tutup',
                   ),
                 ),
@@ -61,7 +61,7 @@ class PhotoPreviewView extends StatelessWidget {
                 child: Text(
                   'FOTO',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Color(0xFF202522),
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.5,
