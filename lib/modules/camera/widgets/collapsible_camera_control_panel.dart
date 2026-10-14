@@ -147,16 +147,16 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
                 height: 48,
                 decoration: BoxDecoration(
                   color: active
-                      ? Colors.white.withValues(alpha: 0.18)
-                      : Colors.black.withValues(alpha: 0.18),
+                      ? const Color(0xFFFFE69A).withValues(alpha: 0.96)
+                      : Colors.white.withValues(alpha: 0.92),
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: active
-                        ? Colors.white70
-                        : Colors.white.withValues(alpha: 0.30),
+                        ? const Color(0xFF6A5200)
+                        : const Color(0xFFE2E6E0),
                   ),
                 ),
-                child: Icon(icon, color: Colors.white, size: 20),
+                child: Icon(icon, color: const Color(0xFF292B25), size: 20),
               ),
               const SizedBox(height: 2),
               Text(
@@ -164,10 +164,10 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  color: Colors.white70,
+                  color: const Color(0xFF202522),
                   fontSize: 9,
                   fontWeight: FontWeight.w500,
-                  shadows: [Shadow(color: Colors.black87, blurRadius: 3)],
+                  shadows: const [],
                 ),
               ),
               Text(
@@ -175,7 +175,7 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: const Color(0xFF202522),
                   fontSize: 9,
                   fontWeight: FontWeight.w700,
                   shadows: [Shadow(color: Colors.black87, blurRadius: 3)],
