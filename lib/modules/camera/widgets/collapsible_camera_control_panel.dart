@@ -13,10 +13,44 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-      child: _toolbar(),
-    );
+    return Obx(() {
+      final expanded = c.isControlPanelExpanded.value;
+      return Container(
+        margin: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (expanded) ...[
+              _toolbar(),
+              const SizedBox(height: 6),
+            ],
+            Align(
+              alignment: Alignment.topCenter,
+              child: Material(
+                color: Colors.black.withValues(alpha: 0.38),
+                shape: const CircleBorder(
+                  side: BorderSide(color: Colors.white54, width: 1),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: IconButton(
+                  tooltip: expanded ? 'Tutup kontrol kamera' : 'Buka kontrol kamera',
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints.tightFor(width: 42, height: 42),
+                  onPressed: c.isCapturing.value || c.isCountingDown
+                      ? null
+                      : c.isControlPanelExpanded.toggle,
+                  icon: Icon(
+                    expanded ? Icons.keyboard_arrow_up_rounded : Icons.tune_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _toolbar() {
@@ -33,7 +67,6 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
       ],
     );
   }
-
   Widget _ratioCell() {
     return Obx(
       () => _toolbarControl(
