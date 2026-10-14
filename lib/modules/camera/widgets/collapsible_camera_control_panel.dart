@@ -178,7 +178,7 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
                   color: const Color(0xFF202522),
                   fontSize: 9,
                   fontWeight: FontWeight.w700,
-                  shadows: [Shadow(color: Colors.black87, blurRadius: 3)],
+                  shadows: const [],
                 ),
               ),
             ],
