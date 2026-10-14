@@ -17,8 +17,8 @@ Future<void> main() async {
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     systemNavigationBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    systemNavigationBarIconBrightness: Brightness.light,
+    statusBarIconBrightness: Brightness.dark,
+    systemNavigationBarIconBrightness: Brightness.dark,
   ));
 
   runApp(const KamlokaApp());
@@ -33,9 +33,19 @@ class KamlokaApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'KAMLOKA',
       theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: Colors.black,
         useMaterial3: true,
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: const Color(0xFFF5F6F3),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFFFC107),
+          brightness: Brightness.light,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFFF5F6F3),
+          foregroundColor: Color(0xFF202522),
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+        ),
       ),
       home: const SplashScreen(),
     );
