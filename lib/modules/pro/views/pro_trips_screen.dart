@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/trip.dart';
+import '../services/pro_access_service.dart';
 import '../services/pro_database_service.dart';
 import '../services/pro_photo_storage_service.dart';
 import '../theme/pro_theme.dart';
@@ -114,6 +115,54 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final access = Get.find<ProAccessService>();
+    if (!access.hasAccess(KamlokaFeature.fieldDocumentation)) {
+      return ProTheme.apply(
+        Scaffold(
+          appBar: AppBar(title: const Text('Dokumentasi PRO')),
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.lock_outline_rounded,
+                    size: 54,
+                    color: ProTheme.secondaryText,
+                  ),
+                  const SizedBox(height: 18),
+                  const Text(
+                    'Dokumentasi lapangan adalah fitur PRO',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: ProTheme.text,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Aktifkan mode PRO melalui Pengaturan saat pengembangan, atau gunakan akses PRO setelah pembelian tersedia.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: ProTheme.secondaryText,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  FilledButton(
+                    onPressed: Get.back,
+                    child: const Text('Kembali ke pengaturan'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return ProTheme.apply(
       Scaffold(
         appBar: AppBar(title: const Text('Perjalanan Saya')),
