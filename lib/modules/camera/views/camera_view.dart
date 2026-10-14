@@ -244,6 +244,7 @@ class _CameraPreview extends StatelessWidget {
                   children: [
                     CollapsibleCameraControlPanel(
                       controller: Get.find<CameraController>(),
+                      toggleOnly: true,
                     ),
                     const Spacer(),
                     Flexible(
@@ -262,6 +263,13 @@ class _CameraPreview extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 8),
+                Center(
+                  child: CollapsibleCameraControlPanel(
+                    controller: Get.find<CameraController>(),
+                    panelOnly: true,
+                  ),
                 ),
               ],
             ),
