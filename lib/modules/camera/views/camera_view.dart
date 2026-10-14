@@ -341,10 +341,7 @@ class _FieldDocumentationButton extends StatelessWidget {
   Future<void> _openDocumentation(BuildContext context) async {
     final access = Get.find<ProAccessService>();
     if (access.isPro.value) {
-      Get.to(
-        () => const ProTripsScreen(),
-        transition: Transition.cupertino,
-      );
+      Get.to(() => const ProTripsScreen(), transition: Transition.cupertino);
       return;
     }
 
@@ -395,10 +392,7 @@ class _FieldDocumentationButton extends StatelessWidget {
             SizedBox(height: 18),
             Text(
               'Fitur ini tersedia untuk pengguna KAMLOKA Pro.',
-              style: TextStyle(
-                color: Color(0xFF68716B),
-                fontSize: 12,
-              ),
+              style: TextStyle(color: Color(0xFF68716B), fontSize: 12),
               textAlign: TextAlign.center,
             ),
           ],
@@ -433,6 +427,7 @@ class _FieldDocumentationButton extends StatelessWidget {
         onTap: () => _openDocumentation(context),
         borderRadius: BorderRadius.circular(24),
         child: Container(
+          margin: const EdgeInsets.only(right: 4, top: 40),
           padding: const EdgeInsets.fromLTRB(12, 9, 9, 9),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -491,10 +486,7 @@ class _FieldDocumentationButton extends StatelessWidget {
 }
 
 class _DocumentationBenefit extends StatelessWidget {
-  const _DocumentationBenefit({
-    required this.icon,
-    required this.text,
-  });
+  const _DocumentationBenefit({required this.icon, required this.text});
 
   final IconData icon;
   final String text;
@@ -509,10 +501,7 @@ class _DocumentationBenefit extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-            ),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
           ),
         ),
       ],
@@ -598,9 +587,9 @@ class _CameraShutter extends GetView<CameraController> {
                         onPressed: isBusy
                             ? null
                             : () => Get.to(
-                                  () => const SettingsScreen(),
-                                  transition: Transition.cupertino,
-                                ),
+                                () => const SettingsScreen(),
+                                transition: Transition.cupertino,
+                              ),
                         icon: const Icon(
                           Icons.settings_rounded,
                           color: Colors.white,

@@ -65,7 +65,10 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
       );
       if (mounted) {
         setState(_reload);
-        Get.snackbar('Perjalanan dibuat', 'Kegiatan siap untuk didokumentasikan.');
+        Get.snackbar(
+          'Perjalanan dibuat',
+          'Kegiatan siap untuk didokumentasikan.',
+        );
       }
     } catch (error) {
       if (mounted) Get.snackbar('Belum berhasil menyimpan', error.toString());
@@ -279,7 +282,10 @@ class _SummaryCard extends StatelessWidget {
                 ? const SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
                 : const Text('Buat'),
           ),
@@ -378,14 +384,20 @@ class _TripCard extends StatelessWidget {
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(Icons.delete_outline_rounded, color: ProTheme.danger),
+                        Icon(
+                          Icons.delete_outline_rounded,
+                          color: ProTheme.danger,
+                        ),
                         SizedBox(width: 10),
                         Text('Hapus perjalanan'),
                       ],
                     ),
                   ),
                 ],
-                icon: const Icon(Icons.more_vert, color: ProTheme.secondaryText),
+                icon: const Icon(
+                  Icons.more_vert,
+                  color: ProTheme.secondaryText,
+                ),
               ),
             ],
           ),
@@ -477,7 +489,6 @@ class _EmptyTrips extends StatelessWidget {
               height: 1.5,
             ),
           ),
-
         ],
       ),
     );
@@ -498,7 +509,11 @@ class _LoadError extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.cloud_off_outlined, size: 42, color: ProTheme.secondaryText),
+            const Icon(
+              Icons.cloud_off_outlined,
+              size: 42,
+              color: ProTheme.secondaryText,
+            ),
             const SizedBox(height: 12),
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 12),
@@ -565,7 +580,9 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
   Future<void> _pickDate({required bool isStart}) async {
     final selected = await showDatePicker(
       context: context,
-      initialDate: isStart ? _startDate : (_endDate.isBefore(_startDate) ? _startDate : _endDate),
+      initialDate: isStart
+          ? _startDate
+          : (_endDate.isBefore(_startDate) ? _startDate : _endDate),
       firstDate: isStart ? DateTime(2000) : _startDate,
       lastDate: DateTime(2100),
       helpText: isStart ? 'Pilih tanggal mulai' : 'Pilih tanggal selesai',
@@ -598,142 +615,163 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Center(
-                  child: Container(
-                    width: 38,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: ProTheme.border,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 22),
-                const Text(
-                  'Perjalanan baru',
-                  style: TextStyle(
-                    color: ProTheme.text,
-                    fontSize: 23,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Isi informasi utama dulu. Detail lainnya bisa ditambahkan jika diperlukan.',
-                  style: TextStyle(color: ProTheme.secondaryText, height: 1.45),
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _title,
-                  autofocus: true,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(
-                    labelText: 'Nama kegiatan *',
-                    hintText: 'Contoh: Monitoring pembangunan',
-                    prefixIcon: Icon(Icons.work_outline_rounded),
-                  ),
-                  validator: (value) => value == null || value.trim().isEmpty
-                      ? 'Nama kegiatan wajib diisi.'
-                      : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _purpose,
-                  textCapitalization: TextCapitalization.sentences,
-                  maxLines: 2,
-                  decoration: const InputDecoration(
-                    labelText: 'Tujuan kegiatan *',
-                    hintText: 'Apa yang ingin dicapai?',
-                    prefixIcon: Icon(Icons.flag_outlined),
-                    alignLabelWithHint: true,
-                  ),
-                  validator: (value) => value == null || value.trim().isEmpty
-                      ? 'Tujuan kegiatan wajib diisi.'
-                      : null,
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Jadwal perjalanan',
-                  style: TextStyle(color: ProTheme.text, fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _DateButton(
-                        label: 'Mulai',
-                        date: _startDate,
-                        onTap: () => _pickDate(isStart: true),
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 38,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: ProTheme.border,
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _DateButton(
-                        label: 'Selesai',
-                        date: _endDate,
-                        onTap: () => _pickDate(isStart: false),
+                  ),
+                  const SizedBox(height: 22),
+                  const Text(
+                    'Perjalanan baru',
+                    style: TextStyle(
+                      color: ProTheme.text,
+                      fontSize: 23,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Isi informasi utama dulu. Detail lainnya bisa ditambahkan jika diperlukan.',
+                    style: TextStyle(
+                      color: ProTheme.secondaryText,
+                      height: 1.45,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: _title,
+                    autofocus: true,
+                    textCapitalization: TextCapitalization.sentences,
+                    decoration: const InputDecoration(
+                      labelText: 'Nama kegiatan *',
+                      hintText: 'Isi nama kegiatan atau judul perjalanan',
+                      prefixIcon: Icon(Icons.work_outline_rounded),
+                    ),
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Nama kegiatan wajib diisi.'
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _purpose,
+                    textCapitalization: TextCapitalization.sentences,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      labelText: 'Tujuan kegiatan *',
+                      hintText: 'Apa yang ingin dicapai?',
+                      prefixIcon: Icon(Icons.flag_outlined),
+                      alignLabelWithHint: true,
+                    ),
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Tujuan kegiatan wajib diisi.'
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Jadwal perjalanan',
+                    style: TextStyle(
+                      color: ProTheme.text,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _DateButton(
+                          label: 'Mulai',
+                          date: _startDate,
+                          onTap: () => _pickDate(isStart: true),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _DateButton(
+                          label: 'Selesai',
+                          date: _endDate,
+                          onTap: () => _pickDate(isStart: false),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: () =>
+                        setState(() => _showOptional = !_showOptional),
+                    icon: Icon(
+                      _showOptional
+                          ? Icons.remove_circle_outline
+                          : Icons.add_circle_outline,
+                    ),
+                    label: Text(
+                      _showOptional
+                          ? 'Sembunyikan detail opsional'
+                          : 'Tambah detail opsional',
+                    ),
+                    style: TextButton.styleFrom(
+                      alignment: Alignment.centerLeft,
+                    ),
+                  ),
+                  if (_showOptional) ...[
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _officer,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: const InputDecoration(
+                        labelText: 'Nama pelaksana',
+                        prefixIcon: Icon(Icons.person_outline_rounded),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _assignment,
+                      decoration: const InputDecoration(
+                        labelText: 'Nomor surat tugas',
+                        prefixIcon: Icon(Icons.description_outlined),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _notes,
+                      maxLines: 2,
+                      decoration: const InputDecoration(
+                        labelText: 'Catatan umum',
+                        prefixIcon: Icon(Icons.notes_rounded),
+                        alignLabelWithHint: true,
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 8),
-                TextButton.icon(
-                  onPressed: () => setState(() => _showOptional = !_showOptional),
-                  icon: Icon(_showOptional ? Icons.remove_circle_outline : Icons.add_circle_outline),
-                  label: Text(_showOptional ? 'Sembunyikan detail opsional' : 'Tambah detail opsional'),
-                  style: TextButton.styleFrom(alignment: Alignment.centerLeft),
-                ),
-                if (_showOptional) ...[
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _officer,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(
-                      labelText: 'Nama pelaksana',
-                      prefixIcon: Icon(Icons.person_outline_rounded),
-                    ),
+                  const SizedBox(height: 18),
+                  FilledButton(
+                    onPressed: _submit,
+                    child: const Text('Simpan perjalanan'),
                   ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _assignment,
-                    decoration: const InputDecoration(
-                      labelText: 'Nomor surat tugas',
-                      prefixIcon: Icon(Icons.description_outlined),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _notes,
-                    maxLines: 2,
-                    decoration: const InputDecoration(
-                      labelText: 'Catatan umum',
-                      prefixIcon: Icon(Icons.notes_rounded),
-                      alignLabelWithHint: true,
-                    ),
+                  const SizedBox(height: 4),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Batal'),
                   ),
                 ],
-                const SizedBox(height: 18),
-                FilledButton(
-                  onPressed: _submit,
-                  child: const Text('Simpan perjalanan'),
-                ),
-                const SizedBox(height: 4),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Batal'),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -764,7 +802,10 @@ class _DateButton extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: ProTheme.secondaryText, fontSize: 12)),
+          Text(
+            label,
+            style: const TextStyle(color: ProTheme.secondaryText, fontSize: 12),
+          ),
           const SizedBox(height: 5),
           Row(
             children: [
@@ -773,7 +814,10 @@ class _DateButton extends StatelessWidget {
               Expanded(
                 child: Text(
                   _dateLabel(date),
-                  style: const TextStyle(color: ProTheme.text, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    color: ProTheme.text,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -788,7 +832,9 @@ String _dateLabel(DateTime date) =>
     '${date.day.toString().padLeft(2, '0')} ${_monthLabel(date.month)} ${date.year}';
 
 String _dateRange(DateTime start, DateTime end) {
-  if (start.year == end.year && start.month == end.month && start.day == end.day) {
+  if (start.year == end.year &&
+      start.month == end.month &&
+      start.day == end.day) {
     return _dateLabel(start);
   }
   return '${start.day.toString().padLeft(2, '0')} ${_monthLabel(start.month)} – '
@@ -796,9 +842,19 @@ String _dateRange(DateTime start, DateTime end) {
 }
 
 String _monthLabel(int month) => const [
-      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
-    ][month - 1];
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'Mei',
+  'Jun',
+  'Jul',
+  'Agu',
+  'Sep',
+  'Okt',
+  'Nov',
+  'Des',
+][month - 1];
 
 String? _nullableText(String value) {
   final trimmed = value.trim();

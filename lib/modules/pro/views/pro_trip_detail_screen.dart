@@ -41,7 +41,8 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
     final locations = await _database.listLocations(widget.trip.id);
     final currentIndex = locations.indexWhere((item) => item.id == location.id);
     final targetIndex = currentIndex + offset;
-    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= locations.length) return;
+    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= locations.length)
+      return;
 
     final orderedIds = locations.map((item) => item.id).toList();
     final movedId = orderedIds.removeAt(currentIndex);
@@ -112,195 +113,220 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
       Scaffold(
         appBar: AppBar(
           title: const Text('Detail perjalanan'),
-        actions: [
-          IconButton(
-            tooltip: 'Ekspor dokumentasi PDF',
-            onPressed: _isExporting ? null : _exportPdf,
-            icon: _isExporting
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.picture_as_pdf_outlined),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _isAddingLocation ? null : _addLocation,
-        icon: const Icon(Icons.add_location_alt_outlined),
-        label: const Text('Tambah Lokasi'),
-      ),
-      body: FutureBuilder<List<VisitLocation>>(
-        future: _locationsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Gagal memuat lokasi: ${snapshot.error}'));
-          }
+          actions: [
+            IconButton(
+              tooltip: 'Ekspor dokumentasi PDF',
+              onPressed: _isExporting ? null : _exportPdf,
+              icon: _isExporting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.picture_as_pdf_outlined),
+            ),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: _isAddingLocation ? null : _addLocation,
+          icon: const Icon(Icons.add_location_alt_outlined),
+          label: const Text('Tambah Lokasi'),
+        ),
+        body: FutureBuilder<List<VisitLocation>>(
+          future: _locationsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(
+                child: Text('Gagal memuat lokasi: ${snapshot.error}'),
+              );
+            }
 
-          final locations = snapshot.data ?? const <VisitLocation>[];
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: ProTheme.surface,
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: ProTheme.border),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF2C8),
-                        borderRadius: BorderRadius.circular(9),
-                      ),
-                      child: const Text(
-                        'RINGKASAN PERJALANAN',
-                        style: TextStyle(
-                          color: ProTheme.primaryDark,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.7,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      widget.trip.title,
-                      style: const TextStyle(
-                        color: ProTheme.text,
-                        fontSize: 22,
-                        height: 1.2,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      widget.trip.purpose,
-                      style: const TextStyle(
-                        color: ProTheme.secondaryText,
-                        fontSize: 14,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
-                      decoration: BoxDecoration(
-                        color: ProTheme.background,
-                        borderRadius: BorderRadius.circular(11),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.calendar_month_outlined,
-                            size: 16,
-                            color: ProTheme.secondaryText,
-                          ),
-                          const SizedBox(width: 7),
-                          Text(
-                            _dateLabel(widget.trip.startDate) + ' – ' + _dateLabel(widget.trip.endDate),
-                            style: const TextStyle(
-                              color: ProTheme.text,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (widget.trip.assignmentNumber?.isNotEmpty == true) ...[
-                      const SizedBox(height: 14),
-                      const Divider(),
-                      const SizedBox(height: 10),
-                      const Row(
-                        children: [
-                          Icon(Icons.description_outlined, size: 17, color: ProTheme.secondaryText),
-                          SizedBox(width: 8),
-                          Text(
-                            'Nomor surat tugas',
-                            style: TextStyle(color: ProTheme.secondaryText, fontSize: 12),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        widget.trip.assignmentNumber!,
-                        style: const TextStyle(
-                          color: ProTheme.text,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 26),
-              Text('Lokasi kunjungan', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-              const SizedBox(height: 8),
-              if (locations.isEmpty)
+            final locations = snapshot.data ?? const <VisitLocation>[];
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+              children: [
                 Container(
-                  padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: ProTheme.surface,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(22),
                     border: Border.all(color: ProTheme.border),
                   ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        width: 62,
-                        height: 62,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFFFF2C8),
-                          shape: BoxShape.circle,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
                         ),
-                        child: const Icon(
-                          Icons.add_location_alt_outlined,
-                          size: 29,
-                          color: ProTheme.primaryDark,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF2C8),
+                          borderRadius: BorderRadius.circular(9),
+                        ),
+                        child: const Text(
+                          'RINGKASAN PERJALANAN',
+                          style: TextStyle(
+                            color: ProTheme.primaryDark,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.7,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 14),
-                      const Text(
-                        'Belum ada lokasi',
-                        style: TextStyle(
+                      Text(
+                        widget.trip.title,
+                        style: const TextStyle(
                           color: ProTheme.text,
-                          fontSize: 16,
+                          fontSize: 22,
+                          height: 1.2,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'Tambahkan lokasi pertama agar foto dan catatan kegiatan tersusun rapi.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
+                      const SizedBox(height: 8),
+                      Text(
+                        widget.trip.purpose,
+                        style: const TextStyle(
                           color: ProTheme.secondaryText,
-                          fontSize: 13,
-                          height: 1.45,
+                          fontSize: 14,
+                          height: 1.5,
                         ),
                       ),
                       const SizedBox(height: 16),
-                      FilledButton.icon(
-                        onPressed: _isAddingLocation ? null : _addLocation,
-                        icon: const Icon(Icons.add_location_alt_outlined),
-                        label: const Text('Tambah lokasi pertama'),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 11,
+                          vertical: 9,
+                        ),
+                        decoration: BoxDecoration(
+                          color: ProTheme.background,
+                          borderRadius: BorderRadius.circular(11),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.calendar_month_outlined,
+                              size: 16,
+                              color: ProTheme.secondaryText,
+                            ),
+                            const SizedBox(width: 7),
+                            Text(
+                              _dateLabel(widget.trip.startDate) +
+                                  ' – ' +
+                                  _dateLabel(widget.trip.endDate),
+                              style: const TextStyle(
+                                color: ProTheme.text,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                      if (widget.trip.assignmentNumber?.isNotEmpty == true) ...[
+                        const SizedBox(height: 14),
+                        const Divider(),
+                        const SizedBox(height: 10),
+                        const Row(
+                          children: [
+                            Icon(
+                              Icons.description_outlined,
+                              size: 17,
+                              color: ProTheme.secondaryText,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Nomor surat tugas',
+                              style: TextStyle(
+                                color: ProTheme.secondaryText,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          widget.trip.assignmentNumber!,
+                          style: const TextStyle(
+                            color: ProTheme.text,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
-                )
-              else
-                ...locations.map((location) => Card(
+                ),
+                const SizedBox(height: 26),
+                Text(
+                  'Lokasi kunjungan',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (locations.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
+                    decoration: BoxDecoration(
+                      color: ProTheme.surface,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: ProTheme.border),
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 62,
+                          height: 62,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFFFF2C8),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.add_location_alt_outlined,
+                            size: 29,
+                            color: ProTheme.primaryDark,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        const Text(
+                          'Belum ada lokasi',
+                          style: TextStyle(
+                            color: ProTheme.text,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Tambahkan lokasi pertama agar foto dan catatan kegiatan tersusun rapi.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: ProTheme.secondaryText,
+                            fontSize: 13,
+                            height: 1.45,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        FilledButton.icon(
+                          onPressed: _isAddingLocation ? null : _addLocation,
+                          icon: const Icon(Icons.add_location_alt_outlined),
+                          label: const Text('Tambah lokasi pertama'),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  ...locations.map(
+                    (location) => Card(
                       child: ListTile(
-                        leading: CircleAvatar(child: Text('${location.sortOrder + 1}')),
+                        leading: CircleAvatar(
+                          child: Text('${location.sortOrder + 1}'),
+                        ),
                         title: Text(location.name),
                         subtitle: Text(
                           location.address ?? 'Alamat tidak tersedia',
@@ -322,7 +348,10 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                                   enabled: location.sortOrder > 0,
                                   child: const Row(
                                     children: [
-                                      Icon(Icons.arrow_upward_rounded, size: 18),
+                                      Icon(
+                                        Icons.arrow_upward_rounded,
+                                        size: 18,
+                                      ),
                                       SizedBox(width: 10),
                                       Text('Pindahkan ke atas'),
                                     ],
@@ -330,10 +359,14 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                                 ),
                                 PopupMenuItem(
                                   value: 'down',
-                                  enabled: location.sortOrder < locations.length - 1,
+                                  enabled:
+                                      location.sortOrder < locations.length - 1,
                                   child: const Row(
                                     children: [
-                                      Icon(Icons.arrow_downward_rounded, size: 18),
+                                      Icon(
+                                        Icons.arrow_downward_rounded,
+                                        size: 18,
+                                      ),
                                       SizedBox(width: 10),
                                       Text('Pindahkan ke bawah'),
                                     ],
@@ -342,23 +375,30 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                               ],
                               icon: const Icon(Icons.more_vert_rounded),
                             ),
-                            const Icon(Icons.chevron_right_rounded, color: ProTheme.secondaryText),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              color: ProTheme.secondaryText,
+                            ),
                           ],
                         ),
                         onTap: () async {
-                          await Get.to(() => ProLocationDetailScreen(
-                                trip: widget.trip,
-                                location: location,
-                              ));
+                          await Get.to(
+                            () => ProLocationDetailScreen(
+                              trip: widget.trip,
+                              location: location,
+                            ),
+                          );
                           if (mounted) setState(_reload);
                         },
                       ),
-                    )),
-            ],
-          );
-        },
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
       ),
-    ));
+    );
   }
 }
 
@@ -412,9 +452,9 @@ class _AddLocationDialogState extends State<_AddLocationDialog> {
       return;
     }
 
-    Navigator.of(context).pop(
-      _NewLocationInput(name: name, notes: _notesController.text),
-    );
+    Navigator.of(
+      context,
+    ).pop(_NewLocationInput(name: name, notes: _notesController.text));
   }
 
   @override
@@ -434,7 +474,7 @@ class _AddLocationDialogState extends State<_AddLocationDialog> {
               },
               decoration: InputDecoration(
                 labelText: 'Nama lokasi *',
-                hintText: 'Contoh: Ruas jalan Desa Sumber Garunggung',
+                hintText: 'Contoh: Ruas jalan A, Kantor B',
                 errorText: _nameError,
               ),
             ),
@@ -445,10 +485,9 @@ class _AddLocationDialogState extends State<_AddLocationDialog> {
                 widget.currentAddress.isEmpty
                     ? 'Alamat GPS belum tersedia.'
                     : widget.currentAddress,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: ProTheme.secondaryText),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: ProTheme.secondaryText),
               ),
             ),
             TextField(
@@ -466,12 +505,8 @@ class _AddLocationDialogState extends State<_AddLocationDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Batal'),
         ),
-        FilledButton(
-          onPressed: _submit,
-          child: const Text('Simpan'),
-        ),
+        FilledButton(onPressed: _submit, child: const Text('Simpan')),
       ],
     );
   }
 }
-
