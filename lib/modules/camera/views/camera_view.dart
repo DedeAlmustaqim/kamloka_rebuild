@@ -117,27 +117,7 @@ class _CameraPreview extends StatelessWidget {
         ),
         const _TopScrim(),
         SafeArea(
-          child: CollapsibleCameraControlPanel(
-            controller: Get.find<CameraController>(),
-          ),
-        ),
-        SafeArea(
-          child: Align(
-            alignment: Alignment.topRight,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 58, right: 14),
-              child: _FieldDocumentationButton(),
-            ),
-          ),
-        ),
-        SafeArea(
-          child: Align(
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 58, left: 14),
-              child: _DocumentationLocationButton(),
-            ),
-          ),
+          child: _CameraTopControls(controller: Get.find<CameraController>()),
         ),
         Obx(() {
           final point = Get.find<CameraController>().focusPoint.value;
@@ -301,6 +281,47 @@ class _CameraPreview extends StatelessWidget {
   }
 }
 
+class _CameraTopControls extends StatelessWidget {
+  const _CameraTopControls({required this.controller});
+
+  final CameraController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CollapsibleCameraControlPanel(controller: controller),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Expanded(
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: _DocumentationLocationButton(),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Align(
+                    alignment: Alignment.topRight,
+                    child: _FieldDocumentationButton(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _TopScrim extends StatelessWidget {
   const _TopScrim();
 
@@ -439,10 +460,9 @@ class _FieldDocumentationButton extends StatelessWidget {
         onTap: () => _openDocumentation(context),
         borderRadius: BorderRadius.circular(24),
         child: Container(
-          margin: const EdgeInsets.only(right: 4, top: 40),
           padding: const EdgeInsets.fromLTRB(12, 9, 9, 9),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Colors.black.withValues(alpha: 0.62),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: const Color(0xFFE2E6E0)),
             boxShadow: const [
@@ -456,16 +476,12 @@ class _FieldDocumentationButton extends StatelessWidget {
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.assignment_outlined,
-                color: Color(0xFF202522),
-                size: 20,
-              ),
+              Icon(Icons.assignment_outlined, color: Colors.white, size: 20),
               SizedBox(width: 7),
               Text(
                 'Dokumentasi',
                 style: TextStyle(
-                  color: Color(0xFF202522),
+                  color: Colors.white,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),
@@ -886,10 +902,8 @@ class _DocumentationLocationButton extends StatelessWidget {
         final locations = await database.listLocations(trip.id);
         options.addAll(
           locations.map(
-            (location) => _DocumentationLocationOption(
-              trip: trip,
-              location: location,
-            ),
+            (location) =>
+                _DocumentationLocationOption(trip: trip, location: location),
           ),
         );
       }
@@ -1051,19 +1065,24 @@ class _DocumentationLocationSheet extends StatelessWidget {
             ListTile(
               leading: const CircleAvatar(
                 backgroundColor: Color(0xFFE7EAE6),
-                child: Icon(Icons.camera_alt_outlined, color: Color(0xFF39433B)),
+                child: Icon(
+                  Icons.camera_alt_outlined,
+                  color: Color(0xFF39433B),
+                ),
               ),
               title: const Text(
                 'Kamera biasa',
                 style: TextStyle(fontWeight: FontWeight.w700),
               ),
-              subtitle: const Text('Simpan ke album tanpa mengaitkan lokasi kunjungan'),
+              subtitle: const Text(
+                'Simpan ke album tanpa mengaitkan lokasi kunjungan',
+              ),
               trailing: selectedLocationId == null
                   ? const Icon(Icons.check_circle, color: Color(0xFF28784B))
                   : null,
-              onTap: () => Navigator.of(context).pop(
-                const _DocumentationLocationChoice(null),
-              ),
+              onTap: () => Navigator.of(
+                context,
+              ).pop(const _DocumentationLocationChoice(null)),
             ),
             const Divider(height: 1),
             Expanded(
@@ -1100,7 +1119,7 @@ class _DocumentationLocationSheet extends StatelessWidget {
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(12, 10, 12, 20),
                       itemCount: options.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 5),
+                      separatorBuilder: (_, _) => const SizedBox(height: 5),
                       itemBuilder: (context, index) {
                         final option = options[index];
                         final selected =
