@@ -534,7 +534,7 @@ class CameraController extends GetxController {
 
       Get.snackbar(
         'Foto didokumentasikan',
-        'Foto tersimpan di album KAMLOKA dan lokasi \${selectedLocation.name}.',
+        'Foto tersimpan di album KAMLOKA dan lokasi ${selectedLocation.name}.',
         snackPosition: SnackPosition.BOTTOM,
       );
     } catch (error) {
@@ -546,7 +546,7 @@ class CameraController extends GetxController {
         }
       }
       captureErrorMessage.value =
-          'Foto masuk galeri, tetapi gagal masuk dokumentasi "\${selectedLocation.name}": $error';
+          'Foto masuk galeri, tetapi gagal masuk dokumentasi "${selectedLocation.name}": $error';
     }
   }
 
