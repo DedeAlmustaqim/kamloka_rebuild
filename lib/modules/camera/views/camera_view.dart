@@ -938,6 +938,11 @@ class _DocumentationLocationButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
+      final access = Get.find<ProAccessService>();
+      if (!access.hasAccess(KamlokaFeature.fieldDocumentation)) {
+        return const SizedBox.shrink();
+      }
+
       final selected =
           Get.find<CameraController>().selectedDocumentationLocation.value;
       return Material(
