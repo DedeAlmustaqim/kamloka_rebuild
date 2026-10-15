@@ -73,7 +73,44 @@ Upload the AAB to **Play Console → Testing → Internal testing**. Complete th
 
 Current version in `pubspec.yaml` is `1.0.0+1` (version name 1.0.0, version code 1). This is suitable for the first upload if no artifact has been uploaded before. For each subsequent Play Console release, increase the build number after `+`, for example `1.0.0+2`.
 
-## 7. Release checklist
+## 8. GitHub Actions: CI and signed AAB artifact
+
+Workflow file: `.github/workflows/kamloka-ci.yml`.
+
+- Pushes and pull requests targeting `feature/kamloka-pro-travel-reports` run `flutter analyze` and `flutter test`.
+- A manually started workflow also builds a signed release AAB after validation succeeds.
+- The AAB is published as a GitHub Actions artifact named `kamloka-release-aab` for 14 days.
+- This first stage does **not** upload directly to Google Play. Play upload automation will be added after the Google Play Developer API service account is configured and tested.
+
+### Add GitHub Actions secrets
+
+Open the repository on GitHub → **Settings → Secrets and variables → Actions → New repository secret**. Add these four secrets:
+
+- `UPLOAD_KEYSTORE_BASE64`: base64 representation of the exact `android/app/kamloka-upload-key.jks` upload keystore.
+- `KEYSTORE_PASSWORD`: keystore password.
+- `KEY_PASSWORD`: password for alias `kamloka-upload`.
+- `KEY_ALIAS`: `kamloka-upload`.
+
+On Windows PowerShell, copy the keystore's base64 value to the clipboard without printing it in the terminal:
+
+```powershell
+$bytes = [System.IO.File]::ReadAllBytes("android\app\kamloka-upload-key.jks")
+[Convert]::ToBase64String($bytes) | Set-Clipboard
+```
+
+Paste that clipboard value into the `UPLOAD_KEYSTORE_BASE64` secret. Do not paste it into source code, issues, chat, or a committed file. Keep the original keystore and passwords backed up securely. Never regenerate the keystore just to configure CI.
+
+### Run the signed AAB workflow
+
+1. Add and verify all four repository secrets.
+2. Open the GitHub repository's **Actions** tab.
+3. Select **KAMLOKA CI**, click **Run workflow**, and choose `feature/kamloka-pro-travel-reports`.
+4. Wait for both `Analyze and test` and `Build signed release AAB` to pass.
+5. Open the completed run and download the `kamloka-release-aab` artifact. Extract the ZIP and upload `app-release.aab` to Play Console when ready.
+
+If validation fails, fix the reported issues before using the release artifact. Never share Actions logs that may contain sensitive information; secrets should be masked by GitHub, but avoid printing them.
+
+## 9. Release checklist
 
 - [ ] Keystore and passwords backed up securely, outside the repository.
 - [ ] `android/key.properties` exists locally and is not tracked by Git.
