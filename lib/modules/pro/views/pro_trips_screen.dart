@@ -322,7 +322,7 @@ class _SummaryCard extends StatelessWidget {
           FilledButton(
             onPressed: onCreate,
             style: FilledButton.styleFrom(
-              backgroundColor: ProTheme.text,
+              backgroundColor: ProTheme.brandGreen,
               foregroundColor: Colors.white,
               minimumSize: const Size(0, 44),
               padding: const EdgeInsets.symmetric(horizontal: 12),
