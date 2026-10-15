@@ -133,16 +133,14 @@ class _ProLocationDetailScreenState extends State<ProLocationDetailScreen> {
   }
 
   Future<void> _deletePhoto(DocumentedPhoto photo) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showProConfirmDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Hapus foto dokumentasi?'),
-        content: const Text('Foto akan dihapus dari perjalanan ini. Salinan di galeri tidak ikut dihapus.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Hapus')),
-        ],
-      ),
+      title: 'Hapus foto dokumentasi?',
+      message:
+          'Foto akan dihapus dari perjalanan ini. Salinan yang sudah tersimpan di galeri tidak ikut dihapus.',
+      confirmText: 'Hapus foto',
+      cancelText: 'Batal',
+      type: ProMessageType.error,
     );
     if (confirmed != true) return;
     await _database.deletePhoto(photo.id);
