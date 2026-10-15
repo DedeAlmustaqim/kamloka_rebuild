@@ -8,6 +8,7 @@ import '../models/trip.dart';
 import '../models/visit_location.dart';
 import '../services/pro_database_service.dart';
 import '../services/pro_pdf_export_service.dart';
+import '../services/pro_photo_storage_service.dart';
 import '../theme/pro_theme.dart';
 import '../widgets/pro_message_dialog.dart';
 import 'pro_location_detail_screen.dart';
@@ -23,6 +24,7 @@ class ProTripDetailScreen extends StatefulWidget {
 
 class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
   final _database = Get.find<ProDatabaseService>();
+  final _photoStorage = Get.find<ProPhotoStorageService>();
   final _uuid = const Uuid();
   late Future<List<VisitLocation>> _locationsFuture;
   bool _isExporting = false;
@@ -51,6 +53,52 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
     await _database.reorderLocations(widget.trip.id, orderedIds);
     if (mounted) setState(_reload);
   }
+
+  Future<void> _deleteLocation(VisitLocation location) async {
+    final photos = await _database.listPhotos(location.id);
+    final confirmed = await showProConfirmDialog(
+      context: context,
+      title: 'Hapus lokasi kunjungan?',
+      message: photos.isEmpty
+          ? 'Lokasi “${location.name}” akan dihapus dari perjalanan ini.'
+          : 'Lokasi “${location.name}” dan ${photos.length} foto dokumentasi di dalamnya akan dihapus. Salinan foto di galeri tidak ikut dihapus.',
+      confirmText: 'Hapus lokasi',
+      cancelText: 'Batal',
+      type: ProMessageType.error,
+    );
+    if (!confirmed) return;
+
+    try {
+      // Remove managed photo files before deleting their database records.
+      for (final photo in photos) {
+        await _photoStorage.deleteManagedPhoto(photo.filePath);
+      }
+      await _database.deleteLocation(location.id);
+      final remaining = await _database.listLocations(widget.trip.id);
+      await _database.reorderLocations(
+        widget.trip.id,
+        remaining.map((item) => item.id).toList(),
+      );
+      if (!mounted) return;
+      setState(_reload);
+      await showProMessageDialog(
+        context: context,
+        title: 'Lokasi berhasil dihapus',
+        message: 'Lokasi dan dokumentasi yang terkait telah dihapus dari perjalanan.',
+        type: ProMessageType.success,
+      );
+    } catch (error) {
+      if (mounted) {
+        await showProMessageDialog(
+          context: context,
+          title: 'Lokasi belum berhasil dihapus',
+          message: error.toString(),
+          type: ProMessageType.error,
+        );
+      }
+    }
+  }
+
 
   Future<void> _exportPdf() async {
     if (_isExporting) return;
@@ -136,19 +184,6 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
       Scaffold(
         appBar: AppBar(
           title: const Text('Detail perjalanan'),
-          actions: [
-            IconButton(
-              tooltip: 'Ekspor dokumentasi PDF',
-              onPressed: _isExporting ? null : _exportPdf,
-              icon: _isExporting
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.picture_as_pdf_outlined),
-            ),
-          ],
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _isAddingLocation ? null : _addLocation,
@@ -284,6 +319,32 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: _isExporting ? null : _exportPdf,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(0, 54),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    icon: _isExporting
+                        ? const SizedBox(
+                            width: 19,
+                            height: 19,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.picture_as_pdf_rounded),
+                    label: Text(
+                      _isExporting ? 'Menyiapkan PDF...' : 'Ekspor Dokumentasi PDF',
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 26),
                 Text(
                   'Lokasi kunjungan',
@@ -364,6 +425,7 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                               onSelected: (value) {
                                 if (value == 'up') _moveLocation(location, -1);
                                 if (value == 'down') _moveLocation(location, 1);
+                                if (value == 'delete') _deleteLocation(location);
                               },
                               itemBuilder: (_) => [
                                 PopupMenuItem(
@@ -392,6 +454,21 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                                       ),
                                       SizedBox(width: 10),
                                       Text('Pindahkan ke bawah'),
+                                    ],
+                                  ),
+                                ),
+                                const PopupMenuDivider(),
+                                const PopupMenuItem(
+                                  value: 'delete',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.delete_outline_rounded,
+                                        color: ProTheme.danger,
+                                        size: 18,
+                                      ),
+                                      SizedBox(width: 10),
+                                      Text('Hapus lokasi'),
                                     ],
                                   ),
                                 ),
