@@ -6,6 +6,7 @@ import '../../pro/services/pro_access_service.dart';
 import '../../pro/services/pro_purchase_service.dart';
 import '../../pro/views/pro_trips_screen.dart';
 import '../../pro/theme/pro_theme.dart';
+import '../../pro/widgets/pro_message_dialog.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
