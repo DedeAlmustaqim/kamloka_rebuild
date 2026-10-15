@@ -92,6 +92,30 @@ abstract final class ProTheme {
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: danger),
         ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: danger, width: 1.7),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: border),
+        ),
+        titleTextStyle: const TextStyle(
+          color: text,
+          fontSize: 19,
+          fontWeight: FontWeight.w800,
+        ),
+        contentTextStyle: const TextStyle(
+          color: secondaryText,
+          fontSize: 14,
+          height: 1.5,
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
