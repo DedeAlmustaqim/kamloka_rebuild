@@ -9,6 +9,7 @@ import '../models/visit_location.dart';
 import '../services/pro_database_service.dart';
 import '../services/pro_pdf_export_service.dart';
 import '../theme/pro_theme.dart';
+import '../widgets/pro_message_dialog.dart';
 import 'pro_location_detail_screen.dart';
 
 class ProTripDetailScreen extends StatefulWidget {
@@ -62,7 +63,12 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
       );
     } catch (error) {
       if (mounted) {
-        Get.snackbar('PDF belum dapat dibuat', error.toString());
+        await showProMessageDialog(
+          context: context,
+          title: 'PDF belum dapat dibuat',
+          message: error.toString(),
+          type: ProMessageType.error,
+        );
       }
     } finally {
       if (mounted) setState(() => _isExporting = false);
