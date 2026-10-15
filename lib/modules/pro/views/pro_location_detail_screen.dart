@@ -11,6 +11,7 @@ import '../models/visit_location.dart';
 import '../services/pro_database_service.dart';
 import '../services/pro_photo_storage_service.dart';
 import '../theme/pro_theme.dart';
+import '../widgets/pro_message_dialog.dart';
 import 'pro_camera_capture_screen.dart';
 
 class ProLocationDetailScreen extends StatefulWidget {
@@ -86,11 +87,21 @@ class _ProLocationDetailScreenState extends State<ProLocationDetailScreen> {
 
       if (mounted) {
         setState(_reload);
-        Get.snackbar('Foto ditambahkan', 'Foto tersimpan pada dokumentasi lokasi ini.');
+        await showProMessageDialog(
+          context: context,
+          title: 'Foto berhasil ditambahkan',
+          message: 'Foto tersimpan pada dokumentasi lokasi ini.',
+          type: ProMessageType.success,
+        );
       }
     } catch (error) {
       if (mounted) {
-        Get.snackbar('Gagal menyimpan foto', error.toString());
+        await showProMessageDialog(
+          context: context,
+          title: 'Gagal menyimpan foto',
+          message: error.toString(),
+          type: ProMessageType.error,
+        );
       }
     } finally {
       if (mounted) setState(() => _isTakingPhoto = false);
