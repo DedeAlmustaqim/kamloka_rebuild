@@ -59,7 +59,7 @@ class WatermarkLayoutEngine {
     final detailHeight = bodyLineHeight * detailsRows;
     final sectionGap = (shortSide * 0.018).clamp(6.0, 28.0).toDouble();
     final logoHeight = hasBranding
-        ? (shortSide * 0.045).clamp(18.0, 72.0).toDouble()
+        ? (shortSide * 0.052).clamp(22.0, 84.0).toDouble()
         : 0.0;
     final rightInfoHeight = (hasBranding ? logoHeight + sectionGap * 0.5 : 0) +
         addressHeight +
