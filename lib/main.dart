@@ -37,7 +37,7 @@ class KamlokaApp extends StatelessWidget {
         brightness: Brightness.light,
         scaffoldBackgroundColor: const Color(0xFFF5F6F3),
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFFFC107),
+          seedColor: const Color(0xFF0C5A3E),
           brightness: Brightness.light,
         ),
         appBarTheme: const AppBarTheme(
