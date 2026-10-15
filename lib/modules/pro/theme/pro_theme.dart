@@ -6,7 +6,10 @@ import 'package:flutter/services.dart';
 abstract final class ProTheme {
   static const Color background = Color(0xFFF5F6F3);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color primary = Color(0xFFFFC107);
+  /// Brand color for primary actions and interactive states.
+  static const Color brandGreen = Color(0xFF0C5A3E);
+  /// Gold is reserved for KAMLOKA Pro highlights and premium states.
+  static const Color primary = Color(0xFFE4B957);
   static const Color primaryDark = Color(0xFF6A5200);
   static const Color text = Color(0xFF202522);
   static const Color secondaryText = Color(0xFF68716B);
@@ -16,10 +19,10 @@ abstract final class ProTheme {
 
   static ThemeData get light {
     final scheme = ColorScheme.fromSeed(
-      seedColor: primary,
+      seedColor: brandGreen,
       brightness: Brightness.light,
       surface: surface,
-      primary: const Color(0xFF292B25),
+      primary: brandGreen,
       onPrimary: Colors.white,
       secondary: primary,
       onSecondary: const Color(0xFF292B25),
@@ -84,8 +87,8 @@ abstract final class ProTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: primary,
-          foregroundColor: const Color(0xFF292B25),
+          backgroundColor: brandGreen,
+          foregroundColor: Colors.white,
           disabledBackgroundColor: const Color(0xFFE5E6E1),
           disabledForegroundColor: secondaryText,
           minimumSize: const Size(0, 50),
@@ -111,8 +114,8 @@ abstract final class ProTheme {
         ),
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: primary,
-        foregroundColor: Color(0xFF292B25),
+        backgroundColor: brandGreen,
+        foregroundColor: Colors.white,
         elevation: 2,
       ),
       chipTheme: ChipThemeData(
