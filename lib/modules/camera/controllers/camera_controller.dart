@@ -5,12 +5,17 @@ import 'package:camera/camera.dart' as camera;
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:uuid/uuid.dart';
 
 import '../services/capture_service.dart';
 import '../services/device_orientation_service.dart';
 import '../../location/services/location_service.dart';
 import '../../gallery/services/gallery_service.dart';
 import '../services/watermark_service.dart';
+import '../../pro/models/documented_photo.dart';
+import '../../pro/models/visit_location.dart';
+import '../../pro/services/pro_database_service.dart';
+import '../../pro/services/pro_photo_storage_service.dart';
 
 class CameraController extends GetxController {
   final isInitializing = true.obs;
@@ -27,10 +32,13 @@ class CameraController extends GetxController {
   final focusPoint = Rxn<Offset>();
   final exposureOffset = 0.0.obs;
   final isExposureExpanded = false.obs;
+  final isControlPanelExpanded = false.obs;
   final timerSeconds = 0.obs;
   final aspectRatio = CaptureAspectRatio.full.obs;
   final showGrid = false.obs;
   final countdown = 0.obs;
+  final selectedDocumentationLocation = Rxn<VisitLocation>();
+  final Uuid _uuid = const Uuid();
   Timer? _countdownTimer;
   double _minExposure = 0.0;
   double _maxExposure = 0.0;
@@ -57,7 +65,17 @@ class CameraController extends GetxController {
     errorMessage.value = '';
 
     try {
-      await Get.find<DeviceOrientationService>().init();
+      // Sensor orientation is helpful for capture processing, but must not
+      // block opening the camera preview.
+      unawaited(
+        Get.find<DeviceOrientationService>()
+            .init()
+            .timeout(const Duration(seconds: 2))
+            .catchError((Object error, StackTrace stack) {
+          debugPrint('[KAMLOKA ORIENTATION] init skipped: $error');
+          return Get.find<DeviceOrientationService>();
+        }),
+      );
 
       final permission = await Permission.camera.request();
 
@@ -95,12 +113,25 @@ class CameraController extends GetxController {
       _cameraController = controller;
 
       await controller.initialize();
-      await controller.setFlashMode(flashMode.value);
-      await _loadZoomRange(controller);
-      await _loadExposureRange(controller);
 
+      // Flash setup is best-effort: a device-specific flash issue should not
+      // keep a usable camera preview behind the loading screen.
+      try {
+        await controller.setFlashMode(flashMode.value);
+      } on camera.CameraException catch (error) {
+        debugPrint('[KAMLOKA FLASH] init: ${error.code}: ${error.description}');
+        flashMode.value = camera.FlashMode.off;
+      }
+
+      // Show the preview as soon as the camera is initialized. Capability
+      // queries and location/network work continue in the background.
       isReady.value = true;
-
+      unawaited(_loadZoomRange(controller).catchError((Object error) {
+        debugPrint('[KAMLOKA ZOOM] range init: $error');
+      }));
+      unawaited(_loadExposureRange(controller).catchError((Object error) {
+        debugPrint('[KAMLOKA EXPOSURE] range init: $error');
+      }));
       unawaited(Get.find<LocationService>().init());
     } on camera.CameraException catch (error, stack) {
       debugPrint(
@@ -383,7 +414,9 @@ class CameraController extends GetxController {
     await completer.future;
   }
 
-  Future<String?> capturePhoto() async {
+  Future<String?> capturePhoto({
+    bool saveToSelectedLocation = true,
+  }) async {
     if (!isReady.value || isCapturing.value) {
       return null;
     }
@@ -430,6 +463,15 @@ class CameraController extends GetxController {
         isSaving.value = false;
       }
 
+      if (saveToSelectedLocation) {
+        await _saveToSelectedDocumentationLocation(
+          watermarked.path,
+          location: location,
+          latitude: position?.latitude,
+          longitude: position?.longitude,
+        );
+      }
+
       return watermarked.path;
     } on camera.CameraException catch (error) {
       captureErrorMessage.value =
@@ -441,6 +483,71 @@ class CameraController extends GetxController {
       return null;
     } finally {
       isCapturing.value = false;
+    }
+  }
+
+  Future<void> _saveToSelectedDocumentationLocation(
+    String sourcePath, {
+    required LocationService location,
+    required double? latitude,
+    required double? longitude,
+  }) async {
+    final selectedLocation = selectedDocumentationLocation.value;
+    if (selectedLocation == null) return;
+
+    final database = Get.find<ProDatabaseService>();
+    final photoStorage = Get.find<ProPhotoStorageService>();
+    String? permanentPath;
+
+    try {
+      final existingPhotos = await database.listPhotos(selectedLocation.id);
+      final now = DateTime.now();
+      final photoId = _uuid.v4();
+      permanentPath = await photoStorage.importProcessedPhoto(
+        sourcePath: sourcePath,
+        tripId: selectedLocation.tripId,
+        locationId: selectedLocation.id,
+        photoId: photoId,
+      );
+
+      try {
+        await database.savePhoto(
+          DocumentedPhoto(
+            id: photoId,
+            locationId: selectedLocation.id,
+            filePath: permanentPath,
+            caption: null,
+            capturedAt: now,
+            latitude: latitude,
+            longitude: longitude,
+            address: location.address.value.trim().isEmpty
+                ? null
+                : location.address.value.trim(),
+            sortOrder: existingPhotos.length,
+            includeInReport: true,
+            createdAt: now,
+          ),
+        );
+      } catch (_) {
+        await photoStorage.deleteManagedPhoto(permanentPath);
+        rethrow;
+      }
+
+      Get.snackbar(
+        'Foto didokumentasikan',
+        'Foto tersimpan di album KAMLOKA dan lokasi ${selectedLocation.name}.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (error) {
+      if (permanentPath != null) {
+        try {
+          await photoStorage.deleteManagedPhoto(permanentPath);
+        } catch (_) {
+          // Preserve the original save error for the user.
+        }
+      }
+      captureErrorMessage.value =
+          'Foto masuk galeri, tetapi gagal masuk dokumentasi "${selectedLocation.name}": $error';
     }
   }
 

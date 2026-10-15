@@ -1,4 +1,4 @@
-package com.example.kamloka
+package com.digitalnative.kamloka
 
 import io.flutter.embedding.android.FlutterActivity
 
