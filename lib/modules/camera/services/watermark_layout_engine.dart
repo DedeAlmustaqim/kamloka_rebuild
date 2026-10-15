@@ -30,23 +30,31 @@ class WatermarkLayoutEngine {
         ? (width * 0.075).clamp(36.0, 220.0).toDouble()
         : (shortSide * 0.035).clamp(12.0, 100.0).toDouble();
     final contentWidth = width - (outerMargin * 2);
-    final isWideLandscape = true; // Dua kolom dipertahankan pada portrait dan landscape.
+    final isWideLandscape = isLandscape;
 
     // Keep the composition proportional to the final bitmap, not screen size.
     final panelPadding = (shortSide * 0.028).clamp(10.0, 52.0).toDouble();
     final columnGap = (contentWidth * 0.045).clamp(12.0, 80.0).toDouble();
     final leftColumnWidth = isWideLandscape
-        ? (contentWidth * 0.30).clamp(shortSide * 0.25, contentWidth * 0.38).toDouble()
+        ? (contentWidth * 0.30)
+            .clamp(shortSide * 0.25, contentWidth * 0.38)
+            .toDouble()
         : contentWidth;
     final rightColumnWidth = isWideLandscape
         ? contentWidth - leftColumnWidth - columnGap
         : contentWidth;
+    final effectiveColumnGap = isWideLandscape ? columnGap : 0.0;
 
     final addressPainter = TextPainter(
       text: TextSpan(text: address.trim().isEmpty ? 'Alamat tidak tersedia' : address.trim(), style: bodyStyle),
       textDirection: textDirection,
       textAlign: TextAlign.start,
-    )..layout(maxWidth: rightColumnWidth - (panelPadding * 2));
+    )..layout(
+        maxWidth: math.min(
+          rightColumnWidth - (panelPadding * 2),
+          isLandscape ? width * 0.22 : contentWidth - (panelPadding * 2),
+        ),
+      );
 
     final timePainter = TextPainter(
       text: TextSpan(text: '00:00', style: timeStyle),
@@ -63,10 +71,7 @@ class WatermarkLayoutEngine {
     final logoHeight = hasBranding
         ? (shortSide * 0.052).clamp(22.0, 84.0).toDouble()
         : 0.0;
-    final rightInfoHeight = (hasBranding ? logoHeight + sectionGap * 0.5 : 0) +
-        addressHeight +
-        detailHeight +
-        sectionGap * 2;
+    final rightInfoHeight = addressHeight + detailHeight + sectionGap * 2;
     final contentHeight = math.max(
       timeLineHeight + bodyLineHeight * 2 + sectionGap * 2,
       rightInfoHeight,
@@ -90,9 +95,9 @@ class WatermarkLayoutEngine {
         ? panelRect.left + leftColumnWidth
         : null;
     final rightRect = Rect.fromLTWH(
-      panelRect.left + leftColumnWidth + columnGap,
+      panelRect.left + (isWideLandscape ? leftColumnWidth + effectiveColumnGap : panelPadding),
       panelRect.top + panelPadding,
-      rightColumnWidth - panelPadding,
+      isWideLandscape ? rightColumnWidth - panelPadding : contentWidth - panelPadding * 2,
       panelRect.height - panelPadding * 2,
     );
 
@@ -100,7 +105,7 @@ class WatermarkLayoutEngine {
     final logoRect = hasBranding
         ? Rect.fromLTWH(
             panelRect.right - panelPadding - logoWidth,
-            panelRect.top + panelPadding,
+            panelRect.top - sectionGap - logoHeight,
             logoWidth,
             logoHeight,
           )
