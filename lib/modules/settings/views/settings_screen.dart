@@ -275,8 +275,61 @@ class _InfoTile extends StatelessWidget {
   }
 }
 
-class KamlokaProScreen extends StatelessWidget {
+class KamlokaProScreen extends StatefulWidget {
   const KamlokaProScreen({super.key});
+
+  @override
+  State<KamlokaProScreen> createState() => _KamlokaProScreenState();
+}
+
+class _KamlokaProScreenState extends State<KamlokaProScreen> {
+  Worker? _purchaseStatusWorker;
+
+  @override
+  void initState() {
+    super.initState();
+    final billing = Get.find<ProPurchaseService>();
+    _purchaseStatusWorker = ever<String>(billing.statusMessage, (message) {
+      final isActionResult = message.contains('Pembelian KAMLOKA Pro diterima') ||
+          message.contains('berhasil dipulihkan') ||
+          message.startsWith('Pembelian gagal:') ||
+          message == 'Pembelian dibatalkan.' ||
+          message.startsWith('Produk belum dapat dimuat:') ||
+          message.startsWith('Produk Pro belum ditemukan.') ||
+          message.startsWith('Gagal menghubungkan Google Play:');
+      if (!isActionResult || !mounted) return;
+
+      final isError = message.startsWith('Pembelian gagal:') ||
+          message.startsWith('Produk belum dapat dimuat:') ||
+          message.startsWith('Produk Pro belum ditemukan.') ||
+          message.startsWith('Gagal menghubungkan Google Play:');
+      final isSuccess = message.contains('diterima') ||
+          message.contains('berhasil dipulihkan');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        showProMessageDialog(
+          context: context,
+          title: isSuccess
+              ? 'KAMLOKA Pro aktif'
+              : isError
+                  ? 'Belum berhasil'
+                  : 'Informasi pembelian',
+          message: message,
+          type: isSuccess
+              ? ProMessageType.success
+              : isError
+                  ? ProMessageType.error
+                  : ProMessageType.info,
+        );
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _purchaseStatusWorker?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -290,8 +343,13 @@ class KamlokaProScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(22),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFE69A),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFFFFE69A), Color(0xFFFFF6D9)],
+                  ),
                   borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: const Color(0xFFEAD28B)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -397,50 +455,127 @@ class KamlokaProScreen extends StatelessWidget {
                 final canBuy = product != null &&
                     billing.storeAvailable.value &&
                     !billing.purchasePending.value;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    FilledButton.icon(
-                      onPressed: canBuy ? billing.buyPro : null,
-                      icon: billing.purchasePending.value
-                          ? const SizedBox(
+                return Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: ProTheme.surface,
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(color: ProTheme.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF2C8),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(
+                              Icons.workspace_premium_rounded,
+                              color: ProTheme.primaryDark,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Akses Pro',
+                                  style: TextStyle(
+                                    color: ProTheme.text,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                SizedBox(height: 3),
+                                Text(
+                                  'Pembelian melalui Google Play',
+                                  style: TextStyle(
+                                    color: ProTheme.secondaryText,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (billing.isLoading.value)
+                            const SizedBox(
                               width: 18,
                               height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.workspace_premium_rounded),
-                      label: Text(
-                        product == null
-                            ? 'Pembelian diaktifkan setelah upload'
-                            : 'Beli KAMLOKA Pro • ${product.price}',
+                            ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    TextButton.icon(
-                      onPressed: billing.isLoading.value
-                          ? null
-                          : billing.restorePurchases,
-                      icon: const Icon(Icons.restore_rounded),
-                      label: const Text('Pulihkan pembelian'),
-                    ),
-                    Text(
-                      billing.statusMessage.value,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: ProTheme.secondaryText,
-                        fontSize: 12,
-                        height: 1.4,
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: canBuy ? billing.buyPro : null,
+                        icon: billing.purchasePending.value
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.lock_open_rounded),
+                        label: Text(
+                          product == null
+                              ? 'Pembelian segera tersedia'
+                              : 'Beli KAMLOKA Pro • ${product.price}',
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    OutlinedButton.icon(
-                      onPressed: billing.isLoading.value
-                          ? null
-                          : billing.initialize,
-                      icon: const Icon(Icons.refresh_rounded),
-                      label: const Text('Periksa produk'),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      TextButton.icon(
+                        onPressed: billing.isLoading.value
+                            ? null
+                            : billing.restorePurchases,
+                        icon: const Icon(Icons.restore_rounded),
+                        label: const Text('Pulihkan pembelian'),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: ProTheme.background,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.info_outline_rounded,
+                              size: 18,
+                              color: ProTheme.secondaryText,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                billing.statusMessage.value,
+                                style: const TextStyle(
+                                  color: ProTheme.secondaryText,
+                                  fontSize: 12,
+                                  height: 1.45,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      OutlinedButton.icon(
+                        onPressed: billing.isLoading.value
+                            ? null
+                            : billing.initialize,
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: const Text('Periksa produk'),
+                      ),
+                    ],
+                  ),
                 );
               }),
               const SizedBox(height: 26),
