@@ -78,7 +78,7 @@ abstract final class ProTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: text, width: 1.5),
+          borderSide: const BorderSide(color: brandGreen, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
