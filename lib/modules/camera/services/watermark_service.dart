@@ -23,7 +23,7 @@ class WatermarkData {
 }
 
 class WatermarkService {
-  static const _logoAsset = 'assets/images/kamloka_typo.png';
+  static const _logoAsset = 'assets/images/kamloka_typo_white.png';
 
   img.Image? _logo;
   Future<img.Image?>? _logoLoading;
@@ -154,125 +154,72 @@ class WatermarkService {
         shadowOffset: layout.shadowOffset,
       );
     } else {
-      // Landscape template: a compact brand mark above a solid rounded panel,
-      // with time/date on the left and location/GPS details on the right.
-      final shortSide = image.width < image.height ? image.width : image.height;
-      final panelX = layout.contentLeft;
-      final panelWidth = layout.contentWidth;
-      final panelHeight = (shortSide * 0.30).round();
-      final panelBottom = image.height - (shortSide * 0.10).round();
-      final panelY = panelBottom - panelHeight;
-      final panelRadius = (shortSide * 0.045).round().clamp(16, 80).toInt();
-      final innerX = (shortSide * 0.055).round();
-      final innerY = (shortSide * 0.035).round();
-      final leftX = panelX + innerX;
-      final dividerX = panelX + (panelWidth * 0.30).round();
-      final rightX = dividerX + innerX;
-      final rightWidth = panelX + panelWidth - rightX - innerX;
-      final textColor = img.ColorRgb8(255, 255, 255);
-      final panelColor = img.ColorRgb8(78, 78, 78);
+      final leftWidth = (layout.contentWidth * 0.32).round();
+      final rightX = layout.contentLeft + leftWidth + layout.columnGap;
+      final rightWidth = layout.contentRight - rightX;
       final addressLines = _wrapText(
         address,
-        maxChars: _wrapChars(rightWidth, shortSide >= 900 ? 12.0 : 7.0),
+        maxChars: _wrapChars(rightWidth, layout.charWidth),
       );
-      final addressFont = shortSide >= 900 ? img.arial24 : img.arial14;
-      final detailFont = shortSide >= 900 ? img.arial24 : img.arial14;
-      final addressLineHeight = addressFont.lineHeight + (shortSide >= 900 ? 4 : 2);
-      final detailLineHeight = detailFont.lineHeight + (shortSide >= 900 ? 2 : 1);
+      final detailLines = _wrapText(
+        detailText,
+        maxChars: _wrapChars(rightWidth, layout.charWidth),
+      );
+      final headerHeight = _headerHeight(layout);
+      final rightHeight =
+          (addressLines.length * layout.textLineHeight) +
+          layout.sectionGap +
+          (detailLines.length * layout.textLineHeight);
+      final bodyHeight = headerHeight > rightHeight
+          ? headerHeight
+          : rightHeight;
+      final contentHeight =
+          layout.topPadding + bodyHeight + layout.bottomMargin;
+      final contentTop = image.height - contentHeight + layout.topPadding;
 
-      _drawRoundedPanel(
+      _drawBottomScrim(image, contentTop - layout.scrimBleed);
+      _drawHeader(
         image,
-        x: panelX,
-        y: panelY,
-        width: panelWidth,
-        height: panelHeight,
-        radius: panelRadius,
-        color: panelColor,
-      );
-
-      _drawStrongText(
-        image,
-        dayName,
-        font: addressFont,
-        x: leftX,
-        y: panelY + innerY,
-        color: textColor,
-        shadow: img.ColorRgba8(0, 0, 0, 0),
-        shadowOffset: 0,
-      );
-      _drawStrongText(
-        image,
-        timeText,
-        font: shortSide >= 900 ? img.arial48 : img.arial24,
-        x: leftX,
-        y: panelY + innerY + addressLineHeight,
-        color: textColor,
-        shadow: img.ColorRgba8(0, 0, 0, 0),
-        shadowOffset: 0,
-      );
-      _drawStrongText(
-        image,
-        dateText,
-        font: detailFont,
-        x: leftX,
-        y: panelY + panelHeight - innerY - detailFont.lineHeight,
-        color: textColor,
-        shadow: img.ColorRgba8(0, 0, 0, 0),
-        shadowOffset: 0,
-      );
-
-      img.drawLine(
-        image,
-        x1: dividerX,
-        y1: panelY + innerY,
-        x2: dividerX,
-        y2: panelY + panelHeight - innerY,
-        color: img.ColorRgb8(255, 255, 255),
-        thickness: shortSide >= 900 ? 4 : 2,
+        dayName: dayName,
+        timeText: timeText,
+        dateText: dateText,
+        x: layout.contentLeft,
+        y: contentTop,
+        layout: layout,
+        color: white,
+        shadow: shadow,
       );
 
       _drawTextLines(
         image,
         addressLines,
-        font: addressFont,
+        font: layout.textFont,
         x: rightX,
-        y: panelY + innerY,
-        lineHeight: addressLineHeight,
-        color: textColor,
-        shadow: img.ColorRgba8(0, 0, 0, 0),
-        shadowOffset: 0,
+        y: contentTop,
+        lineHeight: layout.textLineHeight,
+        color: white,
+        shadow: shadow,
+        shadowOffset: layout.shadowOffset,
       );
 
-      final detailsY = panelY + innerY + (addressLines.length * addressLineHeight) + layout.sectionGap;
-      final detailRows = [
-        '${_formatLatitude(data.latitude)}    ${_formatLongitude(data.longitude)}',
-        '${_formatAccuracy(data.accuracy)}    ${_formatAltitude(data.altitude)}',
-      ];
+      final detailsY =
+          contentTop +
+          (addressLines.length * layout.textLineHeight) +
+          layout.sectionGap;
       _drawTextLines(
         image,
-        detailRows,
-        font: detailFont,
+        detailLines,
+        font: layout.textFont,
         x: rightX,
         y: detailsY,
-        lineHeight: detailLineHeight,
-        color: textColor,
-        shadow: img.ColorRgba8(0, 0, 0, 0),
-        shadowOffset: 0,
+        lineHeight: layout.textLineHeight,
+        color: white,
+        shadow: shadow,
+        shadowOffset: layout.shadowOffset,
       );
-
-      if (logo != null && logoSize != null) {
-        final logoGap = (shortSide * 0.018).round();
-        _drawLogoAt(
-          image,
-          logo,
-          logoSize,
-          x: layout.contentRight - logoSize.width,
-          y: panelY - logoSize.height - logoGap,
-        );
-      }
     }
 
-    if (layout.useSingleColumn && logo != null && logoSize != null) {
+    if (logo != null && logoSize != null) {
       _drawLogo(image, logo, logoSize, layout);
     }
 
@@ -381,55 +328,6 @@ class WatermarkService {
       dstY: layout.logoTop,
       blend: img.BlendMode.alpha,
     );
-  }
-
-  void _drawLogoAt(
-    img.Image image,
-    img.Image logo,
-    _ImageSize size, {
-    required int x,
-    required int y,
-  }) {
-    final resizedLogo = img.copyResize(logo, width: size.width, height: size.height);
-    img.compositeImage(
-      image,
-      resizedLogo,
-      dstX: x,
-      dstY: y.clamp(0, image.height - size.height).toInt(),
-      blend: img.BlendMode.alpha,
-    );
-  }
-
-  void _drawRoundedPanel(
-    img.Image image, {
-    required int x,
-    required int y,
-    required int width,
-    required int height,
-    required int radius,
-    required img.Color color,
-  }) {
-    final r = radius.clamp(1, (height / 2).floor()).toInt();
-    img.fillRect(
-      image,
-      x1: x + r,
-      y1: y,
-      x2: x + width - r - 1,
-      y2: y + height - 1,
-      color: color,
-    );
-    img.fillRect(
-      image,
-      x1: x,
-      y1: y + r,
-      x2: x + width - 1,
-      y2: y + height - r - 1,
-      color: color,
-    );
-    img.fillCircle(image, x: x + r, y: y + r, radius: r, color: color);
-    img.fillCircle(image, x: x + width - r - 1, y: y + r, radius: r, color: color);
-    img.fillCircle(image, x: x + r, y: y + height - r - 1, radius: r, color: color);
-    img.fillCircle(image, x: x + width - r - 1, y: y + height - r - 1, radius: r, color: color);
   }
 
   void _drawBottomScrim(img.Image image, int fromY) {
@@ -547,12 +445,12 @@ class WatermarkService {
 
   String _formatLatitude(double? value) {
     if (value == null) return 'Lat --';
-    return 'Lat ${value.toStringAsFixed(6)}°';
+    return 'Lat ${value.toStringAsFixed(6)} deg';
   }
 
   String _formatLongitude(double? value) {
     if (value == null) return 'Long --';
-    return 'Long ${value.toStringAsFixed(6)}°';
+    return 'Long ${value.toStringAsFixed(6)} deg';
   }
 
   String _formatAccuracy(double? value) {
@@ -657,7 +555,7 @@ class _WatermarkLayout {
       columnGap: (contentWidth * 0.045).round().clamp(18, 80).toInt(),
       scrimBleed: (shortSide * 0.055).round().clamp(24, 110).toInt(),
       logoTop: (shortSide * 0.035).round().clamp(18, 100).toInt(),
-      logoMaxWidth: (width * (isWide ? 0.30 : 0.30)).round(),
+      logoMaxWidth: (width * (isWide ? 0.22 : 0.30)).round(),
       logoMaxHeight: (shortSide * (isWide ? 0.11 : 0.085)).round(),
       textFont: textFont,
       timeFont: timeFont,
