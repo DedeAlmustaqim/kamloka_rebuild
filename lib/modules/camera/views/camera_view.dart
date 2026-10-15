@@ -506,7 +506,7 @@ class _FieldDocumentationButton extends StatelessWidget {
               SizedBox(width: 8),
               DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Color(0xFFFFC107),
+                  color: Color(0xFFE4B957),
                   borderRadius: BorderRadius.all(Radius.circular(6)),
                 ),
                 child: Padding(
