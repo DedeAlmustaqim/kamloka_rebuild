@@ -50,7 +50,7 @@ void main() {
       expect(layout.isLandscape, isFalse);
       expect(layout.isWideLandscape, isFalse);
       expect(layout.dividerX, isNull);
-      expect(layout.rightContentRect.left, layout.panelRect.left + greaterThan(0));
+      expect(layout.rightContentRect.left, greaterThan(layout.panelRect.left));
     });
 
     test('rejects invalid image dimensions', () {
