@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
+import 'modules/pro/services/pro_access_service.dart';
+import 'modules/pro/services/pro_purchase_service.dart';
 import 'modules/splash/views/splash_screen.dart';
 
 Future<void> main() async {
@@ -20,6 +22,9 @@ Future<void> main() async {
     statusBarIconBrightness: Brightness.dark,
     systemNavigationBarIconBrightness: Brightness.dark,
   ));
+
+  Get.put<ProAccessService>(ProAccessService(), permanent: true);
+  Get.put<ProPurchaseService>(ProPurchaseService(), permanent: true);
 
   runApp(const KamlokaApp());
 }
