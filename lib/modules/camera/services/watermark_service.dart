@@ -1,8 +1,11 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:camera/camera.dart' as camera;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
+
+import 'watermark_layout_engine.dart';
 
 class WatermarkData {
   const WatermarkData({
@@ -154,69 +157,17 @@ class WatermarkService {
         shadowOffset: layout.shadowOffset,
       );
     } else {
-      final leftWidth = (layout.contentWidth * 0.32).round();
-      final rightX = layout.contentLeft + leftWidth + layout.columnGap;
-      final rightWidth = layout.contentRight - rightX;
-      final addressLines = _wrapText(
-        address,
-        maxChars: _wrapChars(rightWidth, layout.charWidth),
-      );
-      final detailLines = _wrapText(
-        detailText,
-        maxChars: _wrapChars(rightWidth, layout.charWidth),
-      );
-      final headerHeight = _headerHeight(layout);
-      final rightHeight =
-          (addressLines.length * layout.textLineHeight) +
-          layout.sectionGap +
-          (detailLines.length * layout.textLineHeight);
-      final bodyHeight = headerHeight > rightHeight
-          ? headerHeight
-          : rightHeight;
-      final contentHeight =
-          layout.topPadding + bodyHeight + layout.bottomMargin;
-      final contentTop = image.height - contentHeight + layout.topPadding;
-
-      _drawBottomScrim(image, contentTop - layout.scrimBleed);
-      _drawHeader(
-        image,
+      final measuredLayer = await _renderMeasuredLandscapeLayer(
+        imageWidth: image.width,
+        imageHeight: image.height,
         dayName: dayName,
         timeText: timeText,
         dateText: dateText,
-        x: layout.contentLeft,
-        y: contentTop,
-        layout: layout,
-        color: white,
-        shadow: shadow,
+        address: address,
+        data: data,
+        hasBranding: logo != null && logoSize != null,
       );
-
-      _drawTextLines(
-        image,
-        addressLines,
-        font: layout.textFont,
-        x: rightX,
-        y: contentTop,
-        lineHeight: layout.textLineHeight,
-        color: white,
-        shadow: shadow,
-        shadowOffset: layout.shadowOffset,
-      );
-
-      final detailsY =
-          contentTop +
-          (addressLines.length * layout.textLineHeight) +
-          layout.sectionGap;
-      _drawTextLines(
-        image,
-        detailLines,
-        font: layout.textFont,
-        x: rightX,
-        y: detailsY,
-        lineHeight: layout.textLineHeight,
-        color: white,
-        shadow: shadow,
-        shadowOffset: layout.shadowOffset,
-      );
+      img.compositeImage(image, measuredLayer);
     }
 
     if (logo != null && logoSize != null) {
@@ -236,6 +187,175 @@ class WatermarkService {
     );
 
     return camera.XFile(outputPath);
+  }
+
+  Future<img.Image> _renderMeasuredLandscapeLayer({
+    required int imageWidth,
+    required int imageHeight,
+    required String dayName,
+    required String timeText,
+    required String dateText,
+    required String address,
+    required WatermarkData data,
+    required bool hasBranding,
+  }) async {
+    final shortSide = imageWidth < imageHeight ? imageWidth : imageHeight;
+    final bodyFontSize = (shortSide * 0.014).clamp(14.0, 44.0).toDouble();
+    final timeFontSize = (shortSide * 0.066).clamp(36.0, 180.0).toDouble();
+    final bodyStyle = TextStyle(
+      color: const ui.Color(0xFFFFFFFF),
+      fontSize: bodyFontSize,
+      height: 1.18,
+      fontWeight: FontWeight.w500,
+    );
+    final addressStyle = bodyStyle.copyWith(fontWeight: FontWeight.w700);
+    final timeStyle = bodyStyle.copyWith(
+      fontSize: timeFontSize,
+      height: 1.0,
+      fontWeight: FontWeight.w800,
+    );
+    final engine = const WatermarkLayoutEngine();
+    final layout = engine.calculate(
+      imageSize: ui.Size(imageWidth.toDouble(), imageHeight.toDouble()),
+      address: address,
+      bodyStyle: addressStyle,
+      timeStyle: timeStyle,
+      textDirection: ui.TextDirection.ltr,
+      hasBranding: hasBranding,
+    );
+
+    final recorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(recorder);
+    final panelPaint = ui.Paint()..color = const ui.Color(0xFF4E4E4E);
+    final panelRadius = (shortSide * 0.035).clamp(14.0, 72.0).toDouble();
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(
+        layout.panelRect,
+        ui.Radius.circular(panelRadius),
+      ),
+      panelPaint,
+    );
+
+    if (layout.dividerX != null) {
+      final dividerPaint = ui.Paint()
+        ..color = const ui.Color(0xFFFFFFFF)
+        ..strokeWidth = (shortSide * 0.003).clamp(2.0, 8.0).toDouble();
+      canvas.drawLine(
+        ui.Offset(layout.dividerX!, layout.panelRect.top + layout.panelRect.height * 0.12),
+        ui.Offset(layout.dividerX!, layout.panelRect.bottom - layout.panelRect.height * 0.12),
+        dividerPaint,
+      );
+    }
+
+    void drawText(
+      String value,
+      TextStyle style,
+      double x,
+      double y,
+      double maxWidth, {
+      int? maxLines,
+    }) {
+      final painter = TextPainter(
+        text: TextSpan(text: value, style: style),
+        textDirection: ui.TextDirection.ltr,
+        maxLines: maxLines,
+        ellipsis: maxLines == null ? null : '…',
+      )..layout(maxWidth: maxWidth);
+      painter.paint(canvas, ui.Offset(x, y));
+    }
+
+    final left = layout.leftContentRect;
+    final right = layout.rightContentRect;
+    final innerGap = layout.sectionGap;
+    if (layout.isWideLandscape) {
+      drawText(dayName, addressStyle, left.left, left.top, left.width);
+      drawText(
+        timeText,
+        timeStyle,
+        left.left,
+        left.top + layout.bodyLineHeight * 1.35,
+        left.width,
+        maxLines: 1,
+      );
+      drawText(
+        dateText,
+        bodyStyle,
+        left.left,
+        left.bottom - layout.bodyLineHeight,
+        left.width,
+        maxLines: 1,
+      );
+
+      final addressPainter = TextPainter(
+        text: TextSpan(text: address, style: addressStyle),
+        textDirection: ui.TextDirection.ltr,
+      )..layout(maxWidth: right.width);
+      addressPainter.paint(canvas, ui.Offset(right.left, right.top));
+      final detailY = right.top + addressPainter.height + innerGap;
+      drawText(
+        '${_formatLatitude(data.latitude)}    ${_formatLongitude(data.longitude)}',
+        bodyStyle,
+        right.left,
+        detailY,
+        right.width,
+        maxLines: 1,
+      );
+      drawText(
+        '${_formatAccuracy(data.accuracy)}    ${_formatAltitude(data.altitude)}',
+        bodyStyle,
+        right.left,
+        detailY + layout.bodyLineHeight * 1.25,
+        right.width,
+        maxLines: 1,
+      );
+    } else {
+      var y = right.top;
+      drawText(dayName, addressStyle, right.left, y, right.width, maxLines: 1);
+      y += layout.bodyLineHeight;
+      drawText(timeText, timeStyle, right.left, y, right.width, maxLines: 1);
+      y += layout.timeLineHeight + innerGap;
+      drawText(dateText, bodyStyle, right.left, y, right.width, maxLines: 1);
+      y += layout.bodyLineHeight + innerGap;
+      final addressPainter = TextPainter(
+        text: TextSpan(text: address, style: addressStyle),
+        textDirection: ui.TextDirection.ltr,
+      )..layout(maxWidth: right.width);
+      addressPainter.paint(canvas, ui.Offset(right.left, y));
+      y += addressPainter.height + innerGap;
+      drawText(
+        '${_formatLatitude(data.latitude)}  ${_formatLongitude(data.longitude)}',
+        bodyStyle,
+        right.left,
+        y,
+        right.width,
+      );
+      y += layout.bodyLineHeight;
+      drawText(
+        '${_formatAccuracy(data.accuracy)}  ${_formatAltitude(data.altitude)}',
+        bodyStyle,
+        right.left,
+        y,
+        right.width,
+      );
+    }
+
+    final picture = recorder.endRecording();
+    final rendered = await picture.toImage(imageWidth, imageHeight);
+    final byteData = await rendered.toByteData(format: ui.ImageByteFormat.png);
+    rendered.dispose();
+    picture.dispose();
+    if (byteData == null) {
+      throw const FormatException('Watermark layer gagal dirender.');
+    }
+    final pngBytes = byteData.buffer.asUint8List(
+      byteData.offsetInBytes,
+      byteData.lengthInBytes,
+    );
+    final decoded = img.decodePng(pngBytes);
+    if (decoded == null) {
+      throw const FormatException('Watermark layer PNG tidak valid.');
+    }
+    return decoded;
   }
 
   void _drawHeader(
