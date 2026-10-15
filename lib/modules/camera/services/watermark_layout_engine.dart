@@ -99,7 +99,7 @@ class WatermarkLayoutEngine {
     final logoWidth = math.min(rightColumnWidth * 0.48, logoHeight * 4.2);
     final logoRect = hasBranding
         ? Rect.fromLTWH(
-            panelRect.left + leftColumnWidth + columnGap + panelPadding,
+            panelRect.right - panelPadding - logoWidth,
             panelRect.top + panelPadding,
             logoWidth,
             logoHeight,
