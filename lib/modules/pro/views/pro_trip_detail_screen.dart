@@ -107,7 +107,24 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
           createdAt: DateTime.now(),
         ),
       );
-      if (mounted) setState(_reload);
+      if (mounted) {
+        setState(_reload);
+        await showProMessageDialog(
+          context: context,
+          title: 'Lokasi berhasil ditambahkan',
+          message: 'Lokasi kunjungan siap diisi dengan foto dan catatan dokumentasi.',
+          type: ProMessageType.success,
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        await showProMessageDialog(
+          context: context,
+          title: 'Lokasi belum berhasil disimpan',
+          message: error.toString(),
+          type: ProMessageType.error,
+        );
+      }
     } finally {
       if (mounted) setState(() => _isAddingLocation = false);
     }
