@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../pro/services/pro_access_service.dart';
+import '../../pro/services/pro_purchase_service.dart';
 import '../../pro/views/pro_trips_screen.dart';
 import '../../pro/theme/pro_theme.dart';
 
@@ -177,7 +178,7 @@ class SettingsScreen extends StatelessWidget {
                               )),
                           SizedBox(height: 5),
                           Text(
-                            'Kenali fitur premium yang sedang disiapkan',
+                            'Dokumentasi perjalanan dan fitur premium dalam satu paket',
                             style: TextStyle(color: _muted, fontSize: 12),
                           ),
                         ],
@@ -333,6 +334,7 @@ class KamlokaProScreen extends StatelessWidget {
               const SizedBox(height: 18),
               Obx(() {
                 final pro = Get.find<ProAccessService>();
+                final billing = Get.find<ProPurchaseService>();
                 return Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -374,7 +376,7 @@ class KamlokaProScreen extends StatelessWidget {
                             Text(
                               pro.isPro.value
                                   ? 'Akses premium tersedia di perangkat ini.'
-                                  : 'Aktifkan akses PRO untuk membuka dokumentasi perjalanan. Pembelian belum tersedia.',
+                                  : billing.statusMessage.value,
                               style: const TextStyle(
                                 color: ProTheme.secondaryText,
                                 fontSize: 12,
@@ -388,9 +390,62 @@ class KamlokaProScreen extends StatelessWidget {
                   ),
                 );
               }),
+              const SizedBox(height: 14),
+              Obx(() {
+                final billing = Get.find<ProPurchaseService>();
+                final product = billing.product.value;
+                final canBuy = product != null &&
+                    billing.storeAvailable.value &&
+                    !billing.purchasePending.value;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    FilledButton.icon(
+                      onPressed: canBuy ? billing.buyPro : null,
+                      icon: billing.purchasePending.value
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.workspace_premium_rounded),
+                      label: Text(
+                        product == null
+                            ? 'Pembelian diaktifkan setelah upload'
+                            : 'Beli KAMLOKA Pro • ${product.price}',
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    TextButton.icon(
+                      onPressed: billing.isLoading.value
+                          ? null
+                          : billing.restorePurchases,
+                      icon: const Icon(Icons.restore_rounded),
+                      label: const Text('Pulihkan pembelian'),
+                    ),
+                    Text(
+                      billing.statusMessage.value,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: ProTheme.secondaryText,
+                        fontSize: 12,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: billing.isLoading.value
+                          ? null
+                          : billing.initialize,
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Periksa produk'),
+                    ),
+                  ],
+                );
+              }),
               const SizedBox(height: 26),
               const Text(
-                'Yang sedang disiapkan',
+                'Fitur KAMLOKA Pro',
                 style: TextStyle(
                   color: ProTheme.text,
                   fontSize: 18,
@@ -399,7 +454,7 @@ class KamlokaProScreen extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Fitur premium berikut belum dijual atau dikunci pada versi ini.',
+                'Buka akses dokumentasi perjalanan dan fitur premium. ID produk serta harga akan muncul setelah produk dibuat di Play Console.',
                 style: TextStyle(color: ProTheme.secondaryText, fontSize: 13, height: 1.45),
               ),
               const SizedBox(height: 14),
