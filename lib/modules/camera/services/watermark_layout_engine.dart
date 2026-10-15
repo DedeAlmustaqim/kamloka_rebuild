@@ -26,15 +26,15 @@ class WatermarkLayoutEngine {
 
     final shortSide = math.min(width, height);
     final isLandscape = width >= height;
-    final outerMargin = (shortSide * 0.035).clamp(12.0, 120.0);
+    final outerMargin = (shortSide * 0.035).clamp(12.0, 120.0).toDouble();
     final contentWidth = width - (outerMargin * 2);
     final isWideLandscape = isLandscape && width / height >= 1.35;
 
     // Keep the composition proportional to the final bitmap, not screen size.
-    final panelPadding = (shortSide * 0.035).clamp(10.0, 64.0);
-    final columnGap = (contentWidth * 0.045).clamp(12.0, 80.0);
+    final panelPadding = (shortSide * 0.035).clamp(10.0, 64.0).toDouble();
+    final columnGap = (contentWidth * 0.045).clamp(12.0, 80.0).toDouble();
     final leftColumnWidth = isWideLandscape
-        ? (contentWidth * 0.30).clamp(shortSide * 0.25, contentWidth * 0.38)
+        ? (contentWidth * 0.30).clamp(shortSide * 0.25, contentWidth * 0.38).toDouble()
         : contentWidth;
     final rightColumnWidth = isWideLandscape
         ? contentWidth - leftColumnWidth - columnGap
@@ -57,13 +57,13 @@ class WatermarkLayoutEngine {
     final addressHeight = math.max(bodyLineHeight, addressPainter.height);
     final detailsRows = 2;
     final detailHeight = bodyLineHeight * detailsRows;
-    final sectionGap = (shortSide * 0.018).clamp(6.0, 28.0);
+    final sectionGap = (shortSide * 0.018).clamp(6.0, 28.0).toDouble();
     final contentHeight = math.max(
       timeLineHeight * 2 + bodyLineHeight + sectionGap * 2,
       addressHeight + detailHeight + sectionGap,
     );
     final panelHeight = contentHeight + panelPadding * 2;
-    final bottomMargin = (shortSide * 0.10).clamp(18.0, 100.0);
+    final bottomMargin = (shortSide * 0.10).clamp(18.0, 100.0).toDouble();
     final panelRect = Rect.fromLTWH(
       outerMargin,
       height - bottomMargin - panelHeight,
@@ -94,7 +94,7 @@ class WatermarkLayoutEngine {
             panelRect.height - panelPadding * 2,
           );
 
-    final logoHeight = (shortSide * 0.075).clamp(24.0, 120.0);
+    final logoHeight = (shortSide * 0.075).clamp(24.0, 120.0).toDouble();
     final logoWidth = math.min(width * 0.30, logoHeight * 4.2);
     final logoRect = hasBranding
         ? Rect.fromLTWH(
