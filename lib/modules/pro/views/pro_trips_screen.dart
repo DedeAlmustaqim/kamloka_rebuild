@@ -89,24 +89,14 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
   }
 
   Future<void> _deleteTrip(Trip trip) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showProConfirmDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Hapus perjalanan?'),
-        content: Text(
-          '“${trip.title}” beserta lokasi, foto dokumentasi, dan datanya akan dihapus dari KAMLOKA.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Jangan hapus'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Hapus perjalanan'),
-          ),
-        ],
-      ),
+      title: 'Hapus perjalanan?',
+      message:
+          '“${trip.title}” beserta lokasi, foto dokumentasi, dan datanya akan dihapus dari KAMLOKA. Tindakan ini tidak dapat dibatalkan.',
+      confirmText: 'Hapus',
+      cancelText: 'Jangan hapus',
+      type: ProMessageType.error,
     );
     if (confirmed != true) return;
 
