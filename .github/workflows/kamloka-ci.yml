@@ -3,10 +3,10 @@ name: KAMLOKA CI
 on:
   push:
     branches:
-      - feature/kamloka-pro-travel-reports
+      - main
   pull_request:
     branches:
-      - feature/kamloka-pro-travel-reports
+      - main
   workflow_dispatch:
     inputs:
       upload_to_internal:
@@ -23,7 +23,7 @@ jobs:
     name: Analyze and test
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout main
         uses: actions/checkout@v5
 
       - name: Set up Java
