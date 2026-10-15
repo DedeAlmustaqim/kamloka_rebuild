@@ -203,8 +203,8 @@ class WatermarkService {
     required img.Image? logo,
   }) async {
     final shortSide = imageWidth < imageHeight ? imageWidth : imageHeight;
-    final bodyFontSize = (shortSide * 0.014).clamp(14.0, 44.0).toDouble();
-    final timeFontSize = (shortSide * 0.066).clamp(36.0, 180.0).toDouble();
+    final bodyFontSize = (shortSide * 0.019).clamp(18.0, 54.0).toDouble();
+    final timeFontSize = (shortSide * 0.082).clamp(44.0, 210.0).toDouble();
     final bodyStyle = TextStyle(
       color: const ui.Color(0xFFFFFFFF),
       fontSize: bodyFontSize,
@@ -229,7 +229,7 @@ class WatermarkService {
 
     final recorder = ui.PictureRecorder();
     final canvas = ui.Canvas(recorder);
-    final scrimTop = (layout.panelRect.top - shortSide * 0.10).clamp(0.0, imageHeight.toDouble());
+    final scrimTop = (layout.panelRect.top - shortSide * 0.075).clamp(0.0, imageHeight.toDouble());
     final scrimPaint = ui.Paint()
       ..shader = ui.Gradient.linear(
         ui.Offset(0, scrimTop),
