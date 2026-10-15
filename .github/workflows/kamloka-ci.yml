@@ -8,6 +8,12 @@ on:
     branches:
       - feature/kamloka-pro-travel-reports
   workflow_dispatch:
+    inputs:
+      upload_to_internal:
+        description: 'Upload the signed AAB to Google Play Internal testing'
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -95,3 +101,14 @@ jobs:
           path: build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 14
+
+      - name: Upload to Google Play Internal testing
+        if: inputs.upload_to_internal == true
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
+          packageName: com.digitalnative.kamloka
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          track: internal
+          status: completed
+          changesNotSentForReview: true
