@@ -672,8 +672,7 @@ class _WatermarkLayout {
 
   factory _WatermarkLayout.forImage(int width, int height) {
     final shortSide = width < height ? width : height;
-    final ratio = width / height;
-    final isWide = ratio >= 1.35;
+    // Portrait dan landscape memakai komposisi watermark yang sama.
     final padding = (shortSide * 0.035).round().clamp(18, 120).toInt();
     final contentWidth = width - (padding * 2);
     final textFont = shortSide >= 1200 ? img.arial24 : img.arial14;
@@ -690,14 +689,14 @@ class _WatermarkLayout {
       columnGap: (contentWidth * 0.045).round().clamp(18, 80).toInt(),
       scrimBleed: (shortSide * 0.055).round().clamp(24, 110).toInt(),
       logoTop: (shortSide * 0.035).round().clamp(18, 100).toInt(),
-      logoMaxWidth: (width * (isWide ? 0.22 : 0.30)).round(),
-      logoMaxHeight: (shortSide * (isWide ? 0.11 : 0.085)).round(),
+      logoMaxWidth: (width * 0.30).round(),
+      logoMaxHeight: (shortSide * 0.085).round(),
       textFont: textFont,
       timeFont: timeFont,
       textLineHeight: textLineHeight,
       charWidth: shortSide >= 1200 ? 13.0 : 8.0,
       shadowOffset: shortSide >= 1200 ? 2 : 1,
-      useSingleColumn: !isWide,
+      useSingleColumn: true,
     );
   }
 
