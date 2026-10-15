@@ -28,7 +28,7 @@ class WatermarkLayoutEngine {
     final isLandscape = width >= height;
     final outerMargin = (shortSide * 0.035).clamp(12.0, 120.0).toDouble();
     final contentWidth = width - (outerMargin * 2);
-    final isWideLandscape = isLandscape && width / height >= 1.35;
+    final isWideLandscape = true; // Dua kolom dipertahankan pada portrait dan landscape.
 
     // Keep the composition proportional to the final bitmap, not screen size.
     final panelPadding = (shortSide * 0.035).clamp(10.0, 64.0).toDouble();
@@ -58,9 +58,16 @@ class WatermarkLayoutEngine {
     final detailsRows = 2;
     final detailHeight = bodyLineHeight * detailsRows;
     final sectionGap = (shortSide * 0.018).clamp(6.0, 28.0).toDouble();
+    final logoHeight = hasBranding
+        ? (shortSide * 0.045).clamp(18.0, 72.0).toDouble()
+        : 0.0;
+    final rightInfoHeight = (hasBranding ? logoHeight + sectionGap * 0.5 : 0) +
+        addressHeight +
+        detailHeight +
+        sectionGap * 2;
     final contentHeight = math.max(
-      timeLineHeight * 2 + bodyLineHeight + sectionGap * 2,
-      addressHeight + detailHeight + sectionGap,
+      timeLineHeight + bodyLineHeight * 2 + sectionGap * 2,
+      rightInfoHeight,
     );
     final panelHeight = contentHeight + panelPadding * 2;
     final bottomMargin = (shortSide * 0.10).clamp(18.0, 100.0).toDouble();
@@ -80,26 +87,18 @@ class WatermarkLayoutEngine {
     final dividerX = isWideLandscape
         ? panelRect.left + leftColumnWidth
         : null;
-    final rightRect = isWideLandscape
-        ? Rect.fromLTWH(
-            panelRect.left + leftColumnWidth + columnGap,
-            panelRect.top + panelPadding,
-            rightColumnWidth - panelPadding,
-            panelRect.height - panelPadding * 2,
-          )
-        : Rect.fromLTWH(
-            panelRect.left + panelPadding,
-            panelRect.top + panelPadding,
-            panelRect.width - panelPadding * 2,
-            panelRect.height - panelPadding * 2,
-          );
+    final rightRect = Rect.fromLTWH(
+      panelRect.left + leftColumnWidth + columnGap,
+      panelRect.top + panelPadding,
+      rightColumnWidth - panelPadding,
+      panelRect.height - panelPadding * 2,
+    );
 
-    final logoHeight = (shortSide * 0.075).clamp(24.0, 120.0).toDouble();
-    final logoWidth = math.min(width * 0.30, logoHeight * 4.2);
+    final logoWidth = math.min(rightColumnWidth * 0.48, logoHeight * 4.2);
     final logoRect = hasBranding
         ? Rect.fromLTWH(
-            panelRect.right - logoWidth,
-            panelRect.top - logoHeight - (shortSide * 0.018),
+            panelRect.left + leftColumnWidth + columnGap + panelPadding,
+            panelRect.top + panelPadding,
             logoWidth,
             logoHeight,
           )
