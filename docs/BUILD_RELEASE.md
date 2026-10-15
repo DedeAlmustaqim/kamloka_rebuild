@@ -73,7 +73,7 @@ Upload the AAB to **Play Console → Testing → Internal testing**. Complete th
 
 Current version in `pubspec.yaml` is `1.0.0+1` (version name 1.0.0, version code 1). This is suitable for the first upload if no artifact has been uploaded before. For each subsequent Play Console release, increase the build number after `+`, for example `1.0.0+2`.
 
-## 8. GitHub Actions: CI and signed AAB artifact
+## 7. GitHub Actions: CI and signed AAB artifact
 
 Workflow file: `.github/workflows/kamloka-ci.yml`.
 
@@ -110,7 +110,7 @@ Paste that clipboard value into the `UPLOAD_KEYSTORE_BASE64` secret. Do not past
 
 If validation fails, fix the reported issues before using the release artifact. Never share Actions logs that may contain sensitive information; secrets should be masked by GitHub, but avoid printing them.
 
-## 9. Release checklist
+## 8. Release checklist
 
 - [ ] Keystore and passwords backed up securely, outside the repository.
 - [ ] `android/key.properties` exists locally and is not tracked by Git.
