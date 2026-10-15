@@ -65,23 +65,31 @@ abstract final class ProTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFFFAFBF8),
-        labelStyle: const TextStyle(color: secondaryText),
-        hintStyle: const TextStyle(color: secondaryText),
+        labelStyle: const TextStyle(color: secondaryText, fontSize: 13),
+        floatingLabelStyle: const TextStyle(
+          color: brandGreen,
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+        ),
+        hintStyle: const TextStyle(color: secondaryText, fontSize: 13),
+        prefixIconColor: secondaryText,
+        suffixIconColor: secondaryText,
+        errorStyle: const TextStyle(fontSize: 12, height: 1.3),
         contentPadding: const EdgeInsets.symmetric(horizontal: 17, vertical: 17),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: brandGreen, width: 1.5),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: brandGreen, width: 1.7),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: danger),
         ),
       ),
