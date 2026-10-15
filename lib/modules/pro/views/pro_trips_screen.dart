@@ -7,6 +7,7 @@ import '../services/pro_access_service.dart';
 import '../services/pro_database_service.dart';
 import '../services/pro_photo_storage_service.dart';
 import '../theme/pro_theme.dart';
+import '../widgets/pro_message_dialog.dart';
 import 'pro_trip_detail_screen.dart';
 
 class ProTripsScreen extends StatefulWidget {
@@ -66,13 +67,22 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
       );
       if (mounted) {
         setState(_reload);
-        Get.snackbar(
-          'Perjalanan dibuat',
-          'Kegiatan siap untuk didokumentasikan.',
+        await showProMessageDialog(
+          context: context,
+          title: 'Perjalanan berhasil dibuat',
+          message: 'Kegiatan siap untuk mulai didokumentasikan.',
+          type: ProMessageType.success,
         );
       }
     } catch (error) {
-      if (mounted) Get.snackbar('Belum berhasil menyimpan', error.toString());
+      if (mounted) {
+        await showProMessageDialog(
+          context: context,
+          title: 'Belum berhasil menyimpan',
+          message: error.toString(),
+          type: ProMessageType.error,
+        );
+      }
     } finally {
       if (mounted) setState(() => _isCreating = false);
     }
@@ -109,7 +119,14 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
       await _database.deleteTrip(trip.id);
       if (mounted) setState(_reload);
     } catch (error) {
-      if (mounted) Get.snackbar('Gagal menghapus perjalanan', error.toString());
+      if (mounted) {
+        await showProMessageDialog(
+          context: context,
+          title: 'Gagal menghapus perjalanan',
+          message: error.toString(),
+          type: ProMessageType.error,
+        );
+      }
     }
   }
 
