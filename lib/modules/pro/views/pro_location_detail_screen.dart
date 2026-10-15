@@ -115,8 +115,19 @@ class _ProLocationDetailScreenState extends State<ProLocationDetailScreen> {
     );
     if (result == null) return;
 
-    await _database.updatePhotoCaption(photo.id, result);
-    if (mounted) setState(_reload);
+    try {
+      await _database.updatePhotoCaption(photo.id, result);
+      if (mounted) setState(_reload);
+    } catch (error) {
+      if (mounted) {
+        await showProMessageDialog(
+          context: context,
+          title: 'Keterangan belum tersimpan',
+          message: error.toString(),
+          type: ProMessageType.error,
+        );
+      }
+    }
   }
 
   Future<void> _movePhoto(DocumentedPhoto photo, int offset) async {
@@ -142,15 +153,34 @@ class _ProLocationDetailScreenState extends State<ProLocationDetailScreen> {
       cancelText: 'Batal',
       type: ProMessageType.error,
     );
-    if (confirmed != true) return;
-    await _database.deletePhoto(photo.id);
-    await _photoStorage.deleteManagedPhoto(photo.filePath);
-    final remaining = await _database.listPhotos(widget.location.id);
-    await _database.reorderPhotos(
-      widget.location.id,
-      remaining.map((item) => item.id).toList(),
-    );
-    if (mounted) setState(_reload);
+    if (!confirmed) return;
+    try {
+      await _database.deletePhoto(photo.id);
+      await _photoStorage.deleteManagedPhoto(photo.filePath);
+      final remaining = await _database.listPhotos(widget.location.id);
+      await _database.reorderPhotos(
+        widget.location.id,
+        remaining.map((item) => item.id).toList(),
+      );
+      if (mounted) {
+        setState(_reload);
+        await showProMessageDialog(
+          context: context,
+          title: 'Foto berhasil dihapus',
+          message: 'Foto dihapus dari dokumentasi perjalanan.',
+          type: ProMessageType.success,
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        await showProMessageDialog(
+          context: context,
+          title: 'Foto belum berhasil dihapus',
+          message: error.toString(),
+          type: ProMessageType.error,
+        );
+      }
+    }
   }
 
   @override
