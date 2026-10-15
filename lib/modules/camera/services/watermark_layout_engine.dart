@@ -26,12 +26,12 @@ class WatermarkLayoutEngine {
 
     final shortSide = math.min(width, height);
     final isLandscape = width >= height;
-    final outerMargin = (shortSide * 0.035).clamp(12.0, 120.0).toDouble();
+    final outerMargin = isLandscape\n        ? (width * 0.075).clamp(36.0, 220.0).toDouble()\n        : (shortSide * 0.035).clamp(12.0, 100.0).toDouble();
     final contentWidth = width - (outerMargin * 2);
     final isWideLandscape = true; // Dua kolom dipertahankan pada portrait dan landscape.
 
     // Keep the composition proportional to the final bitmap, not screen size.
-    final panelPadding = (shortSide * 0.035).clamp(10.0, 64.0).toDouble();
+    final panelPadding = (shortSide * 0.028).clamp(10.0, 52.0).toDouble();
     final columnGap = (contentWidth * 0.045).clamp(12.0, 80.0).toDouble();
     final leftColumnWidth = isWideLandscape
         ? (contentWidth * 0.30).clamp(shortSide * 0.25, contentWidth * 0.38).toDouble()
@@ -70,7 +70,7 @@ class WatermarkLayoutEngine {
       rightInfoHeight,
     );
     final panelHeight = contentHeight + panelPadding * 2;
-    final bottomMargin = (shortSide * 0.10).clamp(18.0, 100.0).toDouble();
+    final bottomMargin = (shortSide * 0.025).clamp(12.0, 36.0).toDouble();
     final panelRect = Rect.fromLTWH(
       outerMargin,
       height - bottomMargin - panelHeight,
