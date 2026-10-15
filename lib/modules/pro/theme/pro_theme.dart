@@ -64,12 +64,12 @@ abstract final class ProTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: surface,
+        fillColor: const Color(0xFFFAFBF8),
         labelStyle: const TextStyle(color: secondaryText),
         hintStyle: const TextStyle(color: secondaryText),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 17, vertical: 17),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(18),
           borderSide: const BorderSide(color: border),
         ),
         enabledBorder: OutlineInputBorder(
