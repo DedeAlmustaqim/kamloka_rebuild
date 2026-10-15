@@ -166,11 +166,12 @@ class WatermarkService {
         address: address,
         data: data,
         hasBranding: logo != null && logoSize != null,
+        logo: logo,
       );
       img.compositeImage(image, measuredLayer);
     }
 
-    if (logo != null && logoSize != null) {
+    if (layout.useSingleColumn && logo != null && logoSize != null) {
       _drawLogo(image, logo, logoSize, layout);
     }
 
@@ -198,6 +199,7 @@ class WatermarkService {
     required String address,
     required WatermarkData data,
     required bool hasBranding,
+    required img.Image? logo,
   }) async {
     final shortSide = imageWidth < imageHeight ? imageWidth : imageHeight;
     final bodyFontSize = (shortSide * 0.014).clamp(14.0, 44.0).toDouble();
@@ -354,6 +356,18 @@ class WatermarkService {
     final decoded = img.decodePng(pngBytes);
     if (decoded == null) {
       throw const FormatException('Watermark layer PNG tidak valid.');
+    }
+    if (logo != null && layout.logoRect != ui.Rect.zero) {
+      final logoWidth = layout.logoRect.width.round().clamp(1, imageWidth).toInt();
+      final logoHeight = layout.logoRect.height.round().clamp(1, imageHeight).toInt();
+      final resizedLogo = img.copyResize(logo, width: logoWidth, height: logoHeight);
+      img.compositeImage(
+        decoded,
+        resizedLogo,
+        dstX: layout.logoRect.left.round(),
+        dstY: layout.logoRect.top.round().clamp(0, imageHeight - logoHeight).toInt(),
+        blend: img.BlendMode.alpha,
+      );
     }
     return decoded;
   }
