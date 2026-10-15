@@ -229,14 +229,21 @@ class WatermarkService {
 
     final recorder = ui.PictureRecorder();
     final canvas = ui.Canvas(recorder);
-    final panelPaint = ui.Paint()..color = const ui.Color(0xFF4E4E4E);
-    final panelRadius = (shortSide * 0.035).clamp(14.0, 72.0).toDouble();
-    canvas.drawRRect(
-      ui.RRect.fromRectAndRadius(
-        layout.panelRect,
-        ui.Radius.circular(panelRadius),
-      ),
-      panelPaint,
+    final scrimTop = (layout.panelRect.top - shortSide * 0.10).clamp(0.0, imageHeight.toDouble());
+    final scrimPaint = ui.Paint()
+      ..shader = ui.Gradient.linear(
+        ui.Offset(0, scrimTop),
+        ui.Offset(0, imageHeight.toDouble()),
+        const [
+          ui.Color(0x00000000),
+          ui.Color(0x99000000),
+          ui.Color(0xD9000000),
+        ],
+        const [0.0, 0.42, 1.0],
+      );
+    canvas.drawRect(
+      ui.Rect.fromLTRB(0, scrimTop, imageWidth.toDouble(), imageHeight.toDouble()),
+      scrimPaint,
     );
 
     if (layout.dividerX != null) {
@@ -289,12 +296,16 @@ class WatermarkService {
         maxLines: 1,
       );
 
+      var infoTop = right.top;
+      if (hasBranding && layout.logoRect != ui.Rect.zero) {
+        infoTop += layout.logoRect.height + innerGap * 0.5;
+      }
       final addressPainter = TextPainter(
         text: TextSpan(text: address, style: addressStyle),
         textDirection: ui.TextDirection.ltr,
       )..layout(maxWidth: right.width);
-      addressPainter.paint(canvas, ui.Offset(right.left, right.top));
-      final detailY = right.top + addressPainter.height + innerGap;
+      addressPainter.paint(canvas, ui.Offset(right.left, infoTop));
+      final detailY = infoTop + addressPainter.height + innerGap;
       drawText(
         '${_formatLatitude(data.latitude)}    ${_formatLongitude(data.longitude)}',
         bodyStyle,
@@ -365,7 +376,7 @@ class WatermarkService {
       img.compositeImage(
         decoded,
         resizedLogo,
-        dstX: layout.logoRect.left.round(),
+        dstX: layout.logoRect.left.round().clamp(0, imageWidth - logoWidth).toInt(),
         dstY: layout.logoRect.top.round().clamp(0, imageHeight - logoHeight).toInt(),
         blend: img.BlendMode.alpha,
       );
@@ -696,7 +707,7 @@ class _WatermarkLayout {
       textLineHeight: textLineHeight,
       charWidth: shortSide >= 1200 ? 13.0 : 8.0,
       shadowOffset: shortSide >= 1200 ? 2 : 1,
-      useSingleColumn: true,
+      useSingleColumn: false,
     );
   }
 
