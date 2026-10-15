@@ -26,7 +26,9 @@ class WatermarkLayoutEngine {
 
     final shortSide = math.min(width, height);
     final isLandscape = width >= height;
-    final outerMargin = isLandscape\n        ? (width * 0.075).clamp(36.0, 220.0).toDouble()\n        : (shortSide * 0.035).clamp(12.0, 100.0).toDouble();
+    final outerMargin = isLandscape
+        ? (width * 0.075).clamp(36.0, 220.0).toDouble()
+        : (shortSide * 0.035).clamp(12.0, 100.0).toDouble();
     final contentWidth = width - (outerMargin * 2);
     final isWideLandscape = true; // Dua kolom dipertahankan pada portrait dan landscape.
 
