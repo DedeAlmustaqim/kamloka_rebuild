@@ -173,7 +173,7 @@ class WatermarkService {
       final panelColor = img.ColorRgb8(78, 78, 78);
       final addressLines = _wrapText(
         address,
-        maxChars: _wrapChars(rightWidth, layout.charWidth * 0.88),
+        maxChars: _wrapChars(rightWidth, shortSide >= 900 ? 12.0 : 7.0),
       );
       final addressFont = shortSide >= 900 ? img.arial24 : img.arial14;
       final detailFont = shortSide >= 900 ? img.arial24 : img.arial14;
@@ -547,12 +547,12 @@ class WatermarkService {
 
   String _formatLatitude(double? value) {
     if (value == null) return 'Lat --';
-    return 'Lat ${value.toStringAsFixed(6)} deg';
+    return 'Lat ${value.toStringAsFixed(6)}°';
   }
 
   String _formatLongitude(double? value) {
     if (value == null) return 'Long --';
-    return 'Long ${value.toStringAsFixed(6)} deg';
+    return 'Long ${value.toStringAsFixed(6)}°';
   }
 
   String _formatAccuracy(double? value) {
@@ -657,7 +657,7 @@ class _WatermarkLayout {
       columnGap: (contentWidth * 0.045).round().clamp(18, 80).toInt(),
       scrimBleed: (shortSide * 0.055).round().clamp(24, 110).toInt(),
       logoTop: (shortSide * 0.035).round().clamp(18, 100).toInt(),
-      logoMaxWidth: (width * (isWide ? 0.22 : 0.30)).round(),
+      logoMaxWidth: (width * (isWide ? 0.30 : 0.30)).round(),
       logoMaxHeight: (shortSide * (isWide ? 0.11 : 0.085)).round(),
       textFont: textFont,
       timeFont: timeFont,
