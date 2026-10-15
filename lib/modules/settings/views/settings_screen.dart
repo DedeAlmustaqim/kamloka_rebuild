@@ -40,11 +40,11 @@ class SettingsScreen extends StatelessWidget {
                   width: 54,
                   height: 54,
                   decoration: BoxDecoration(
-                    color: ProTheme.text,
+                    color: ProTheme.brandGreen,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(Icons.camera_alt_rounded,
-                      color: _background, size: 29),
+                      color: Colors.white, size: 29),
                 ),
                 const SizedBox(width: 14),
                 const Expanded(
