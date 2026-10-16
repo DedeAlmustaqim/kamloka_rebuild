@@ -35,15 +35,6 @@ class PhotoPreviewView extends StatelessWidget {
     }
   }
 
-  Future<void> _savePhoto(BuildContext context) async {
-    try {
-      await GalleryService().saveImage(filePath);
-      if (context.mounted) _showMessage(context, 'Foto tersimpan di album KAMLOKA.');
-    } catch (error) {
-      if (context.mounted) _showMessage(context, 'Foto gagal disimpan: $error');
-    }
-  }
-
   Future<void> _deletePhoto(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -151,14 +142,6 @@ class PhotoPreviewView extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: _BottomAction(
-                        icon: Icons.save_alt_rounded,
-                        label: 'Simpan',
-                        onPressed: () => _savePhoto(context),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
                     Expanded(
                       child: _BottomAction(
                         icon: Icons.ios_share_rounded,
