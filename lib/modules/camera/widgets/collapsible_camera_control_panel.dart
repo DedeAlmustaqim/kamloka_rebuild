@@ -43,7 +43,12 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
         ),
       );
 
-      if (toggleOnly) return toggle;
+      if (toggleOnly) {
+        return Transform.translate(
+          offset: const Offset(0, 8),
+          child: toggle,
+        );
+      }
       if (panelOnly) {
         if (!expanded) return const SizedBox.shrink();
         return Container(
