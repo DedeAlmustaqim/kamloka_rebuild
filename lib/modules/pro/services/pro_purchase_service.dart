@@ -8,10 +8,9 @@ import 'pro_access_service.dart';
 
 /// Google Play billing bridge for KAMLOKA Pro.
 ///
-/// Keep [proProductId] empty until the app has been uploaded and the product
-/// has been created in Play Console. Then replace it with the exact product ID.
+/// Google Play one-time purchase for lifetime KAMLOKA Pro access.
 class ProPurchaseService extends GetxService {
-  static const String proProductId = '';
+  static const String proProductId = 'kamloka_pro';
 
   final InAppPurchase _billing = InAppPurchase.instance;
   final RxBool storeAvailable = false.obs;
@@ -69,6 +68,15 @@ class ProPurchaseService extends GetxService {
         (item) => item.id == proProductId,
       );
       statusMessage.value = 'Produk KAMLOKA Pro tersedia.';
+      // Re-query owned non-consumable purchases so Pro access is restored
+      // after an app restart or reinstall. The purchase stream handles results.
+      try {
+        await _billing.restorePurchases();
+      } catch (error) {
+        if (kDebugMode) {
+          debugPrint('KAMLOKA automatic purchase restore error: $error');
+        }
+      }
     } catch (error) {
       statusMessage.value = 'Gagal menghubungkan Google Play: $error';
     } finally {
@@ -115,7 +123,7 @@ class ProPurchaseService extends GetxService {
     try {
       isLoading.value = true;
       await _billing.restorePurchases();
-      statusMessage.value = 'Permintaan pemulihan pembelian dikirim ke Google Play.';
+      statusMessage.value = 'Memeriksa pembelian sebelumnya melalui Google Play…';
     } catch (error) {
       statusMessage.value = 'Pemulihan pembelian gagal: $error';
     } finally {
@@ -138,8 +146,9 @@ class ProPurchaseService extends GetxService {
           break;
         case PurchaseStatus.purchased:
         case PurchaseStatus.restored:
-          // Client-side purchase state only. Before public production release,
-          // validate purchase tokens with a trusted backend where possible.
+          // This client currently grants access from Google Play purchase
+          // updates. Add trusted server-side purchase-token verification before
+          // treating this as tamper-resistant entitlement enforcement.
           if (isProductConfigured && purchase.productID == proProductId) {
             Get.find<ProAccessService>().isPro.value = true;
             statusMessage.value = purchase.status == PurchaseStatus.restored
