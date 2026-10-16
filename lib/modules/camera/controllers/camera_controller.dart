@@ -15,6 +15,7 @@ import '../services/watermark_service.dart';
 import '../../pro/models/documented_photo.dart';
 import '../../pro/models/visit_location.dart';
 import '../../pro/services/pro_database_service.dart';
+import '../../pro/services/pro_access_service.dart';
 import '../../pro/services/pro_photo_storage_service.dart';
 
 class CameraController extends GetxController {
@@ -452,6 +453,8 @@ class CameraController extends GetxController {
           accuracy: position?.accuracy,
           altitude: position?.altitude,
         ),
+        // Free photos carry KAMLOKA branding; Pro photos are unbranded.
+        showBranding: !Get.find<ProAccessService>().isPro.value,
       );
 
       lastCapturePath.value = watermarked.path;
