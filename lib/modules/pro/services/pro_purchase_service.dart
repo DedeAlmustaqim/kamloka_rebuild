@@ -122,8 +122,8 @@ class ProPurchaseService extends GetxService {
 
     try {
       isLoading.value = true;
-      await _billing.restorePurchases();
       statusMessage.value = 'Memeriksa pembelian sebelumnya melalui Google Play…';
+      await _billing.restorePurchases();
     } catch (error) {
       statusMessage.value = 'Pemulihan pembelian gagal: $error';
     } finally {
