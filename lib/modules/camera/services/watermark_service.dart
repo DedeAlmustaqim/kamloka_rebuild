@@ -370,16 +370,32 @@ class WatermarkService {
       throw const FormatException('Watermark layer PNG tidak valid.');
     }
     if (logo != null && layout.logoRect != ui.Rect.zero) {
-      final logoWidth = layout.logoRect.width.round().clamp(1, imageWidth).toInt();
-      final logoHeight = layout.logoRect.height.round().clamp(1, imageHeight).toInt();
-      final resizedLogo = img.copyResize(logo, width: logoWidth, height: logoHeight);
-      img.compositeImage(
-        decoded,
-        resizedLogo,
-        dstX: layout.logoRect.left.round().clamp(0, imageWidth - logoWidth).toInt(),
-        dstY: layout.logoRect.top.round().clamp(0, imageHeight - logoHeight).toInt(),
-        blend: img.BlendMode.alpha,
+      // Fit the logo into the reserved top-right area without distorting it.
+      final fitted = _scaledSize(
+        logo,
+        maxWidth: layout.logoRect.width.round().clamp(1, imageWidth).toInt(),
+        maxHeight: layout.logoRect.height.round().clamp(1, imageHeight).toInt(),
       );
+      if (fitted != null) {
+        final resizedLogo = img.copyResize(
+          logo,
+          width: fitted.width,
+          height: fitted.height,
+        );
+        img.compositeImage(
+          decoded,
+          resizedLogo,
+          dstX: (layout.logoRect.right - fitted.width)
+              .round()
+              .clamp(0, imageWidth - fitted.width)
+              .toInt(),
+          dstY: layout.logoRect.top
+              .round()
+              .clamp(0, imageHeight - fitted.height)
+              .toInt(),
+          blend: img.BlendMode.alpha,
+        );
+      }
     }
     return decoded;
   }
