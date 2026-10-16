@@ -233,7 +233,7 @@ class _CameraPreview extends StatelessWidget {
         Positioned(
           left: 14,
           right: 14,
-          bottom: 245,
+          bottom: 200,
           child: SafeArea(
             top: false,
             child: Column(

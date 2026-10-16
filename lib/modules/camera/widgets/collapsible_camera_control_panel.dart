@@ -82,6 +82,7 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
       ],
     );
   }
+
   Widget _ratioCell() {
     return Obx(
       () => _toolbarControl(
