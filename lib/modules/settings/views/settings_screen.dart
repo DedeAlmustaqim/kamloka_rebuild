@@ -499,10 +499,12 @@ class _KamlokaProScreenState extends State<KamlokaProScreen> {
               const SizedBox(height: 14),
               Obx(() {
                 final billing = Get.find<ProPurchaseService>();
+                final access = Get.find<ProAccessService>();
                 final product = billing.product.value;
                 final canBuy = product != null &&
                     billing.storeAvailable.value &&
-                    !billing.purchasePending.value;
+                    !billing.purchasePending.value &&
+                    !access.isPro.value;
                 return Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
@@ -573,11 +575,13 @@ class _KamlokaProScreenState extends State<KamlokaProScreen> {
                               )
                             : const Icon(Icons.lock_open_rounded),
                         label: Text(
-                          product == null
-                              ? (billing.isLoading.value
-                                  ? 'Memuat produk Google Play…'
-                                  : 'Produk belum tersedia')
-                              : 'Beli KAMLOKA Pro • ${product.price}',
+                          access.isPro.value
+                              ? 'KAMLOKA Pro sudah aktif'
+                              : product == null
+                                  ? (billing.isLoading.value
+                                      ? 'Memuat produk Google Play…'
+                                      : 'Produk belum tersedia')
+                                  : 'Beli KAMLOKA Pro • ${product.price}',
                         ),
                       ),
                       const SizedBox(height: 4),
