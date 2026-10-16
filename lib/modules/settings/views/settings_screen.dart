@@ -495,7 +495,7 @@ class _KamlokaProScreenState extends State<KamlokaProScreen> {
                                 ),
                                 SizedBox(height: 3),
                                 Text(
-                                  'Pembelian melalui Google Play',
+                                  'Sekali bayar • Akses PRO permanen',
                                   style: TextStyle(
                                     color: ProTheme.secondaryText,
                                     fontSize: 12,
@@ -590,7 +590,7 @@ class _KamlokaProScreenState extends State<KamlokaProScreen> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Buka akses dokumentasi perjalanan dan fitur premium. ID produk serta harga akan muncul setelah produk dibuat di Play Console.',
+                'Buka akses dokumentasi perjalanan dan fitur premium dengan sekali pembayaran. Harga ditampilkan langsung dari Google Play.',
                 style: TextStyle(color: ProTheme.secondaryText, fontSize: 13, height: 1.45),
               ),
               const SizedBox(height: 14),
