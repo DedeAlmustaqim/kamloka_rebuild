@@ -36,7 +36,7 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
               ? null
               : c.isControlPanelExpanded.toggle,
           icon: Icon(
-            expanded ? Icons.keyboard_arrow_up_rounded : Icons.tune_rounded,
+            expanded ? Icons.keyboard_arrow_down_rounded : Icons.tune_rounded,
             color: Colors.white,
             size: 22,
           ),
