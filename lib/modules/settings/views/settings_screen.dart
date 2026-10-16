@@ -527,7 +527,9 @@ class _KamlokaProScreenState extends State<KamlokaProScreen> {
                             : const Icon(Icons.lock_open_rounded),
                         label: Text(
                           product == null
-                              ? 'Pembelian segera tersedia'
+                              ? (billing.isLoading.value
+                                  ? 'Memuat produk Google Play…'
+                                  : 'Produk belum tersedia')
                               : 'Beli KAMLOKA Pro • ${product.price}',
                         ),
                       ),
