@@ -449,6 +449,53 @@ class _KamlokaProScreenState extends State<KamlokaProScreen> {
                   ),
                 );
               }),
+              if (kDebugMode) ...[
+                const SizedBox(height: 14),
+                Obx(() {
+                  final access = Get.find<ProAccessService>();
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: ProTheme.surface,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: ProTheme.border),
+                    ),
+                    child: SwitchListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 5,
+                      ),
+                      secondary: Icon(
+                        access.isPro.value
+                            ? Icons.workspace_premium_rounded
+                            : Icons.developer_mode_rounded,
+                        color: access.isPro.value
+                            ? ProTheme.primaryDark
+                            : ProTheme.secondaryText,
+                      ),
+                      title: Text(
+                        access.isPro.value
+                            ? 'Uji fitur PRO: Aktif'
+                            : 'Uji fitur PRO: Nonaktif',
+                        style: const TextStyle(
+                          color: ProTheme.text,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      subtitle: const Text(
+                        'Sakelar sementara untuk pengujian developer. Tidak tersedia pada build rilis.',
+                        style: TextStyle(
+                          color: ProTheme.secondaryText,
+                          fontSize: 12,
+                          height: 1.4,
+                        ),
+                      ),
+                      value: access.isPro.value,
+                      activeThumbColor: ProTheme.primaryDark,
+                      onChanged: access.setDeveloperProOverride,
+                    ),
+                  );
+                }),
+              ],
               const SizedBox(height: 14),
               Obx(() {
                 final billing = Get.find<ProPurchaseService>();
