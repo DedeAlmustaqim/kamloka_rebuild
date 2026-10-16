@@ -18,7 +18,7 @@ class ProPurchaseService extends GetxService {
   final RxBool purchasePending = false.obs;
   final Rxn<ProductDetails> product = Rxn<ProductDetails>();
   final RxString statusMessage =
-      'ID produk Google Play akan diisi setelah upload aplikasi.'.obs;
+      'Menghubungkan ke Google Play untuk memeriksa KAMLOKA Pro…'.obs;
 
   StreamSubscription<List<PurchaseDetails>>? _purchaseSubscription;
 
@@ -57,16 +57,21 @@ class ProPurchaseService extends GetxService {
             'Produk belum dapat dimuat: ${response.error!.message}';
         return;
       }
-      if (response.notFoundIDs.contains(proProductId) ||
-          response.productDetails.isEmpty) {
+      ProductDetails? matchedProduct;
+      for (final item in response.productDetails) {
+        if (item.id == proProductId) {
+          matchedProduct = item;
+          break;
+        }
+      }
+      if (response.notFoundIDs.contains(proProductId) || matchedProduct == null) {
+        product.value = null;
         statusMessage.value =
-            'Produk Pro belum ditemukan. Periksa ID produk dan konfigurasi Play Console.';
+            'Produk kamloka_pro belum ditemukan. Pastikan produk aktif di Play Console dan aplikasi dipasang melalui jalur pengujian Google Play.';
         return;
       }
 
-      product.value = response.productDetails.firstWhere(
-        (item) => item.id == proProductId,
-      );
+      product.value = matchedProduct;
       statusMessage.value = 'Produk KAMLOKA Pro tersedia.';
       // Re-query owned non-consumable purchases so Pro access is restored
       // after an app restart or reinstall. The purchase stream handles results.
