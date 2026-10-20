@@ -26,9 +26,11 @@ class WatermarkLayoutEngine {
 
     final shortSide = math.min(width, height);
     final isLandscape = width >= height;
+    // Keep visible breathing room on both horizontal edges. The margin is
+    // measured from the final bitmap, not the preview widget.
     final outerMargin = isLandscape
-        ? (width * 0.075).clamp(36.0, 220.0).toDouble()
-        : (shortSide * 0.035).clamp(12.0, 100.0).toDouble();
+        ? (width * 0.04).clamp(18.0, 120.0).toDouble()
+        : (shortSide * 0.035).clamp(12.0, 72.0).toDouble();
     final contentWidth = width - (outerMargin * 2);
     final isWideLandscape = isLandscape;
 
@@ -45,16 +47,19 @@ class WatermarkLayoutEngine {
         : contentWidth;
     final effectiveColumnGap = isWideLandscape ? columnGap : 0.0;
 
+    // Measure the address at the same width that the renderer will use.
+    final rightTextWidth = math.max(
+      1.0,
+      rightColumnWidth - (panelPadding * 2),
+    );
     final addressPainter = TextPainter(
-      text: TextSpan(text: address.trim().isEmpty ? 'Alamat tidak tersedia' : address.trim(), style: bodyStyle),
+      text: TextSpan(
+        text: address.trim().isEmpty ? 'Alamat tidak tersedia' : address.trim(),
+        style: bodyStyle,
+      ),
       textDirection: textDirection,
       textAlign: TextAlign.start,
-    )..layout(
-        maxWidth: math.min(
-          rightColumnWidth - (panelPadding * 2),
-          isLandscape ? width * 0.22 : contentWidth - (panelPadding * 2),
-        ),
-      );
+    )..layout(maxWidth: rightTextWidth);
 
     final timePainter = TextPainter(
       text: TextSpan(text: '00:00', style: timeStyle),
@@ -85,19 +90,29 @@ class WatermarkLayoutEngine {
       panelHeight,
     );
 
+    final innerLeft = panelRect.left + panelPadding;
+    final innerWidth = math.max(1.0, panelRect.width - panelPadding * 2);
+    final actualLeftWidth = isWideLandscape
+        ? math.max(1.0, leftColumnWidth - panelPadding)
+        : innerWidth;
     final leftRect = Rect.fromLTWH(
-      panelRect.left + panelPadding,
+      innerLeft,
       panelRect.top + panelPadding,
-      leftColumnWidth - panelPadding,
+      actualLeftWidth,
       panelRect.height - panelPadding * 2,
     );
     final dividerX = isWideLandscape
-        ? panelRect.left + leftColumnWidth
+        ? innerLeft + actualLeftWidth + effectiveColumnGap / 2
         : null;
+    final rightLeft = isWideLandscape
+        ? innerLeft + leftColumnWidth + effectiveColumnGap
+        : innerLeft;
     final rightRect = Rect.fromLTWH(
-      panelRect.left + (isWideLandscape ? leftColumnWidth + effectiveColumnGap : panelPadding),
+      rightLeft,
       panelRect.top + panelPadding,
-      isWideLandscape ? rightColumnWidth - panelPadding : contentWidth - panelPadding * 2,
+      isWideLandscape
+          ? math.max(1.0, panelRect.right - panelPadding - rightLeft)
+          : innerWidth,
       panelRect.height - panelPadding * 2,
     );
 
