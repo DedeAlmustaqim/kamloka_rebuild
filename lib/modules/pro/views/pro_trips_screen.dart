@@ -896,6 +896,8 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
       firstDate: isStart ? DateTime(2000) : _startDate,
       lastDate: DateTime(2100),
       helpText: isStart ? 'Pilih tanggal mulai' : 'Pilih tanggal selesai',
+      cancelText: 'Batal',
+      confirmText: 'Pilih tanggal',
     );
     if (selected == null || !mounted) return;
     setState(() {
@@ -908,7 +910,18 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
     });
   }
 
+  void _setSchedule(int daysFromToday) {
+    final today = DateTime.now();
+    final date = DateTime(today.year, today.month, today.day)
+        .add(Duration(days: daysFromToday));
+    setState(() {
+      _startDate = date;
+      _endDate = date;
+    });
+  }
+
   void _submit() {
+    FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
     Navigator.of(context).pop(
       _TripDraft(
@@ -924,14 +937,22 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isToday = _isSameDay(_startDate, DateTime.now()) &&
+        _isSameDay(_endDate, DateTime.now());
+    final tomorrow = DateTime.now().add(const Duration(days: 1));
+    final isTomorrow =
+        _isSameDay(_startDate, tomorrow) && _isSameDay(_endDate, tomorrow);
+    final isMultiDay = !_isSameDay(_startDate, _endDate);
+
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.viewInsetsOf(context).bottom,
         ),
         child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
             child: Form(
               key: _formKey,
               child: Column(
@@ -948,116 +969,282 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 22),
-                  const Text(
-                    'Perjalanan baru',
-                    style: TextStyle(
-                      color: ProTheme.text,
-                      fontSize: 23,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Isi informasi utama dulu. Detail lainnya bisa ditambahkan jika diperlukan.',
-                    style: TextStyle(
-                      color: ProTheme.secondaryText,
-                      height: 1.45,
-                    ),
-                  ),
                   const SizedBox(height: 20),
-                  TextFormField(
-                    controller: _title,
-                    autofocus: true,
-                    textCapitalization: TextCapitalization.sentences,
-                    decoration: const InputDecoration(
-                      labelText: 'Nama kegiatan *',
-                      hintText: 'Isi nama kegiatan atau judul perjalanan',
-                      prefixIcon: Icon(Icons.work_outline_rounded),
-                    ),
-                    validator: (value) => value == null || value.trim().isEmpty
-                        ? 'Nama kegiatan wajib diisi.'
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Jadwal perjalanan',
-                    style: TextStyle(
-                      color: ProTheme.text,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: _DateButton(
-                          label: 'Mulai',
-                          date: _startDate,
-                          onTap: () => _pickDate(isStart: true),
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE4F0E9),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: const Icon(
+                          Icons.add_task_rounded,
+                          color: ProTheme.brandGreen,
+                          size: 25,
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _DateButton(
-                          label: 'Selesai',
-                          date: _endDate,
-                          onTap: () => _pickDate(isStart: false),
+                      const SizedBox(width: 13),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Buat kegiatan baru',
+                              style: TextStyle(
+                                color: ProTheme.text,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                                height: 1.2,
+                              ),
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              'Mulai dengan nama dan jadwal kegiatan. Informasi lainnya bisa diisi nanti.',
+                              style: TextStyle(
+                                color: ProTheme.secondaryText,
+                                fontSize: 13,
+                                height: 1.45,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  TextButton.icon(
-                    onPressed: () =>
-                        setState(() => _showOptional = !_showOptional),
-                    icon: Icon(
-                      _showOptional
-                          ? Icons.remove_circle_outline
-                          : Icons.add_circle_outline,
+                  const SizedBox(height: 24),
+                  const _FormSectionLabel(
+                    number: '01',
+                    title: 'Informasi kegiatan',
+                    subtitle: 'Nama kegiatan wajib diisi.',
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _title,
+                    autofocus: true,
+                    textCapitalization: TextCapitalization.sentences,
+                    textInputAction: TextInputAction.next,
+                    maxLength: 100,
+                    decoration: const InputDecoration(
+                      labelText: 'Nama kegiatan',
+                      hintText: 'Contoh: Monitoring lokasi pembangunan',
+                      helperText: 'Gunakan nama yang mudah dikenali.',
+                      prefixIcon: Icon(Icons.work_outline_rounded),
+                      counterText: '',
                     ),
-                    label: Text(
-                      _showOptional
-                          ? 'Sembunyikan detail opsional'
-                          : 'Tambah detail opsional',
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Nama kegiatan wajib diisi.';
+                      }
+                      if (value.trim().length < 3) {
+                        return 'Masukkan minimal 3 karakter.';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  const _FormSectionLabel(
+                    number: '02',
+                    title: 'Jadwal kegiatan',
+                    subtitle: 'Pilih jadwal cepat atau tentukan tanggal sendiri.',
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _SchedulePresetChip(
+                        label: 'Hari ini',
+                        icon: Icons.today_rounded,
+                        selected: isToday,
+                        onTap: () => _setSchedule(0),
+                      ),
+                      _SchedulePresetChip(
+                        label: 'Besok',
+                        icon: Icons.event_available_rounded,
+                        selected: isTomorrow,
+                        onTap: () => _setSchedule(1),
+                      ),
+                      _SchedulePresetChip(
+                        label: 'Beberapa hari',
+                        icon: Icons.date_range_rounded,
+                        selected: isMultiDay,
+                        onTap: () => _pickDate(isStart: false),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: ProTheme.surface,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: ProTheme.border),
                     ),
-                    style: TextButton.styleFrom(
-                      alignment: Alignment.centerLeft,
+                    child: Column(
+                      children: [
+                        _DateRow(
+                          label: 'Tanggal mulai',
+                          date: _startDate,
+                          onTap: () => _pickDate(isStart: true),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 42),
+                          child: Divider(
+                            height: 1,
+                            color: ProTheme.border,
+                          ),
+                        ),
+                        _DateRow(
+                          label: 'Tanggal selesai',
+                          date: _endDate,
+                          onTap: () => _pickDate(isStart: false),
+                        ),
+                      ],
                     ),
                   ),
-                  if (_showOptional) ...[
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _officer,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(
-                        labelText: 'Nama pelaksana',
-                        prefixIcon: Icon(Icons.person_outline_rounded),
+                  const SizedBox(height: 8),
+                  const Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.info_outline_rounded,
+                        size: 15,
+                        color: ProTheme.secondaryText,
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _assignment,
-                      decoration: const InputDecoration(
-                        labelText: 'Nomor surat tugas',
-                        prefixIcon: Icon(Icons.description_outlined),
+                      SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Tanggal selesai tidak bisa lebih awal dari tanggal mulai.',
+                          style: TextStyle(
+                            color: ProTheme.secondaryText,
+                            fontSize: 12,
+                            height: 1.4,
+                          ),
+                        ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 22),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: ProTheme.surface,
+                      border: Border.all(color: ProTheme.border),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _notes,
-                      maxLines: 2,
-                      decoration: const InputDecoration(
-                        labelText: 'Catatan umum',
-                        prefixIcon: Icon(Icons.notes_rounded),
-                        alignLabelWithHint: true,
-                      ),
+                    child: Column(
+                      children: [
+                        ListTile(
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 14),
+                          leading: Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: ProTheme.background,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              _showOptional
+                                  ? Icons.keyboard_arrow_up_rounded
+                                  : Icons.tune_rounded,
+                              color: ProTheme.brandGreen,
+                            ),
+                          ),
+                          title: const Text(
+                            'Detail tambahan',
+                            style: TextStyle(
+                              color: ProTheme.text,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                            ),
+                          ),
+                          subtitle: const Text(
+                            'Opsional · nomor surat, pelaksana, catatan',
+                            style: TextStyle(
+                              color: ProTheme.secondaryText,
+                              fontSize: 12,
+                            ),
+                          ),
+                          trailing: Icon(
+                            _showOptional
+                                ? Icons.expand_less_rounded
+                                : Icons.expand_more_rounded,
+                            color: ProTheme.secondaryText,
+                          ),
+                          onTap: () => setState(
+                            () => _showOptional = !_showOptional,
+                          ),
+                        ),
+                        if (_showOptional) ...[
+                          Divider(height: 1, color: ProTheme.border),
+                          Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Column(
+                              children: [
+                                TextFormField(
+                                  controller: _officer,
+                                  textCapitalization:
+                                      TextCapitalization.words,
+                                  textInputAction: TextInputAction.next,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Nama pelaksana',
+                                    hintText: 'Nama petugas atau tim',
+                                    prefixIcon:
+                                        Icon(Icons.person_outline_rounded),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: _assignment,
+                                  textCapitalization:
+                                      TextCapitalization.characters,
+                                  textInputAction: TextInputAction.next,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Nomor surat tugas',
+                                    hintText: 'Contoh: 800/123/2026',
+                                    prefixIcon:
+                                        Icon(Icons.description_outlined),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: _notes,
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  maxLines: 3,
+                                  minLines: 2,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Catatan umum',
+                                    hintText: 'Tambahkan informasi bila perlu',
+                                    prefixIcon: Icon(Icons.notes_rounded),
+                                    alignLabelWithHint: true,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                  ],
-                  const SizedBox(height: 18),
-                  FilledButton(
+                  ),
+                  const SizedBox(height: 22),
+                  FilledButton.icon(
                     onPressed: _submit,
-                    child: const Text('Simpan perjalanan'),
+                    icon: const Icon(Icons.check_circle_outline_rounded),
+                    label: const Text('Simpan kegiatan'),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(52),
+                      textStyle: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 4),
                   TextButton(
@@ -1073,6 +1260,181 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
     );
   }
 }
+
+class _FormSectionLabel extends StatelessWidget {
+  const _FormSectionLabel({
+    required this.number,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final String number;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 30,
+          height: 30,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: const Color(0xFFE4F0E9),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            number,
+            style: const TextStyle(
+              color: ProTheme.brandGreen,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: ProTheme.text,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  color: ProTheme.secondaryText,
+                  fontSize: 12,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SchedulePresetChip extends StatelessWidget {
+  const _SchedulePresetChip({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ChoiceChip(
+      avatar: Icon(icon, size: 17),
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onTap(),
+      showCheckmark: false,
+      labelStyle: TextStyle(
+        color: selected ? ProTheme.brandGreen : ProTheme.text,
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+      ),
+      backgroundColor: ProTheme.surface,
+      selectedColor: const Color(0xFFE4F0E9),
+      side: BorderSide(
+        color: selected ? ProTheme.brandGreen : ProTheme.border,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+    );
+  }
+}
+
+class _DateRow extends StatelessWidget {
+  const _DateRow({
+    required this.label,
+    required this.date,
+    required this.onTap,
+  });
+
+  final String label;
+  final DateTime date;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 13),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: ProTheme.background,
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: const Icon(
+                Icons.calendar_month_rounded,
+                size: 18,
+                color: ProTheme.brandGreen,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: ProTheme.secondaryText,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _dateLabel(date),
+                    style: const TextStyle(
+                      color: ProTheme.text,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.edit_calendar_rounded,
+              size: 19,
+              color: ProTheme.secondaryText,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+bool _isSameDay(DateTime first, DateTime second) =>
+    first.year == second.year &&
+    first.month == second.month &&
+    first.day == second.day;
 
 class _DateButton extends StatelessWidget {
   const _DateButton({
