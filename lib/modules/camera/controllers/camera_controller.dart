@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:camera/camera.dart' as camera;
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
@@ -417,6 +418,7 @@ class CameraController extends GetxController {
 
   Future<String?> capturePhoto({
     bool saveToSelectedLocation = true,
+    BuildContext? context,
   }) async {
     if (!isReady.value || isCapturing.value) {
       return null;
@@ -427,6 +429,7 @@ class CameraController extends GetxController {
 
     try {
       await _runCountdown();
+      final capturedAt = DateTime.now();
       final physicalOrientation =
           Get.find<DeviceOrientationService>().orientation.value;
 
@@ -443,8 +446,32 @@ class CameraController extends GetxController {
       final location = Get.find<LocationService>();
       final position = location.position.value;
 
-      // Watermark implementation is intentionally disabled while being redesigned.
-      final watermarked = await _watermarkService.apply(file);
+      // Watermark diproses setelah foto diambil agar preview kamera tetap ringan.
+      // Jika proses watermark gagal, foto asli tetap disimpan.
+      camera.XFile watermarked = file;
+      if (context != null && context.mounted) {
+        try {
+          watermarked = await _watermarkService.apply(
+            file,
+            context: context,
+            details: WatermarkDetails(
+              capturedAt: capturedAt,
+              coordinates: location.coordinateText,
+              accuracy: position?.accuracy.toStringAsFixed(1) ?? '--',
+              altitude: position?.altitude.toStringAsFixed(1) ?? '--',
+              address: location.address.value.trim(),
+            ),
+          );
+        } catch (error, stack) {
+          debugPrint('[KAMLOKA WATERMARK] failed: $error');
+          debugPrintStack(stackTrace: stack);
+          captureErrorMessage.value =
+              'Watermark gagal diproses; foto asli tetap disimpan.';
+        }
+      } else {
+        captureErrorMessage.value =
+            'Watermark tidak tersedia; foto asli tetap disimpan.';
+      }
 
       lastCapturePath.value = watermarked.path;
 
