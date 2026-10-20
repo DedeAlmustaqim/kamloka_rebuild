@@ -593,7 +593,7 @@ class _CameraShutter extends GetView<CameraController> {
                     const _CaptureThumbnail(),
                     const Spacer(),
                     GestureDetector(
-                      onTap: isBusy ? null : controller.capturePhoto,
+                      onTap: isBusy ? null : () => controller.capturePhoto(context: context),
                       child: AnimatedOpacity(
                         duration: const Duration(milliseconds: 150),
                         opacity: isBusy ? 0.6 : 1,
