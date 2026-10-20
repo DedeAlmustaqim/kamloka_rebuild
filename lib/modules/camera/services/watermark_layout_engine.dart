@@ -24,13 +24,14 @@ class WatermarkLayoutEngine {
       throw ArgumentError.value(imageSize, 'imageSize', 'Must be positive.');
     }
 
-    // Simple layout rules: one outer margin, one inner padding, one column gap.
+    // Watermark panel occupies 75% of the photo width and is centered.
+    // Keep its content geometry relative to the panel rather than the full image.
     final shortSide = math.min(width, height);
     final isLandscape = width >= height;
-    final margin = isLandscape ? width * 0.02 : shortSide * 0.025;
+    final contentWidth = width * 0.75;
+    final margin = (width - contentWidth) / 2;
     final padding = shortSide * 0.02;
     final gap = shortSide * 0.015;
-    final contentWidth = width - margin * 2;
     final leftWidth = isLandscape ? contentWidth * 0.30 : contentWidth;
     final rightWidth = isLandscape ? contentWidth - leftWidth - gap : contentWidth;
 
