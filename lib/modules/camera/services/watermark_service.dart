@@ -129,7 +129,7 @@ class WatermarkService {
     required img.Image? logo,
   }) async {
     final shortSide = imageWidth < imageHeight ? imageWidth : imageHeight;
-    final bodyFontSize = (shortSide * 0.022).clamp(20.0, 60.0).toDouble();
+    final bodyFontSize = (shortSide * 0.028).clamp(22.0, 64.0).toDouble();
     final timeFontSize = (shortSide * 0.09).clamp(48.0, 220.0).toDouble();
     final bodyStyle = TextStyle(
       color: const ui.Color(0xFFFFFFFF),
