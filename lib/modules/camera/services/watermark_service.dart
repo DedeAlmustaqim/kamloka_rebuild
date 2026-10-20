@@ -1,10 +1,10 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:camera/camera.dart' as camera;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
 
@@ -107,7 +107,7 @@ class WatermarkService {
 
     final outputPath = p.join(
       p.dirname(source.path),
-      p.basenameWithoutExtension(source.path) + '_watermarked.jpg',
+      '${p.basenameWithoutExtension(source.path)}_watermarked.jpg',
     );
 
     await compute(
@@ -142,16 +142,11 @@ class _WatermarkCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final time = details.capturedAt;
-    final timeText = time.hour.toString().padLeft(2, '0') +
-        ':' +
-        time.minute.toString().padLeft(2, '0') +
-        ':' +
-        time.second.toString().padLeft(2, '0');
-    final dateText = time.day.toString() +
-        ' ' +
-        _monthName(time.month) +
-        ' ' +
-        time.year.toString();
+    final timeText =
+        '${time.hour.toString().padLeft(2, '0')}:'
+        '${time.minute.toString().padLeft(2, '0')}:'
+        '${time.second.toString().padLeft(2, '0')}';
+    final dateText = '${time.day} ${_monthName(time.month)} ${time.year}';
 
     return Material(
       color: Colors.transparent,
@@ -217,11 +212,7 @@ class _WatermarkCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Akurasi ' +
-                        details.accuracy +
-                        ' m  •  Alt ' +
-                        details.altitude +
-                        ' m',
+                    'Akurasi ${details.accuracy} m  •  Alt ${details.altitude} m',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
