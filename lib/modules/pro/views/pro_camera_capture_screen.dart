@@ -61,7 +61,10 @@ class ProCameraCaptureScreen extends StatelessWidget {
                         onTap: controller.isCapturing.value
                             ? null
                             : () async {
-                                final path = await controller.capturePhoto(saveToSelectedLocation: false);
+                                final path = await controller.capturePhoto(
+                                  saveToSelectedLocation: false,
+                                  context: context,
+                                );
                                 if (path != null && context.mounted) {
                                   Get.back(result: path);
                                 }
