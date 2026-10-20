@@ -73,9 +73,6 @@ class WatermarkService {
       throw const FormatException('Foto tidak dapat diproses untuk watermark.');
     }
 
-    final layout = _WatermarkLayout.forImage(image.width, image.height);
-    final white = img.ColorRgb8(255, 255, 255);
-    final shadow = img.ColorRgba8(0, 0, 0, 210);
 
     final local = data.dateTime.toLocal();
     final dayName = _dayName(local.weekday);
@@ -89,92 +86,21 @@ class WatermarkService {
     final detailText = _formatDetails(data);
 
     final logo = showBranding ? await _loadLogo() : null;
-    final logoSize = logo == null
-        ? null
-        : _scaledSize(
-            logo,
-            maxWidth: layout.logoMaxWidth,
-            maxHeight: layout.logoMaxHeight,
-          );
 
-    if (layout.useSingleColumn) {
-      final addressLines = _wrapText(
-        address,
-        maxChars: _wrapChars(layout.contentWidth, layout.charWidth),
-      );
-      final detailLines = _wrapText(
-        detailText,
-        maxChars: _wrapChars(layout.contentWidth, layout.charWidth),
-      );
-      final headerHeight = _headerHeight(layout);
-      final addressHeight = addressLines.length * layout.textLineHeight;
-      final detailHeight = detailLines.length * layout.textLineHeight;
-      final contentHeight =
-          layout.topPadding +
-          headerHeight +
-          layout.sectionGap +
-          addressHeight +
-          layout.sectionGap +
-          detailHeight +
-          layout.bottomMargin;
-      final contentTop = image.height - contentHeight + layout.topPadding;
-
-      _drawBottomScrim(image, contentTop - layout.scrimBleed);
-      _drawHeader(
-        image,
-        dayName: dayName,
-        timeText: timeText,
-        dateText: dateText,
-        x: layout.contentLeft,
-        y: contentTop,
-        layout: layout,
-        color: white,
-        shadow: shadow,
-      );
-
-      final addressY = contentTop + headerHeight + layout.sectionGap;
-      _drawTextLines(
-        image,
-        addressLines,
-        font: layout.textFont,
-        x: layout.contentLeft,
-        y: addressY,
-        lineHeight: layout.textLineHeight,
-        color: white,
-        shadow: shadow,
-        shadowOffset: layout.shadowOffset,
-      );
-
-      final detailsY = addressY + addressHeight + layout.sectionGap;
-      _drawTextLines(
-        image,
-        detailLines,
-        font: layout.textFont,
-        x: layout.contentLeft,
-        y: detailsY,
-        lineHeight: layout.textLineHeight,
-        color: white,
-        shadow: shadow,
-        shadowOffset: layout.shadowOffset,
-      );
-    } else {
-      final measuredLayer = await _renderMeasuredLandscapeLayer(
-        imageWidth: image.width,
-        imageHeight: image.height,
-        dayName: dayName,
-        timeText: timeText,
-        dateText: dateText,
-        address: address,
-        data: data,
-        hasBranding: logo != null && logoSize != null,
-        logo: logo,
-      );
-      img.compositeImage(image, measuredLayer);
-    }
-
-    if (layout.useSingleColumn && logo != null && logoSize != null) {
-      _drawLogo(image, logo, logoSize, layout);
-    }
+    // Use Flutter's TrueType text renderer for both orientations. Font sizes
+    // are derived from the source image resolution inside the renderer.
+    final measuredLayer = await _renderMeasuredLandscapeLayer(
+      imageWidth: image.width,
+      imageHeight: image.height,
+      dayName: dayName,
+      timeText: timeText,
+      dateText: dateText,
+      address: address,
+      data: data,
+      hasBranding: logo != null,
+      logo: logo,
+    );
+    img.compositeImage(image, measuredLayer);
 
     final outputPath = _outputPath(source.path);
     final outputFile = File(outputPath);
