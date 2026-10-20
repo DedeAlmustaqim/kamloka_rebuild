@@ -29,14 +29,14 @@ class WatermarkLayoutEngine {
     // Keep visible breathing room on both horizontal edges. The margin is
     // measured from the final bitmap, not the preview widget.
     final outerMargin = isLandscape
-        ? (width * 0.04).clamp(18.0, 120.0).toDouble()
-        : (shortSide * 0.035).clamp(12.0, 72.0).toDouble();
+        ? (width * 0.02).clamp(12.0, 64.0).toDouble()
+        : (shortSide * 0.025).clamp(10.0, 48.0).toDouble();
     final contentWidth = width - (outerMargin * 2);
     final isWideLandscape = isLandscape;
 
     // Keep the composition proportional to the final bitmap, not screen size.
-    final panelPadding = (shortSide * 0.028).clamp(10.0, 52.0).toDouble();
-    final columnGap = (contentWidth * 0.045).clamp(12.0, 80.0).toDouble();
+    final panelPadding = (shortSide * 0.020).clamp(8.0, 36.0).toDouble();
+    final columnGap = (contentWidth * 0.030).clamp(10.0, 48.0).toDouble();
     final leftColumnWidth = isWideLandscape
         ? (contentWidth * 0.30)
             .clamp(shortSide * 0.25, contentWidth * 0.38)
@@ -72,7 +72,7 @@ class WatermarkLayoutEngine {
     final addressHeight = math.max(bodyLineHeight, addressPainter.height);
     final detailsRows = 2;
     final detailHeight = bodyLineHeight * detailsRows;
-    final sectionGap = (shortSide * 0.018).clamp(6.0, 28.0).toDouble();
+    final sectionGap = (shortSide * 0.012).clamp(4.0, 18.0).toDouble();
     final logoHeight = hasBranding
         ? (shortSide * 0.052).clamp(22.0, 84.0).toDouble()
         : 0.0;
@@ -82,7 +82,7 @@ class WatermarkLayoutEngine {
       rightInfoHeight,
     );
     final panelHeight = contentHeight + panelPadding * 2;
-    final bottomMargin = (shortSide * 0.025).clamp(12.0, 36.0).toDouble();
+    final bottomMargin = (shortSide * 0.020).clamp(8.0, 24.0).toDouble();
     final panelRect = Rect.fromLTWH(
       outerMargin,
       height - bottomMargin - panelHeight,
