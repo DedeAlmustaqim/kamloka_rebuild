@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../gallery/services/gallery_service.dart';
 
 class PhotoPreviewView extends StatelessWidget {
   const PhotoPreviewView({
