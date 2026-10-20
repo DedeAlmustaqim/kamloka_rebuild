@@ -184,7 +184,7 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
     return ProTheme.apply(
       Scaffold(
         appBar: AppBar(
-          title: const Text('Detail perjalanan'),
+          title: const Text('Detail kegiatan'),
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _isAddingLocation ? null : _addLocation,
@@ -204,7 +204,9 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
             }
 
             final locations = snapshot.data ?? const <VisitLocation>[];
-            return ListView(
+            return RefreshIndicator(
+              onRefresh: () async => setState(_reload),
+              child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
               children: [
                 Container(
@@ -247,15 +249,19 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        widget.trip.purpose,
-                        style: const TextStyle(
-                          color: ProTheme.secondaryText,
-                          fontSize: 14,
-                          height: 1.5,
+                      if (widget.trip.purpose.trim().isNotEmpty &&
+                          widget.trip.purpose.trim() != widget.trip.title.trim()) ...[
+                        Text(
+                          widget.trip.purpose,
+                          style: const TextStyle(
+                            color: ProTheme.secondaryText,
+                            fontSize: 14,
+                            height: 1.5,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
+                        const SizedBox(height: 16),
+                      ] else
+                        const SizedBox(height: 16),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 11,
@@ -319,6 +325,11 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                _TripProgressCard(
+                  locationCount: locations.length,
+                  onAddLocation: _isAddingLocation ? null : _addLocation,
+                ),
+                const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
@@ -345,63 +356,49 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                   ),
                 ),
                 const SizedBox(height: 26),
-                Text(
-                  'Lokasi kunjungan',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Lokasi kunjungan',
+                        style: TextStyle(
+                          color: ProTheme.text,
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: ProTheme.surface,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: ProTheme.border),
+                      ),
+                      child: Text(
+                        '${locations.length} lokasi',
+                        style: const TextStyle(
+                          color: ProTheme.secondaryText,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                const Text(
+                  'Ketuk lokasi untuk membuka detail, mengambil foto, dan menambahkan catatan.',
+                  style: TextStyle(
+                    color: ProTheme.secondaryText,
+                    fontSize: 12,
+                    height: 1.4,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 if (locations.isEmpty)
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
-                    decoration: BoxDecoration(
-                      color: ProTheme.surface,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: ProTheme.border),
-                    ),
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 62,
-                          height: 62,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFFFF2C8),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.add_location_alt_outlined,
-                            size: 29,
-                            color: ProTheme.primaryDark,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        const Text(
-                          'Belum ada lokasi',
-                          style: TextStyle(
-                            color: ProTheme.text,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        const Text(
-                          'Tambahkan lokasi pertama agar foto dan catatan kegiatan tersusun rapi.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: ProTheme.secondaryText,
-                            fontSize: 13,
-                            height: 1.45,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        FilledButton.icon(
-                          onPressed: _isAddingLocation ? null : _addLocation,
-                          icon: const Icon(Icons.add_location_alt_outlined),
-                          label: const Text('Tambah lokasi pertama'),
-                        ),
-                      ],
-                    ),
+                  _EmptyLocations(
+                    onAdd: _isAddingLocation ? null : _addLocation,
                   )
                 else
                   ...locations.map(
@@ -493,9 +490,234 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                     ),
                   ),
               ],
+              ),
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+class _TripProgressCard extends StatelessWidget {
+  const _TripProgressCard({
+    required this.locationCount,
+    required this.onAddLocation,
+  });
+
+  final int locationCount;
+  final VoidCallback? onAddLocation;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasLocation = locationCount > 0;
+    return Container(
+      padding: const EdgeInsets.all(17),
+      decoration: BoxDecoration(
+        color: ProTheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: ProTheme.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Mulai dokumentasi',
+                  style: TextStyle(
+                    color: ProTheme.text,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Text(
+                hasLocation ? '1 dari 2' : '0 dari 2',
+                style: const TextStyle(
+                  color: ProTheme.brandGreen,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          const Text(
+            'Ikuti langkah sederhana untuk menyusun laporan kegiatan.',
+            style: TextStyle(
+              color: ProTheme.secondaryText,
+              fontSize: 12,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 14),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: LinearProgressIndicator(
+              value: hasLocation ? 0.5 : 0,
+              minHeight: 6,
+              backgroundColor: ProTheme.background,
+              valueColor: const AlwaysStoppedAnimation<Color>(ProTheme.brandGreen),
+            ),
+          ),
+          const SizedBox(height: 15),
+          _ProgressStep(
+            number: '1',
+            title: 'Tambahkan lokasi kunjungan',
+            description: hasLocation
+                ? '$locationCount lokasi sudah ditambahkan.'
+                : 'Simpan tempat yang akan Anda dokumentasikan.',
+            done: hasLocation,
+          ),
+          const SizedBox(height: 13),
+          const _ProgressStep(
+            number: '2',
+            title: 'Ambil foto dan catatan',
+            description: 'Ketuk salah satu lokasi untuk mulai mendokumentasikan.',
+            done: false,
+          ),
+          if (!hasLocation) ...[
+            const SizedBox(height: 15),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: onAddLocation,
+                icon: const Icon(Icons.add_location_alt_rounded),
+                label: const Text('Tambah lokasi pertama'),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressStep extends StatelessWidget {
+  const _ProgressStep({
+    required this.number,
+    required this.title,
+    required this.description,
+    required this.done,
+  });
+
+  final String number;
+  final String title;
+  final String description;
+  final bool done;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 29,
+          height: 29,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: done ? ProTheme.brandGreen : const Color(0xFFFFF2C8),
+            shape: BoxShape.circle,
+          ),
+          child: done
+              ? const Icon(Icons.check_rounded, color: Colors.white, size: 17)
+              : Text(
+                  number,
+                  style: const TextStyle(
+                    color: ProTheme.primaryDark,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+        ),
+        const SizedBox(width: 11),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: ProTheme.text,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                description,
+                style: const TextStyle(
+                  color: ProTheme.secondaryText,
+                  fontSize: 12,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _EmptyLocations extends StatelessWidget {
+  const _EmptyLocations({required this.onAdd});
+
+  final VoidCallback? onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(22, 26, 22, 24),
+      decoration: BoxDecoration(
+        color: ProTheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: ProTheme.border),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 66,
+            height: 66,
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFF2C8),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.add_location_alt_outlined,
+              size: 30,
+              color: ProTheme.primaryDark,
+            ),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Belum ada lokasi kunjungan',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: ProTheme.text,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 7),
+          const Text(
+            'Tambahkan lokasi pertama. Setelah itu, buka lokasi untuk mengambil foto dan menambahkan catatan.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: ProTheme.secondaryText,
+              fontSize: 13,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: onAdd,
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Tambah lokasi pertama'),
+          ),
+        ],
       ),
     );
   }
