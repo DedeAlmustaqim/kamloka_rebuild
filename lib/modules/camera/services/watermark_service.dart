@@ -42,6 +42,9 @@ class WatermarkService {
       const AssetImage('assets/images/kamloka_typo_white.png'),
       context,
     );
+    if (!context.mounted) {
+      throw StateError('Halaman kamera sudah ditutup sebelum watermark dirender.');
+    }
 
     final boundaryKey = GlobalKey();
     final overlay = Overlay.of(context, rootOverlay: true);
