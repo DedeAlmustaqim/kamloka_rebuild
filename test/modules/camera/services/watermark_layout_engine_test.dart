@@ -18,11 +18,15 @@ void main() {
       );
 
       expect(layout.isLandscape, isTrue);
-      expect(layout.panelRect.left, greaterThanOrEqualTo(0));
-      expect(layout.panelRect.right, lessThanOrEqualTo(4000));
+      expect(layout.panelRect.left, greaterThan(0));
+      expect(layout.panelRect.left, closeTo(120, 0.1));
+      expect(layout.panelRect.right, lessThan(4000));
+      expect(layout.panelRect.right, closeTo(3880, 0.1));
       expect(layout.panelRect.bottom, lessThanOrEqualTo(3000));
       expect(layout.logoRect.right, lessThanOrEqualTo(layout.panelRect.right));
       expect(layout.logoRect.bottom, lessThan(layout.panelRect.top));
+      expect(layout.leftContentRect.left, greaterThan(layout.panelRect.left));
+      expect(layout.rightContentRect.right, lessThan(layout.panelRect.right));
     });
 
     test('measures long addresses and wraps to multiple lines', () {
