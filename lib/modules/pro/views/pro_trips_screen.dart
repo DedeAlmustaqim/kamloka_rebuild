@@ -402,17 +402,21 @@ class _TripCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 5),
-                    Text(
-                      trip.purpose,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: ProTheme.secondaryText,
-                        fontSize: 13,
-                        height: 1.4,
+                    if (trip.purpose.trim().isNotEmpty &&
+                        trip.purpose.trim() != trip.title.trim()) ...[
+                      Text(
+                        trip.purpose,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: ProTheme.secondaryText,
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
+                      const SizedBox(height: 10),
+                    ] else
+                      const SizedBox(height: 10),
                     Wrap(
                       spacing: 6,
                       runSpacing: 6,
