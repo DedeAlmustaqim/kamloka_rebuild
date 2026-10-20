@@ -129,8 +129,8 @@ class WatermarkService {
     required img.Image? logo,
   }) async {
     final shortSide = imageWidth < imageHeight ? imageWidth : imageHeight;
-    final bodyFontSize = (shortSide * 0.019).clamp(18.0, 54.0).toDouble();
-    final timeFontSize = (shortSide * 0.082).clamp(44.0, 210.0).toDouble();
+    final bodyFontSize = (shortSide * 0.022).clamp(20.0, 60.0).toDouble();
+    final timeFontSize = (shortSide * 0.09).clamp(48.0, 220.0).toDouble();
     final bodyStyle = TextStyle(
       color: const ui.Color(0xFFFFFFFF),
       fontSize: bodyFontSize,
@@ -158,8 +158,17 @@ class WatermarkService {
     final panelRect = layout.panelRect;
     final panelRadius = (shortSide * 0.022).clamp(12.0, 44.0).toDouble();
 
-    // Keep the watermark panel transparent: draw text and optional divider only.
-    // This avoids adding a black or dark background over the photo.
+    // Semi-transparent black panel (80% opacity) for readable text over photos.
+    final panelPaint = ui.Paint()
+      ..color = const ui.Color(0xCC000000)
+      ..style = ui.PaintingStyle.fill;
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(
+        panelRect,
+        ui.Radius.circular(panelRadius),
+      ),
+      panelPaint,
+    );
 
     if (layout.dividerX != null) {
       final dividerPaint = ui.Paint()
@@ -198,7 +207,7 @@ class WatermarkService {
         timeText,
         timeStyle,
         left.left,
-        left.top + layout.bodyLineHeight * 1.35,
+        left.top + layout.bodyLineHeight * 1.22,
         left.width,
         maxLines: 1,
       );
