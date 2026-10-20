@@ -30,8 +30,8 @@ class WatermarkLayoutEngine {
     final isLandscape = width >= height;
     final contentWidth = width * 0.75;
     final margin = (width - contentWidth) / 2;
-    final padding = shortSide * 0.02;
-    final gap = shortSide * 0.015;
+    final padding = shortSide * 0.018;
+    final gap = shortSide * 0.012;
     final leftWidth = isLandscape ? contentWidth * 0.30 : contentWidth;
     final rightWidth = isLandscape ? contentWidth - leftWidth - gap : contentWidth;
 
@@ -46,7 +46,7 @@ class WatermarkLayoutEngine {
     final bodyHeight = _lineHeight(bodyStyle);
     final timeHeight = _lineHeight(timeStyle);
     final addressHeight = math.max(bodyHeight, addressPainter.height);
-    final sectionGap = shortSide * 0.012;
+    final sectionGap = shortSide * 0.009;
     final detailsHeight = bodyHeight * 2;
     final leftHeight = timeHeight + bodyHeight * 2 + sectionGap * 2;
     final rightHeight = addressHeight + detailsHeight + sectionGap * 2;
