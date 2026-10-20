@@ -24,102 +24,68 @@ class WatermarkLayoutEngine {
       throw ArgumentError.value(imageSize, 'imageSize', 'Must be positive.');
     }
 
+    // Simple layout rules: one outer margin, one inner padding, one column gap.
     final shortSide = math.min(width, height);
     final isLandscape = width >= height;
-    // Keep visible breathing room on both horizontal edges. The margin is
-    // measured from the final bitmap, not the preview widget.
-    final outerMargin = isLandscape
-        ? (width * 0.02).clamp(12.0, 64.0).toDouble()
-        : (shortSide * 0.025).clamp(10.0, 48.0).toDouble();
-    final contentWidth = width - (outerMargin * 2);
-    final isWideLandscape = isLandscape;
+    final margin = isLandscape ? width * 0.02 : shortSide * 0.025;
+    final padding = shortSide * 0.02;
+    final gap = shortSide * 0.015;
+    final contentWidth = width - margin * 2;
+    final leftWidth = isLandscape ? contentWidth * 0.30 : contentWidth;
+    final rightWidth = isLandscape ? contentWidth - leftWidth - gap : contentWidth;
 
-    // Keep the composition proportional to the final bitmap, not screen size.
-    final panelPadding = (shortSide * 0.020).clamp(8.0, 36.0).toDouble();
-    final columnGap = (contentWidth * 0.030).clamp(10.0, 48.0).toDouble();
-    final leftColumnWidth = isWideLandscape
-        ? (contentWidth * 0.30)
-            .clamp(shortSide * 0.25, contentWidth * 0.38)
-            .toDouble()
-        : contentWidth;
-    final rightColumnWidth = isWideLandscape
-        ? contentWidth - leftColumnWidth - columnGap
-        : contentWidth;
-    final effectiveColumnGap = isWideLandscape ? columnGap : 0.0;
-
-    // Measure the address at the same width that the renderer will use.
-    final rightTextWidth = math.max(
-      1.0,
-      rightColumnWidth - (panelPadding * 2),
-    );
     final addressPainter = TextPainter(
       text: TextSpan(
         text: address.trim().isEmpty ? 'Alamat tidak tersedia' : address.trim(),
         style: bodyStyle,
       ),
       textDirection: textDirection,
-      textAlign: TextAlign.start,
-    )..layout(maxWidth: rightTextWidth);
+    )..layout(maxWidth: math.max(1.0, rightWidth - padding * 2));
 
-    final timePainter = TextPainter(
-      text: TextSpan(text: '00:00', style: timeStyle),
-      textDirection: textDirection,
-      maxLines: 1,
-    )..layout(maxWidth: leftColumnWidth - (panelPadding * 2));
-
-    final bodyLineHeight = _lineHeight(bodyStyle);
-    final timeLineHeight = _lineHeight(timeStyle);
-    final addressHeight = math.max(bodyLineHeight, addressPainter.height);
-    final detailsRows = 2;
-    final detailHeight = bodyLineHeight * detailsRows;
-    final sectionGap = (shortSide * 0.012).clamp(4.0, 18.0).toDouble();
-    final logoHeight = hasBranding
-        ? (shortSide * 0.052).clamp(22.0, 84.0).toDouble()
-        : 0.0;
-    final rightInfoHeight = addressHeight + detailHeight + sectionGap * 2;
-    final contentHeight = math.max(
-      timeLineHeight + bodyLineHeight * 2 + sectionGap * 2,
-      rightInfoHeight,
-    );
-    final panelHeight = contentHeight + panelPadding * 2;
-    final bottomMargin = (shortSide * 0.020).clamp(8.0, 24.0).toDouble();
+    final bodyHeight = _lineHeight(bodyStyle);
+    final timeHeight = _lineHeight(timeStyle);
+    final addressHeight = math.max(bodyHeight, addressPainter.height);
+    final sectionGap = shortSide * 0.012;
+    final detailsHeight = bodyHeight * 2;
+    final leftHeight = timeHeight + bodyHeight * 2 + sectionGap * 2;
+    final rightHeight = addressHeight + detailsHeight + sectionGap * 2;
+    final panelHeight = math.max(leftHeight, rightHeight) + padding * 2;
+    final bottomMargin = shortSide * 0.02;
     final panelRect = Rect.fromLTWH(
-      outerMargin,
+      margin,
       height - bottomMargin - panelHeight,
       contentWidth,
       panelHeight,
     );
 
-    final innerLeft = panelRect.left + panelPadding;
-    final innerWidth = math.max(1.0, panelRect.width - panelPadding * 2);
-    final actualLeftWidth = isWideLandscape
-        ? math.max(1.0, leftColumnWidth - panelPadding)
-        : innerWidth;
+    final contentTop = panelRect.top + padding;
+    final contentHeight = panelRect.height - padding * 2;
     final leftRect = Rect.fromLTWH(
-      innerLeft,
-      panelRect.top + panelPadding,
-      actualLeftWidth,
-      panelRect.height - panelPadding * 2,
+      panelRect.left + padding,
+      contentTop,
+      math.max(1.0, leftWidth - padding),
+      contentHeight,
     );
-    final dividerX = isWideLandscape
-        ? innerLeft + actualLeftWidth + effectiveColumnGap / 2
-        : null;
-    final rightLeft = isWideLandscape
-        ? innerLeft + leftColumnWidth + effectiveColumnGap
-        : innerLeft;
+    final rightLeft = isLandscape
+        ? panelRect.left + leftWidth + gap
+        : panelRect.left + padding;
     final rightRect = Rect.fromLTWH(
       rightLeft,
-      panelRect.top + panelPadding,
-      isWideLandscape
-          ? math.max(1.0, panelRect.right - panelPadding - rightLeft)
-          : innerWidth,
-      panelRect.height - panelPadding * 2,
+      contentTop,
+      math.max(
+        1.0,
+        isLandscape
+            ? panelRect.right - padding - rightLeft
+            : panelRect.width - padding * 2,
+      ),
+      contentHeight,
     );
 
-    final logoWidth = math.min(rightColumnWidth * 0.48, logoHeight * 4.2);
+    final logoHeight = hasBranding ? shortSide * 0.052 : 0.0;
+    final logoWidth = math.min(rightWidth * 0.48, logoHeight * 4.2);
     final logoRect = hasBranding
         ? Rect.fromLTWH(
-            panelRect.right - panelPadding - logoWidth,
+            panelRect.right - padding - logoWidth,
             panelRect.top - sectionGap - logoHeight,
             logoWidth,
             logoHeight,
@@ -129,18 +95,18 @@ class WatermarkLayoutEngine {
     return WatermarkLayout(
       imageSize: imageSize,
       isLandscape: isLandscape,
-      isWideLandscape: isWideLandscape,
+      isWideLandscape: isLandscape,
       panelRect: panelRect,
       leftContentRect: leftRect,
       rightContentRect: rightRect,
-      dividerX: dividerX,
+      dividerX: isLandscape ? panelRect.left + leftWidth + gap / 2 : null,
       logoRect: logoRect,
       addressHeight: addressHeight,
-      bodyLineHeight: bodyLineHeight,
-      timeLineHeight: timeLineHeight,
+      bodyLineHeight: bodyHeight,
+      timeLineHeight: timeHeight,
       sectionGap: sectionGap,
       addressLineCount: addressPainter.computeLineMetrics().length,
-      timeFitsLeftColumn: timePainter.didExceedMaxLines == false,
+      timeFitsLeftColumn: true,
     );
   }
 
