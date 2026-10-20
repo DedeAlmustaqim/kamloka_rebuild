@@ -443,19 +443,8 @@ class CameraController extends GetxController {
       final location = Get.find<LocationService>();
       final position = location.position.value;
 
-      final watermarked = await _watermarkService.apply(
-        file,
-        data: WatermarkData(
-          dateTime: DateTime.now(),
-          address: location.address.value,
-          latitude: position?.latitude,
-          longitude: position?.longitude,
-          accuracy: position?.accuracy,
-          altitude: position?.altitude,
-        ),
-        // Free photos carry KAMLOKA branding; Pro photos are unbranded.
-        showBranding: !Get.find<ProAccessService>().isPro.value,
-      );
+      // Watermark implementation is intentionally disabled while being redesigned.
+      final watermarked = await _watermarkService.apply(file);
 
       lastCapturePath.value = watermarked.path;
 
