@@ -28,8 +28,9 @@ class WatermarkDetails {
 
 /// Renderer widget-to-PNG dan komposisi watermark ke foto asli.
 ///
-/// Widget hanya dirender saat capture. Penggabungan gambar dilakukan melalui
-/// compute() agar decoding dan encoding JPEG tidak memblokir UI thread.
+/// Widget hanya dirender saat capture. Android memakai Bitmap/Canvas native
+/// untuk komposisi JPEG; platform lain atau kegagalan native memakai fallback
+/// image package di isolate agar UI thread tetap responsif.
 class WatermarkService {
   static const double _logicalWidth = 320;
   static const double _renderPixelRatio = 8;
