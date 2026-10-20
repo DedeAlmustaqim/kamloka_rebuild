@@ -442,87 +442,6 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
   }
 }
 
-class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({
-    required this.count,
-    required this.onCreate,
-    required this.isCreating,
-  });
-
-  final int count;
-  final VoidCallback? onCreate;
-  final bool isCreating;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFE69A),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.72),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: const Icon(
-              Icons.folder_copy_outlined,
-              color: ProTheme.text,
-              size: 25,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$count perjalanan tersimpan',
-                  style: const TextStyle(
-                    color: ProTheme.text,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Mulai dokumentasi kegiatan berikutnya.',
-                  style: TextStyle(color: ProTheme.text, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          FilledButton(
-            onPressed: onCreate,
-            style: FilledButton.styleFrom(
-              backgroundColor: ProTheme.brandGreen,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(0, 44),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-            ),
-            child: isCreating
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Text('Buat'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _TripCard extends StatelessWidget {
   const _TripCard({
     required this.trip,
@@ -603,6 +522,32 @@ class _TripCard extends StatelessWidget {
                           ),
                       ],
                     ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.touch_app_rounded,
+                          size: 15,
+                          color: ProTheme.brandGreen,
+                        ),
+                        const SizedBox(width: 5),
+                        const Expanded(
+                          child: Text(
+                            'Ketuk untuk buka detail kegiatan',
+                            style: TextStyle(
+                              color: ProTheme.brandGreen,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        const Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 17,
+                          color: ProTheme.brandGreen,
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -676,49 +621,186 @@ class _MetaChip extends StatelessWidget {
 }
 
 class _EmptyTrips extends StatelessWidget {
-  const _EmptyTrips();
+  const _EmptyTrips({required this.onCreate});
+
+  final VoidCallback onCreate;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
       decoration: BoxDecoration(
         color: ProTheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: ProTheme.border),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 66,
-            height: 66,
-            decoration: const BoxDecoration(
-              color: Color(0xFFFFF2C8),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.route_outlined,
-              size: 31,
-              color: ProTheme.primaryDark,
+          Center(
+            child: Container(
+              width: 70,
+              height: 70,
+              decoration: const BoxDecoration(
+                color: Color(0xFFE4F0E9),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.route_rounded,
+                size: 34,
+                color: ProTheme.brandGreen,
+              ),
             ),
           ),
-          const SizedBox(height: 16),
-          const Text(
-            'Belum ada perjalanan',
-            style: TextStyle(
-              color: ProTheme.text,
-              fontSize: 17,
-              fontWeight: FontWeight.w800,
+          const SizedBox(height: 18),
+          const Center(
+            child: Text(
+              'Mulai dari satu kegiatan',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: ProTheme.text,
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
           const SizedBox(height: 7),
           const Text(
-            'Buat perjalanan pertama untuk mulai menyimpan lokasi dan foto dokumentasi.',
+            'Ikuti tiga langkah sederhana untuk membuat dokumentasi lapangan.',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: ProTheme.secondaryText,
               fontSize: 13,
               height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 20),
+          const _GettingStartedStep(
+            number: '1',
+            title: 'Buat kegiatan',
+            description: 'Isi nama kegiatan dan jadwalnya.',
+          ),
+          const SizedBox(height: 14),
+          const _GettingStartedStep(
+            number: '2',
+            title: 'Tambahkan lokasi',
+            description: 'Simpan tempat yang dikunjungi.',
+          ),
+          const SizedBox(height: 14),
+          const _GettingStartedStep(
+            number: '3',
+            title: 'Ambil foto',
+            description: 'Dokumentasikan kegiatan dengan kamera KAMLOKA.',
+          ),
+          const SizedBox(height: 22),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: onCreate,
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Buat kegiatan pertama'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GettingStartedStep extends StatelessWidget {
+  const _GettingStartedStep({
+    required this.number,
+    required this.title,
+    required this.description,
+  });
+
+  final String number;
+  final String title;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 30,
+          height: 30,
+          alignment: Alignment.center,
+          decoration: const BoxDecoration(
+            color: Color(0xFFE4F0E9),
+            shape: BoxShape.circle,
+          ),
+          child: Text(
+            number,
+            style: const TextStyle(
+              color: ProTheme.brandGreen,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: ProTheme.text,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                description,
+                style: const TextStyle(
+                  color: ProTheme.secondaryText,
+                  fontSize: 12,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _NoTripResults extends StatelessWidget {
+  const _NoTripResults();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: ProTheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: ProTheme.border),
+      ),
+      child: const Column(
+        children: [
+          Icon(Icons.search_off_rounded, size: 34, color: ProTheme.secondaryText),
+          SizedBox(height: 10),
+          Text(
+            'Kegiatan tidak ditemukan',
+            style: TextStyle(
+              color: ProTheme.text,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          SizedBox(height: 5),
+          Text(
+            'Coba kata kunci lain atau ubah filter tanggal.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: ProTheme.secondaryText,
+              fontSize: 13,
+              height: 1.4,
             ),
           ),
         ],
