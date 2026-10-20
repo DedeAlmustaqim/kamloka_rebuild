@@ -5,6 +5,7 @@ import 'package:camera/camera.dart' as camera;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
 
@@ -110,19 +111,54 @@ class WatermarkService {
       '${p.basenameWithoutExtension(source.path)}_watermarked.jpg',
     );
 
-    await compute(
-      _compositeWatermark,
-      <String, Object>{
-        'sourcePath': source.path,
-        'outputPath': outputPath,
-        'watermarkBytes': watermarkBytes,
-      },
-    );
+    var compositor = 'dart';
+    if (Platform.isAndroid) {
+      try {
+        final nativePath = await const MethodChannel('kamloka/watermark')
+            .invokeMethod<String>(
+          'composite',
+          <String, Object>{
+            'sourcePath': source.path,
+            'outputPath': outputPath,
+            'watermarkBytes': watermarkBytes,
+            'widthRatio': 0.75,
+            'bottomMarginRatio': 0.035,
+            'jpegQuality': 95,
+          },
+        );
+        if (nativePath == null || nativePath.isEmpty) {
+          throw StateError('Native watermark tidak mengembalikan path foto.');
+        }
+        compositor = 'android-native';
+      } catch (error, stack) {
+        debugPrint('[KAMLOKA WATERMARK] native compositor failed: $error');
+        debugPrintStack(stackTrace: stack);
+        // Fallback agar watermark tetap berfungsi jika native compositor gagal.
+        await compute(
+          _compositeWatermark,
+          <String, Object>{
+            'sourcePath': source.path,
+            'outputPath': outputPath,
+            'watermarkBytes': watermarkBytes,
+          },
+        );
+      }
+    } else {
+      await compute(
+        _compositeWatermark,
+        <String, Object>{
+          'sourcePath': source.path,
+          'outputPath': outputPath,
+          'watermarkBytes': watermarkBytes,
+        },
+      );
+    }
 
     compositeWatch.stop();
     totalWatch.stop();
     debugPrint(
-      '[KAMLOKA WATERMARK] render=${renderWatch.elapsedMilliseconds}ms '
+      '[KAMLOKA WATERMARK] compositor=$compositor '
+      'render=${renderWatch.elapsedMilliseconds}ms '
       'composite=${compositeWatch.elapsedMilliseconds}ms '
       'total=${totalWatch.elapsedMilliseconds}ms',
     );
