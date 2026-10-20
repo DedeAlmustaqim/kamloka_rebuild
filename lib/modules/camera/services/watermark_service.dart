@@ -38,6 +38,8 @@ class WatermarkService {
     required BuildContext context,
     required WatermarkDetails details,
   }) async {
+    final totalWatch = Stopwatch()..start();
+    final renderWatch = Stopwatch()..start();
     await precacheImage(
       const AssetImage('assets/images/kamloka_typo_white.png'),
       context,
@@ -100,6 +102,9 @@ class WatermarkService {
       entry.remove();
     }
 
+    renderWatch.stop();
+    final compositeWatch = Stopwatch()..start();
+
     final outputPath = p.join(
       p.dirname(source.path),
       p.basenameWithoutExtension(source.path) + '_watermarked.jpg',
@@ -114,6 +119,13 @@ class WatermarkService {
       },
     );
 
+    compositeWatch.stop();
+    totalWatch.stop();
+    debugPrint(
+      '[KAMLOKA WATERMARK] render=${renderWatch.elapsedMilliseconds}ms '
+      'composite=${compositeWatch.elapsedMilliseconds}ms '
+      'total=${totalWatch.elapsedMilliseconds}ms',
+    );
     return camera.XFile(outputPath);
   }
 
