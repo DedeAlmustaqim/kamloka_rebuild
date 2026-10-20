@@ -54,7 +54,8 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
         Trip(
           id: _uuid.v4(),
           title: draft.title,
-          purpose: draft.purpose,
+          // Keep the existing database field populated for backward compatibility.
+          purpose: draft.title,
           startDate: draft.startDate,
           endDate: draft.endDate,
           officerName: _nullableText(draft.officerName),
@@ -588,7 +589,6 @@ class _LoadError extends StatelessWidget {
 class _TripDraft {
   const _TripDraft({
     required this.title,
-    required this.purpose,
     required this.startDate,
     required this.endDate,
     required this.officerName,
@@ -597,7 +597,6 @@ class _TripDraft {
   });
 
   final String title;
-  final String purpose;
   final DateTime startDate;
   final DateTime endDate;
   final String officerName;
@@ -615,7 +614,6 @@ class _CreateTripSheet extends StatefulWidget {
 class _CreateTripSheetState extends State<_CreateTripSheet> {
   final _formKey = GlobalKey<FormState>();
   final _title = TextEditingController();
-  final _purpose = TextEditingController();
   final _officer = TextEditingController();
   final _assignment = TextEditingController();
   final _notes = TextEditingController();
@@ -626,7 +624,6 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
   @override
   void dispose() {
     _title.dispose();
-    _purpose.dispose();
     _officer.dispose();
     _assignment.dispose();
     _notes.dispose();
@@ -659,7 +656,6 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
     Navigator.of(context).pop(
       _TripDraft(
         title: _title.text.trim(),
-        purpose: _purpose.text.trim(),
         startDate: _startDate,
         endDate: _endDate,
         officerName: _officer.text,
@@ -727,20 +723,7 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                         : null,
                   ),
                   const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _purpose,
-                    textCapitalization: TextCapitalization.sentences,
-                    maxLines: 2,
-                    decoration: const InputDecoration(
-                      labelText: 'Tujuan kegiatan *',
-                      hintText: 'Apa yang ingin dicapai?',
-                      prefixIcon: Icon(Icons.flag_outlined),
-                      alignLabelWithHint: true,
-                    ),
-                    validator: (value) => value == null || value.trim().isEmpty
-                        ? 'Tujuan kegiatan wajib diisi.'
-                        : null,
-                  ),
+                  const SizedBox(height: 4),
                   const SizedBox(height: 16),
                   const Text(
                     'Jadwal perjalanan',
