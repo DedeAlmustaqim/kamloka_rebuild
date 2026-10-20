@@ -181,7 +181,7 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
 
     return ProTheme.apply(
       Scaffold(
-        appBar: AppBar(title: const Text('Perjalanan Saya')),
+        appBar: AppBar(title: const Text('Dokumentasi Lapangan')),
         body: FutureBuilder<List<Trip>>(
           future: _tripsFuture,
           builder: (context, snapshot) {
@@ -979,8 +979,6 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                         ? 'Nama kegiatan wajib diisi.'
                         : null,
                   ),
-                  const SizedBox(height: 12),
-                  const SizedBox(height: 4),
                   const SizedBox(height: 16),
                   const Text(
                     'Jadwal perjalanan',
