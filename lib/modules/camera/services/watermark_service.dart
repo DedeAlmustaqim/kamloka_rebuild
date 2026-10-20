@@ -229,21 +229,28 @@ class WatermarkService {
 
     final recorder = ui.PictureRecorder();
     final canvas = ui.Canvas(recorder);
-    final scrimTop = (layout.panelRect.top - shortSide * 0.075).clamp(0.0, imageHeight.toDouble());
-    final scrimPaint = ui.Paint()
+    final panelRect = layout.panelRect;
+    final panelRadius = (shortSide * 0.022).clamp(12.0, 44.0).toDouble();
+
+    // Render a distinct rounded panel inset from all image edges. Keeping the
+    // gradient inside this shape avoids the old full-width black band.
+    final panelPaint = ui.Paint()
       ..shader = ui.Gradient.linear(
-        ui.Offset(0, scrimTop),
-        ui.Offset(0, imageHeight.toDouble()),
+        ui.Offset(0, panelRect.top),
+        ui.Offset(0, panelRect.bottom),
         const [
-          ui.Color(0x00000000),
-          ui.Color(0x99000000),
-          ui.Color(0xD9000000),
+          ui.Color(0x66101010),
+          ui.Color(0xB8101010),
+          ui.Color(0xE6101010),
         ],
         const [0.0, 0.42, 1.0],
       );
-    canvas.drawRect(
-      ui.Rect.fromLTRB(0, scrimTop, imageWidth.toDouble(), imageHeight.toDouble()),
-      scrimPaint,
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(
+        panelRect,
+        ui.Radius.circular(panelRadius),
+      ),
+      panelPaint,
     );
 
     if (layout.dividerX != null) {
