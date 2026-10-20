@@ -47,7 +47,9 @@ class WatermarkService {
       context,
     );
     if (!context.mounted) {
-      throw StateError('Halaman kamera sudah ditutup sebelum watermark dirender.');
+      throw StateError(
+        'Halaman kamera sudah ditutup sebelum watermark dirender.',
+      );
     }
 
     final boundaryKey = GlobalKey();
@@ -116,17 +118,14 @@ class WatermarkService {
     if (Platform.isAndroid) {
       try {
         final nativePath = await const MethodChannel('kamloka/watermark')
-            .invokeMethod<String>(
-          'composite',
-          <String, Object>{
-            'sourcePath': source.path,
-            'outputPath': outputPath,
-            'watermarkBytes': watermarkBytes,
-            'widthRatio': 0.75,
-            'bottomMarginRatio': 0.035,
-            'jpegQuality': 95,
-          },
-        );
+            .invokeMethod<String>('composite', <String, Object>{
+              'sourcePath': source.path,
+              'outputPath': outputPath,
+              'watermarkBytes': watermarkBytes,
+              'widthRatio': 0.75,
+              'bottomMarginRatio': 0.035,
+              'jpegQuality': 95,
+            });
         if (nativePath == null || nativePath.isEmpty) {
           throw StateError('Native watermark tidak mengembalikan path foto.');
         }
@@ -135,24 +134,18 @@ class WatermarkService {
         debugPrint('[KAMLOKA WATERMARK] native compositor failed: $error');
         debugPrintStack(stackTrace: stack);
         // Fallback agar watermark tetap berfungsi jika native compositor gagal.
-        await compute(
-          _compositeWatermark,
-          <String, Object>{
-            'sourcePath': source.path,
-            'outputPath': outputPath,
-            'watermarkBytes': watermarkBytes,
-          },
-        );
-      }
-    } else {
-      await compute(
-        _compositeWatermark,
-        <String, Object>{
+        await compute(_compositeWatermark, <String, Object>{
           'sourcePath': source.path,
           'outputPath': outputPath,
           'watermarkBytes': watermarkBytes,
-        },
-      );
+        });
+      }
+    } else {
+      await compute(_compositeWatermark, <String, Object>{
+        'sourcePath': source.path,
+        'outputPath': outputPath,
+        'watermarkBytes': watermarkBytes,
+      });
     }
 
     compositeWatch.stop();
@@ -197,12 +190,37 @@ class _WatermarkCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SizedBox(
-              width: 68,
-              child: Image.asset(
-                'assets/images/kamloka_typo_white.png',
-                fit: BoxFit.contain,
-              ),
+            Column(
+              children: [
+                Image.asset(
+                  "assets/images/kamloka_typo_white.png",
+                  width: 60.0,
+
+                  fit: BoxFit.fill,
+                ),
+                SizedBox(height: 2),
+                Text(
+                  timeText,
+                  maxLines: 1,
+                  style: const TextStyle(
+                    color: _textColor,
+                    fontSize: 17,
+                    height: 1.05,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  dateText,
+                  maxLines: 1,
+                  style: const TextStyle(
+                    color: _textColor,
+                    fontSize: 11.5,
+                    height: 1.15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -210,32 +228,21 @@ class _WatermarkCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    timeText,
-                    maxLines: 1,
-                    style: const TextStyle(
-                      color: _textColor,
-                      fontSize: 17,
-                      height: 1.05,
-                      fontWeight: FontWeight.w800,
+                  if (details.address.trim().isNotEmpty) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      details.address.trim(),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: _textColor,
+                        fontSize: 10,
+                        height: 1.15,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    dateText,
-                    maxLines: 1,
-                    style: const TextStyle(
-                      color: _textColor,
-                      fontSize: 11.5,
-                      height: 1.15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Container(
-                    height: 1,
-                    margin: const EdgeInsets.symmetric(vertical: 5),
-                    color: Colors.white.withValues(alpha: 0.45),
-                  ),
+                  ],
+                  const SizedBox(height: 3),
                   Text(
                     details.coordinates,
                     maxLines: 1,
@@ -259,20 +266,6 @@ class _WatermarkCard extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  if (details.address.trim().isNotEmpty) ...[
-                    const SizedBox(height: 3),
-                    Text(
-                      details.address.trim(),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: _textColor,
-                        fontSize: 10,
-                        height: 1.15,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -338,9 +331,8 @@ String _compositeWatermark(Map<String, Object> args) {
     dstY: vertical < 0 ? 0 : vertical,
   );
 
-  File(outputPath).writeAsBytesSync(
-    img.encodeJpg(photo, quality: 95),
-    flush: true,
-  );
+  File(
+    outputPath,
+  ).writeAsBytesSync(img.encodeJpg(photo, quality: 95), flush: true);
   return outputPath;
 }
