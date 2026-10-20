@@ -730,7 +730,7 @@ class _WatermarkLayout {
       textLineHeight: textLineHeight,
       charWidth: shortSide >= 1200 ? 13.0 : 8.0,
       shadowOffset: shortSide >= 1200 ? 2 : 1,
-      useSingleColumn: false,
+      useSingleColumn: true,
     );
   }
 
