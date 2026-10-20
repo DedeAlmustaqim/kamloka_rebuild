@@ -158,26 +158,8 @@ class WatermarkService {
     final panelRect = layout.panelRect;
     final panelRadius = (shortSide * 0.022).clamp(12.0, 44.0).toDouble();
 
-    // Render a distinct rounded panel inset from all image edges. Keeping the
-    // gradient inside this shape avoids the old full-width black band.
-    final panelPaint = ui.Paint()
-      ..shader = ui.Gradient.linear(
-        ui.Offset(0, panelRect.top),
-        ui.Offset(0, panelRect.bottom),
-        const [
-          ui.Color(0x66101010),
-          ui.Color(0xB8101010),
-          ui.Color(0xE6101010),
-        ],
-        const [0.0, 0.42, 1.0],
-      );
-    canvas.drawRRect(
-      ui.RRect.fromRectAndRadius(
-        panelRect,
-        ui.Radius.circular(panelRadius),
-      ),
-      panelPaint,
-    );
+    // Keep the watermark panel transparent: draw text and optional divider only.
+    // This avoids adding a black or dark background over the photo.
 
     if (layout.dividerX != null) {
       final dividerPaint = ui.Paint()
