@@ -47,9 +47,14 @@ class WatermarkLayoutEngine {
     final timeHeight = _lineHeight(timeStyle);
     final addressHeight = math.max(bodyHeight, addressPainter.height);
     final sectionGap = shortSide * 0.009;
+    final logoHeight = hasBranding ? shortSide * 0.052 : 0.0;
     final detailsHeight = bodyHeight * 2;
     final leftHeight = timeHeight + bodyHeight * 2 + sectionGap * 2;
-    final rightHeight = addressHeight + detailsHeight + sectionGap * 2;
+    // Reserve vertical room for the logo inside the panel, not above it.
+    final rightHeight = addressHeight +
+        detailsHeight +
+        sectionGap * 2 +
+        (hasBranding ? logoHeight + sectionGap : 0.0);
     final panelHeight = math.max(leftHeight, rightHeight) + padding * 2;
     final bottomMargin = shortSide * 0.02;
     final panelRect = Rect.fromLTWH(
@@ -82,12 +87,11 @@ class WatermarkLayoutEngine {
       contentHeight,
     );
 
-    final logoHeight = hasBranding ? shortSide * 0.052 : 0.0;
     final logoWidth = math.min(rightWidth * 0.48, logoHeight * 4.2);
     final logoRect = hasBranding
         ? Rect.fromLTWH(
             panelRect.right - padding - logoWidth,
-            panelRect.top - sectionGap - logoHeight,
+            panelRect.top + padding,
             logoWidth,
             logoHeight,
           )
