@@ -44,8 +44,9 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
     final locations = await _database.listLocations(widget.trip.id);
     final currentIndex = locations.indexWhere((item) => item.id == location.id);
     final targetIndex = currentIndex + offset;
-    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= locations.length)
+    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= locations.length) {
       return;
+    }
 
     final orderedIds = locations.map((item) => item.id).toList();
     final movedId = orderedIds.removeAt(currentIndex);
@@ -66,7 +67,7 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
       cancelText: 'Batal',
       type: ProMessageType.error,
     );
-    if (!confirmed) return;
+    if (!mounted || !confirmed) return;
 
     try {
       // Remove managed photo files before deleting their database records.
@@ -274,9 +275,7 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                             ),
                             const SizedBox(width: 7),
                             Text(
-                              _dateLabel(widget.trip.startDate) +
-                                  ' – ' +
-                                  _dateLabel(widget.trip.endDate),
+                              '${_dateLabel(widget.trip.startDate)} – ${_dateLabel(widget.trip.endDate)}',
                               style: const TextStyle(
                                 color: ProTheme.text,
                                 fontSize: 12,
