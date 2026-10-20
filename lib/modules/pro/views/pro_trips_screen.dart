@@ -22,11 +22,19 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
   final _uuid = const Uuid();
   late Future<List<Trip>> _tripsFuture;
   bool _isCreating = false;
+  final _searchController = TextEditingController();
+  String _tripFilter = 'Semua';
 
   @override
   void initState() {
     super.initState();
     _reload();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _reload() {
@@ -188,64 +196,217 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
             }
 
             final trips = snapshot.data ?? const <Trip>[];
+            final query = _searchController.text.trim().toLowerCase();
+            final visibleTrips = trips.where((trip) {
+              final matchesQuery = trip.title.toLowerCase().contains(query) ||
+                  (trip.assignmentNumber ?? '').toLowerCase().contains(query);
+              final matchesFilter = _tripFilter == 'Semua' ||
+                  (_tripFilter == 'Satu hari'
+                      ? trip.startDate.year == trip.endDate.year &&
+                          trip.startDate.month == trip.endDate.month &&
+                          trip.startDate.day == trip.endDate.day
+                      : trip.startDate.year != trip.endDate.year ||
+                          trip.startDate.month != trip.endDate.month ||
+                          trip.startDate.day != trip.endDate.day);
+              return matchesQuery && matchesFilter;
+            }).toList(growable: false);
+
             return RefreshIndicator(
               onRefresh: () async => setState(_reload),
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 112),
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
                 children: [
-                  const Text(
-                    'Dokumentasi kegiatan lapangan',
-                    style: TextStyle(
-                      color: ProTheme.text,
-                      fontSize: 25,
-                      fontWeight: FontWeight.w800,
-                      height: 1.15,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Perjalanan Saya',
+                              style: TextStyle(
+                                color: ProTheme.text,
+                                fontSize: 27,
+                                fontWeight: FontWeight.w800,
+                                height: 1.15,
+                              ),
+                            ),
+                            const SizedBox(height: 7),
+                            Text(
+                              trips.isEmpty
+                                  ? 'Mulai dokumentasikan kegiatan lapangan Anda.'
+                                  : 'Kelola kegiatan dan lanjutkan dokumentasinya.',
+                              style: const TextStyle(
+                                color: ProTheme.secondaryText,
+                                fontSize: 14,
+                                height: 1.45,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE4F0E9),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(
+                          Icons.route_rounded,
+                          color: ProTheme.brandGreen,
+                          size: 25,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 22),
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF0C5A3E), Color(0xFF174631)],
+                      ),
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.folder_copy_outlined,
+                                color: Colors.white70, size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${trips.length} kegiatan tersimpan',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Siap turun ke lapangan?',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        const Text(
+                          'Buat kegiatan, tambahkan lokasi, lalu ambil foto dokumentasi.',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                            height: 1.45,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: _isCreating ? null : _createTrip,
+                            icon: _isCreating
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: ProTheme.brandGreen,
+                                    ),
+                                  )
+                                : const Icon(Icons.add_rounded),
+                            label: Text(_isCreating
+                                ? 'Menyimpan...'
+                                : 'Buat kegiatan baru'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: const Color(0xFFFFE69A),
+                              foregroundColor: ProTheme.text,
+                              minimumSize: const Size.fromHeight(50),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Satukan lokasi, foto, dan laporan setiap perjalanan dalam satu tempat.',
-                    style: TextStyle(
-                      color: ProTheme.secondaryText,
-                      fontSize: 14,
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  _SummaryCard(
-                    count: trips.length,
-                    onCreate: _isCreating ? null : _createTrip,
-                    isCreating: _isCreating,
-                  ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 26),
                   Row(
                     children: [
                       const Expanded(
                         child: Text(
-                          'Perjalanan',
+                          'Daftar kegiatan',
                           style: TextStyle(
                             color: ProTheme.text,
-                            fontSize: 18,
+                            fontSize: 19,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
-                      Text(
-                        '${trips.length} kegiatan',
-                        style: const TextStyle(
-                          color: ProTheme.secondaryText,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: ProTheme.surface,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: ProTheme.border),
+                        ),
+                        child: Text(
+                          '${visibleTrips.length} dari ${trips.length}',
+                          style: const TextStyle(
+                            color: ProTheme.secondaryText,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
+                  TextField(
+                    controller: _searchController,
+                    onChanged: (_) => setState(() {}),
+                    textInputAction: TextInputAction.search,
+                    decoration: InputDecoration(
+                      hintText: 'Cari nama kegiatan atau surat tugas',
+                      prefixIcon: const Icon(Icons.search_rounded),
+                      suffixIcon: _searchController.text.isEmpty
+                          ? null
+                          : IconButton(
+                              tooltip: 'Hapus pencarian',
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {});
+                              },
+                              icon: const Icon(Icons.close_rounded),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      for (final filter in ['Semua', 'Satu hari', 'Lebih dari sehari'])
+                        ChoiceChip(
+                          label: Text(filter),
+                          selected: _tripFilter == filter,
+                          onSelected: (_) => setState(() => _tripFilter = filter),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
                   if (trips.isEmpty)
-                    const _EmptyTrips()
+                    _EmptyTrips(onCreate: _createTrip)
+                  else if (visibleTrips.isEmpty)
+                    const _NoTripResults()
                   else
-                    ...trips.map(
+                    ...visibleTrips.map(
                       (trip) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: _TripCard(
@@ -259,6 +420,16 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
                             if (mounted) setState(_reload);
                           },
                         ),
+                      ),
+                    ),
+                  const SizedBox(height: 10),
+                  if (trips.isNotEmpty)
+                    const Text(
+                      'Tip: ketuk kartu kegiatan untuk membuka detail dan menambahkan lokasi atau foto.',
+                      style: TextStyle(
+                        color: ProTheme.secondaryText,
+                        fontSize: 12,
+                        height: 1.45,
                       ),
                     ),
                 ],
