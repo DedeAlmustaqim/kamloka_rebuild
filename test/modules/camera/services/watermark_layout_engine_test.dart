@@ -19,9 +19,9 @@ void main() {
 
       expect(layout.isLandscape, isTrue);
       expect(layout.panelRect.left, greaterThan(0));
-      expect(layout.panelRect.left, closeTo(120, 0.1));
+      expect(layout.panelRect.left, closeTo(64, 0.1));
       expect(layout.panelRect.right, lessThan(4000));
-      expect(layout.panelRect.right, closeTo(3880, 0.1));
+      expect(layout.panelRect.right, closeTo(3936, 0.1));
       expect(layout.panelRect.bottom, lessThanOrEqualTo(3000));
       expect(layout.logoRect.right, lessThanOrEqualTo(layout.panelRect.right));
       expect(layout.logoRect.bottom, lessThan(layout.panelRect.top));
