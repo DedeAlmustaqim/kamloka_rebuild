@@ -1,8 +1,5 @@
 import 'dart:async';
-import 'dart:ui';
-
 import 'package:camera/camera.dart' as camera;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -16,7 +13,6 @@ import '../services/watermark_service.dart';
 import '../../pro/models/documented_photo.dart';
 import '../../pro/models/visit_location.dart';
 import '../../pro/services/pro_database_service.dart';
-import '../../pro/services/pro_access_service.dart';
 import '../../pro/services/pro_photo_storage_service.dart';
 
 class CameraController extends GetxController {
