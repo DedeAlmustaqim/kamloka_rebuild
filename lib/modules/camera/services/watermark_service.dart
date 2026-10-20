@@ -709,9 +709,11 @@ class _WatermarkLayout {
     // Portrait dan landscape memakai komposisi watermark yang sama.
     final padding = (shortSide * 0.035).round().clamp(18, 120).toInt();
     final contentWidth = width - (padding * 2);
-    final textFont = shortSide >= 1200 ? img.arial24 : img.arial14;
-    final timeFont = shortSide >= 1200 ? img.arial48 : img.arial24;
-    final textLineHeight = textFont.lineHeight + (shortSide >= 1200 ? 4 : 2);
+    // Enlarge every watermark text tier while retaining a stronger time
+    // hierarchy. Use larger bitmap fonts for high-resolution images too.
+    final textFont = shortSide >= 1200 ? img.arial48 : img.arial24;
+    final timeFont = img.arial48;
+    final textLineHeight = textFont.lineHeight + (shortSide >= 1200 ? 6 : 4);
 
     return _WatermarkLayout(
       contentLeft: padding,
@@ -728,7 +730,7 @@ class _WatermarkLayout {
       textFont: textFont,
       timeFont: timeFont,
       textLineHeight: textLineHeight,
-      charWidth: shortSide >= 1200 ? 13.0 : 8.0,
+      charWidth: shortSide >= 1200 ? 24.0 : 13.0,
       shadowOffset: shortSide >= 1200 ? 2 : 1,
       useSingleColumn: true,
     );
