@@ -15,7 +15,9 @@ class PhotoPreviewView extends StatelessWidget {
 
   Future<void> _sharePhoto(BuildContext context) async {
     final file = File(filePath);
-    if (!await file.exists()) {
+    final exists = await file.exists();
+    if (!context.mounted) return;
+    if (!exists) {
       _showMessage(context, 'Foto tidak ditemukan.');
       return;
     }
