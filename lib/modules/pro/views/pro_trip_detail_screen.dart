@@ -328,6 +328,7 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                 _TripProgressCard(
                   locationCount: locations.length,
                   onAddLocation: _isAddingLocation ? null : _addLocation,
+                  singleLocationActivity: widget.trip.status == 'single_location',
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
@@ -503,10 +504,12 @@ class _TripProgressCard extends StatelessWidget {
   const _TripProgressCard({
     required this.locationCount,
     required this.onAddLocation,
+    this.singleLocationActivity = false,
   });
 
   final int locationCount;
   final VoidCallback? onAddLocation;
+  final bool singleLocationActivity;
 
   @override
   Widget build(BuildContext context) {
@@ -534,7 +537,9 @@ class _TripProgressCard extends StatelessWidget {
                 ),
               ),
               Text(
-                hasLocation ? '1 dari 2' : '0 dari 2',
+                singleLocationActivity
+                    ? (hasLocation ? '1 dari 2' : '0 dari 2')
+                    : (hasLocation ? '1 dari 2' : '0 dari 2'),
                 style: const TextStyle(
                   color: ProTheme.brandGreen,
                   fontSize: 12,
@@ -544,8 +549,10 @@ class _TripProgressCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 5),
-          const Text(
-            'Ikuti langkah sederhana untuk menyusun laporan kegiatan.',
+          Text(
+            singleLocationActivity
+                ? 'Dokumentasikan lokasi kegiatan ini dengan satu atau beberapa foto.'
+                : 'Ikuti langkah sederhana untuk menyusun laporan kegiatan.',
             style: TextStyle(
               color: ProTheme.secondaryText,
               fontSize: 12,
@@ -565,9 +572,9 @@ class _TripProgressCard extends StatelessWidget {
           const SizedBox(height: 15),
           _ProgressStep(
             number: '1',
-            title: 'Tambahkan lokasi kunjungan',
+            title: singleLocationActivity ? 'Lokasi kegiatan' : 'Tambahkan lokasi kunjungan',
             description: hasLocation
-                ? '$locationCount lokasi sudah ditambahkan.'
+                ? (singleLocationActivity ? 'Lokasi kegiatan sudah tersimpan.' : '$locationCount lokasi sudah ditambahkan.')
                 : 'Simpan tempat yang akan Anda dokumentasikan.',
             done: hasLocation,
           ),
@@ -578,7 +585,7 @@ class _TripProgressCard extends StatelessWidget {
             description: 'Ketuk salah satu lokasi untuk mulai mendokumentasikan.',
             done: false,
           ),
-          if (!hasLocation) ...[
+          if (!hasLocation && !singleLocationActivity) ...[
             const SizedBox(height: 15),
             SizedBox(
               width: double.infinity,
