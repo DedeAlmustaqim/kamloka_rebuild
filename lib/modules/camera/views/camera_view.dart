@@ -374,7 +374,7 @@ class _BottomScrim extends StatelessWidget {
       child: Align(
         alignment: Alignment.bottomCenter,
         child: Container(
-          height: isLandscape ? 120 : 190,
+          height: MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height ? 120 : 190,
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.bottomCenter,
