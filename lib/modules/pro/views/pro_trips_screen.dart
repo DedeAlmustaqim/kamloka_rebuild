@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../models/trip.dart';
+import '../models/visit_location.dart';
 import '../services/pro_access_service.dart';
 import '../services/pro_database_service.dart';
 import '../services/pro_photo_storage_service.dart';
@@ -58,8 +60,7 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
     setState(() => _isCreating = true);
     try {
       final now = DateTime.now();
-      await _database.saveTrip(
-        Trip(
+      final trip = Trip(
           id: _uuid.v4(),
           title: draft.title,
           // Keep the existing database field populated for backward compatibility.
@@ -72,14 +73,28 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
           status: 'draft',
           createdAt: now,
           updatedAt: now,
+        );
+      await _database.saveTripWithInitialLocation(
+        trip,
+        VisitLocation(
+          id: _uuid.v4(),
+          tripId: trip.id,
+          name: draft.locationName,
+          address: _nullableText(draft.locationAddress),
+          latitude: draft.latitude,
+          longitude: draft.longitude,
+          visitedAt: draft.startDate,
+          notes: null,
+          sortOrder: 0,
+          createdAt: now,
         ),
       );
       if (mounted) {
         setState(_reload);
         await showProMessageDialog(
           context: context,
-          title: 'Perjalanan berhasil dibuat',
-          message: 'Kegiatan siap untuk mulai didokumentasikan.',
+          title: 'Kegiatan berhasil dibuat',
+          message: 'Kegiatan dan lokasi awal sudah tersimpan. Anda dapat menambahkan beberapa foto pada lokasi ini.',
           type: ProMessageType.success,
         );
       }
@@ -301,7 +316,7 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
                         ),
                         const SizedBox(height: 5),
                         const Text(
-                          'Buat kegiatan, tambahkan lokasi, lalu ambil foto dokumentasi.',
+                          'Buat kegiatan dengan satu lokasi, lalu tambahkan foto dokumentasi sebanyak yang diperlukan.',
                           style: TextStyle(
                             color: Colors.white70,
                             fontSize: 13,
@@ -425,7 +440,7 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
                   const SizedBox(height: 10),
                   if (trips.isNotEmpty)
                     const Text(
-                      'Tip: ketuk kartu kegiatan untuk membuka detail dan menambahkan lokasi atau foto.',
+                      'Tip: ketuk kartu kegiatan untuk membuka detail dan melanjutkan dokumentasi foto.',
                       style: TextStyle(
                         color: ProTheme.secondaryText,
                         fontSize: 12,
@@ -859,6 +874,10 @@ class _TripDraft {
   final String officerName;
   final String assignmentNumber;
   final String notes;
+  final String locationName;
+  final String locationAddress;
+  final double? latitude;
+  final double? longitude;
 }
 
 class _CreateTripSheet extends StatefulWidget {
@@ -874,6 +893,12 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
   final _officer = TextEditingController();
   final _assignment = TextEditingController();
   final _notes = TextEditingController();
+  final _locationName = TextEditingController();
+  final _locationAddress = TextEditingController();
+  final _latitude = TextEditingController();
+  final _longitude = TextEditingController();
+  bool _useGps = false;
+  bool _isGettingLocation = false;
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now();
   bool _showOptional = false;
@@ -884,6 +909,10 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
     _officer.dispose();
     _assignment.dispose();
     _notes.dispose();
+    _locationName.dispose();
+    _locationAddress.dispose();
+    _latitude.dispose();
+    _longitude.dispose();
     super.dispose();
   }
 
@@ -920,9 +949,88 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
     });
   }
 
+  Future<void> _captureGpsLocation() async {
+    if (_isGettingLocation) return;
+    setState(() => _isGettingLocation = true);
+    try {
+      final enabled = await Geolocator.isLocationServiceEnabled();
+      if (!enabled) {
+        throw Exception('Layanan lokasi/GPS sedang dimatikan.');
+      }
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        throw Exception(
+          permission == LocationPermission.deniedForever
+              ? 'Izin lokasi ditolak permanen. Aktifkan melalui pengaturan aplikasi.'
+              : 'Izin lokasi diperlukan untuk mengambil koordinat.',
+        );
+      }
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 20),
+        ),
+      );
+      if (!mounted) return;
+      setState(() {
+        _useGps = true;
+        _latitude.text = position.latitude.toStringAsFixed(6);
+        _longitude.text = position.longitude.toStringAsFixed(6);
+      });
+    } catch (error) {
+      if (mounted) {
+        await showProMessageDialog(
+          context: context,
+          title: 'Lokasi belum berhasil diambil',
+          message: error.toString().replaceFirst('Exception: ', ''),
+          type: ProMessageType.error,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isGettingLocation = false);
+    }
+  }
+
   void _submit() {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
+    final latitudeText = _latitude.text.trim();
+    final longitudeText = _longitude.text.trim();
+    final latitude = latitudeText.isEmpty ? null : double.tryParse(latitudeText);
+    final longitude = longitudeText.isEmpty ? null : double.tryParse(longitudeText);
+    if ((latitudeText.isNotEmpty && latitude == null) ||
+        (longitudeText.isNotEmpty && longitude == null) ||
+        ((latitude == null) != (longitude == null))) {
+      showProMessageDialog(
+        context: context,
+        title: 'Koordinat belum valid',
+        message: 'Isi latitude dan longitude dengan angka yang valid, atau kosongkan keduanya.',
+        type: ProMessageType.error,
+      );
+      return;
+    }
+    if (latitude != null && (latitude < -90 || latitude > 90)) {
+      showProMessageDialog(
+        context: context,
+        title: 'Latitude di luar batas',
+        message: 'Periksa kembali nilai latitude.',
+        type: ProMessageType.error,
+      );
+      return;
+    }
+    if (longitude != null && (longitude < -180 || longitude > 180)) {
+      showProMessageDialog(
+        context: context,
+        title: 'Longitude di luar batas',
+        message: 'Periksa kembali nilai longitude.',
+        type: ProMessageType.error,
+      );
+      return;
+    }
     Navigator.of(context).pop(
       _TripDraft(
         title: _title.text.trim(),
@@ -931,6 +1039,10 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
         officerName: _officer.text,
         assignmentNumber: _assignment.text,
         notes: _notes.text,
+        locationName: _locationName.text.trim(),
+        locationAddress: _locationAddress.text,
+        latitude: latitude,
+        longitude: longitude,
       ),
     );
   }
@@ -1029,7 +1141,7 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                     maxLength: 100,
                     decoration: const InputDecoration(
                       labelText: 'Nama kegiatan',
-                      hintText: 'Contoh: Monitoring lokasi pembangunan',
+                      hintText: 'Masukkan nama kegiatan',
                       helperText: 'Gunakan nama yang mudah dikenali.',
                       prefixIcon: Icon(Icons.work_outline_rounded),
                       counterText: '',
@@ -1047,6 +1159,112 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                   const SizedBox(height: 24),
                   const _FormSectionLabel(
                     number: '02',
+                    title: 'Lokasi kegiatan',
+                    subtitle: 'Tentukan lokasi secara manual atau melalui GPS.',
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _locationName,
+                    textCapitalization: TextCapitalization.sentences,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(
+                      labelText: 'Nama lokasi',
+                      hintText: 'Masukkan nama lokasi',
+                      prefixIcon: Icon(Icons.place_outlined),
+                    ),
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Nama lokasi wajib diisi.'
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _locationAddress,
+                    textCapitalization: TextCapitalization.sentences,
+                    textInputAction: TextInputAction.next,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      labelText: 'Alamat lokasi',
+                      hintText: 'Masukkan alamat lokasi',
+                      prefixIcon: Icon(Icons.location_on_outlined),
+                      alignLabelWithHint: true,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: ProTheme.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: ProTheme.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                'Koordinat lokasi',
+                                style: TextStyle(
+                                  color: ProTheme.text,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            TextButton.icon(
+                              onPressed: _isGettingLocation ? null : _captureGpsLocation,
+                              icon: _isGettingLocation
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : const Icon(Icons.my_location_rounded, size: 18),
+                              label: Text(_isGettingLocation ? 'Mengambil...' : 'Ambil Lokasi Saya'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _latitude,
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                                decoration: const InputDecoration(
+                                  labelText: 'Latitude',
+                                  hintText: 'Masukkan latitude',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: TextFormField(
+                                controller: _longitude,
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                                decoration: const InputDecoration(
+                                  labelText: 'Longitude',
+                                  hintText: 'Masukkan longitude',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Koordinat bersifat opsional. GPS hanya diakses saat tombol ditekan.',
+                          style: TextStyle(
+                            color: ProTheme.secondaryText,
+                            fontSize: 12,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const _FormSectionLabel(
+                    number: '03',
                     title: 'Jadwal kegiatan',
                     subtitle: 'Pilih jadwal cepat atau tentukan tanggal sendiri.',
                   ),
@@ -1204,7 +1422,7 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                                   textInputAction: TextInputAction.next,
                                   decoration: const InputDecoration(
                                     labelText: 'Nomor surat tugas',
-                                    hintText: 'Contoh: 800/123/2026',
+                                    hintText: 'Masukkan nomor surat tugas',
                                     prefixIcon:
                                         Icon(Icons.description_outlined),
                                   ),
@@ -1218,7 +1436,7 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                                   minLines: 2,
                                   decoration: const InputDecoration(
                                     labelText: 'Catatan umum',
-                                    hintText: 'Tambahkan informasi bila perlu',
+                                    hintText: 'Tambahkan catatan bila diperlukan',
                                     prefixIcon: Icon(Icons.notes_rounded),
                                     alignLabelWithHint: true,
                                   ),
