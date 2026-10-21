@@ -378,12 +378,127 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                   else
                     const Center(child: Text('Lokasi kegiatan tidak ditemukan.')),
                 ] else ...[
-
-                        style: TextStyle(
-                          color: ProTheme.text,
-                          fontSize: 19,
-                          fontWeight: FontWeight.w800,
+                  const SizedBox(height: 26),
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Lokasi kunjungan',
+                          style: TextStyle(
+                            color: ProTheme.text,
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: ProTheme.surface,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: ProTheme.border),
+                        ),
+                        child: Text(
+                          '${locations.length} lokasi',
+                          style: const TextStyle(
+                            color: ProTheme.secondaryText,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  const Text(
+                    'Ketuk lokasi untuk membuka detail, mengambil foto, dan menambahkan catatan.',
+                    style: TextStyle(
+                      color: ProTheme.secondaryText,
+                      fontSize: 12,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  if (locations.isEmpty)
+                    _EmptyLocations(
+                      onAdd: _isAddingLocation ? null : _addLocation,
+                    )
+                  else
+                    ...locations.map(
+                      (location) => Card(
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            child: Text('${location.sortOrder + 1}'),
+                          ),
+                          title: Text(location.name),
+                          subtitle: Text(
+                            location.address ?? 'Alamat tidak tersedia',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              PopupMenuButton<String>(
+                                tooltip: 'Atur urutan lokasi',
+                                onSelected: (value) {
+                                  if (value == 'up') _moveLocation(location, -1);
+                                  if (value == 'down') _moveLocation(location, 1);
+                                  if (value == 'delete') _deleteLocation(location);
+                                },
+                                itemBuilder: (_) => [
+                                  PopupMenuItem(
+                                    value: 'up',
+                                    enabled: location.sortOrder > 0,
+                                    child: const Row(
+                                      children: [
+                                        Icon(Icons.arrow_upward_rounded, size: 18),
+                                        SizedBox(width: 10),
+                                        Text('Pindahkan ke atas'),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'down',
+                                    enabled: location.sortOrder < locations.length - 1,
+                                    child: const Row(
+                                      children: [
+                                        Icon(Icons.arrow_downward_rounded, size: 18),
+                                        SizedBox(width: 10),
+                                        Text('Pindahkan ke bawah'),
+                                      ],
+                                    ),
+                                  ),
+                                  const PopupMenuDivider(),
+                                  const PopupMenuItem(
+                                    value: 'delete',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.delete_outline_rounded, color: ProTheme.danger, size: 18),
+                                        SizedBox(width: 10),
+                                        Text('Hapus lokasi'),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                                icon: const Icon(Icons.more_vert_rounded),
+                              ),
+                              const Icon(Icons.chevron_right_rounded, color: ProTheme.secondaryText),
+                            ],
+                          ),
+                          onTap: () async {
+                            await Get.to(
+                              () => ProLocationDetailScreen(
+                                trip: widget.trip,
+                                location: location,
+                              ),
+                            );
+                            if (mounted) setState(_reload);
+                          },
+                        ),
+                      ),
+                    ),
+
                       ),
                     ),
                     Container(
