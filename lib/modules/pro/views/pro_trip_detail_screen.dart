@@ -263,6 +263,7 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 112),
               children: [
+                // Unified compact card for activity, location, and PDF export.
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -274,12 +275,18 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                     borderRadius: BorderRadius.circular(22),
                   ),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text('DETAIL KEGIATAN', style: TextStyle(color: Color(0xFFD9E7DF), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.7)),
-                    const SizedBox(height: 8),
+                    Row(children: [
+                      const Icon(Icons.folder_open_rounded, size: 15, color: Color(0xFFE4B957)),
+                      const SizedBox(width: 7),
+                      const Expanded(child: Text('DETAIL KEGIATAN', style: TextStyle(color: Color(0xFFD9E7DF), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.7))),
+                      if (widget.trip.assignmentNumber?.trim().isNotEmpty == true)
+                        Flexible(child: Text(widget.trip.assignmentNumber!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white70, fontSize: 10))),
+                    ]),
+                    const SizedBox(height: 9),
                     Text(widget.trip.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 19, height: 1.2, fontWeight: FontWeight.w800)),
                     if (widget.trip.purpose.trim().isNotEmpty && widget.trip.purpose.trim() != widget.trip.title.trim()) ...[
                       const SizedBox(height: 4),
-                      Text(widget.trip.purpose, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFFD9E7DF), fontSize: 11)),
+                      Text(widget.trip.purpose, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFFD9E7DF), fontSize: 11, height: 1.35)),
                     ],
                     const SizedBox(height: 9),
                     Row(children: [
@@ -287,10 +294,6 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                       const SizedBox(width: 7),
                       Expanded(child: Text('${_dateLabel(widget.trip.startDate)} – ${_dateLabel(widget.trip.endDate)}', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600))),
                     ]),
-                    if (widget.trip.assignmentNumber?.trim().isNotEmpty == true) ...[
-                      const SizedBox(height: 4),
-                      Text('No. surat: ${widget.trip.assignmentNumber}', style: const TextStyle(color: Color(0xFFD9E7DF), fontSize: 10)),
-                    ],
                     Padding(padding: const EdgeInsets.symmetric(vertical: 11), child: Container(height: 1, color: Colors.white.withValues(alpha: 0.18))),
                     Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       const Icon(Icons.location_on_rounded, size: 17, color: Color(0xFFE4B957)),
@@ -339,6 +342,116 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                   ),
                 ]),
                 const SizedBox(height: 12),
+                FutureBuilder<List<DocumentedPhoto>>(
+                  future: _photosFuture,
+                  builder: (context, photoSnapshot) {
+                    if (photoSnapshot.connectionState == ConnectionState.waiting) {
+                      return const Padding(padding: EdgeInsets.all(36), child: Center(child: CircularProgressIndicator()));
+                    }
+                    if (photoSnapshot.hasError) return Center(child: Text('Gagal memuat foto: ${photoSnapshot.error}'));
+                    final photos = photoSnapshot.data ?? const <DocumentedPhoto>[];
+                    if (photos.isEmpty) {
+                      return Container(
+                        padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
+                        decoration: BoxDecoration(color: ProTheme.surface, borderRadius: BorderRadius.circular(22), border: Border.all(color: ProTheme.border)),
+                        child: Column(children: [
+                          Container(
+                            width: 68,
+                            height: 68,
+                            decoration: BoxDecoration(color: const Color(0xFFE7F2EC), borderRadius: BorderRadius.circular(22)),
+                            child: const Icon(Icons.add_a_photo_outlined, color: ProTheme.brandGreen, size: 30),
+                          ),
+                          const SizedBox(height: 14),
+                          const Text('Mulai dokumentasi kegiatan', textAlign: TextAlign.center, style: TextStyle(color: ProTheme.text, fontSize: 16, fontWeight: FontWeight.w800)),
+                          const SizedBox(height: 6),
+                          const Text('Ambil foto langsung dari kamera. Foto, keterangan, dan pilihan untuk PDF dikelola dari halaman ini.', textAlign: TextAlign.center, style: TextStyle(color: ProTheme.secondaryText, fontSize: 12, height: 1.5)),
+                          const SizedBox(height: 16),
+                          FilledButton.icon(onPressed: _isTakingPhoto ? null : _takePhoto, icon: const Icon(Icons.camera_alt_outlined), label: const Text('Ambil foto pertama')),
+                        ]),
+                      );
+                    }
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: photos.length,
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: 0.69,
+                      ),
+                      itemBuilder: (context, index) {
+                        final photo = photos[index];
+                        final hasFile = File(photo.filePath).existsSync();
+                        return Container(
+                          clipBehavior: Clip.antiAlias,
+                          decoration: BoxDecoration(color: ProTheme.surface, borderRadius: BorderRadius.circular(17), border: Border.all(color: ProTheme.border)),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                            Expanded(child: Stack(fit: StackFit.expand, children: [
+                              if (hasFile) Image.file(File(photo.filePath), fit: BoxFit.cover)
+                              else const Center(child: Icon(Icons.broken_image_outlined, size: 32, color: ProTheme.secondaryText)),
+                              Positioned(left: 8, top: 8, child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                                decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.58), borderRadius: BorderRadius.circular(9)),
+                                child: Text('${index + 1}'.padLeft(2, '0'), style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800)),
+                              )),
+                              Positioned(right: 5, top: 5, child: Material(
+                                color: Colors.white.withValues(alpha: 0.94),
+                                borderRadius: BorderRadius.circular(12),
+                                child: Checkbox(
+                                  value: photo.includeInReport,
+                                  visualDensity: VisualDensity.compact,
+                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  onChanged: (value) async {
+                                    await _database.setPhotoIncludedInReport(photo.id, value ?? false);
+                                    if (mounted) setState(() => _photosFuture = _database.listPhotos(location.id));
+                                  },
+                                ),
+                              )),
+                              Positioned(right: 5, bottom: 5, child: PopupMenuButton<String>(
+                                tooltip: 'Aksi foto',
+                                iconColor: Colors.white,
+                                color: Colors.white,
+                                onSelected: (value) {
+                                  if (value == 'caption') _editCaption(photo);
+                                  if (value == 'up') _movePhoto(photo, -1, photos);
+                                  if (value == 'down') _movePhoto(photo, 1, photos);
+                                  if (value == 'delete') _deletePhoto(photo);
+                                },
+                                itemBuilder: (_) => [
+                                  const PopupMenuItem(value: 'caption', child: Text('Ubah keterangan')),
+                                  PopupMenuItem(value: 'up', enabled: index > 0, child: const Text('Pindahkan ke kiri/atas')),
+                                  PopupMenuItem(value: 'down', enabled: index < photos.length - 1, child: const Text('Pindahkan ke kanan/bawah')),
+                                  const PopupMenuItem(value: 'delete', child: Text('Hapus foto')),
+                                ],
+                                child: Container(
+                                  padding: const EdgeInsets.all(7),
+                                  decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.48), borderRadius: BorderRadius.circular(11)),
+                                  child: const Icon(Icons.more_horiz_rounded, color: Colors.white, size: 20),
+                                ),
+                              )),
+                            ])),
+                            InkWell(
+                              onTap: () => _editCaption(photo),
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
+                                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                  Text(photo.caption?.trim().isNotEmpty == true ? photo.caption!.trim() : 'Tambah keterangan', maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: photo.caption?.trim().isNotEmpty == true ? ProTheme.text : ProTheme.secondaryText, fontSize: 11, fontWeight: FontWeight.w700)),
+                                  const SizedBox(height: 6),
+                                  Row(children: [
+                                    const Icon(Icons.schedule_rounded, size: 12, color: ProTheme.secondaryText),
+                                    const SizedBox(width: 4),
+                                    Expanded(child: Text(photo.capturedAt == null ? 'Waktu tidak tersedia' : _dateTimeLabel(photo.capturedAt!), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: ProTheme.secondaryText, fontSize: 9))),
+                                  ]),
+                                ]),
+                              ),
+                            ),
+                          ]),
+                        );
+                      },
+                    );
+                  },
+                ),
               ],
             ),
           );
