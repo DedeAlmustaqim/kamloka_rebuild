@@ -89,7 +89,9 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
       }
 
       if (mounted) {
-        setState(() => _photosFuture = _database.listPhotos(location.id));
+        setState(() {
+          _photosFuture = _database.listPhotos(location.id);
+        });
         await showProMessageDialog(
           context: context,
           title: 'Foto berhasil ditambahkan',
@@ -121,7 +123,9 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
       await _database.updatePhotoCaption(photo.id, result);
       final location = _location;
       if (mounted && location != null) {
-        setState(() => _photosFuture = _database.listPhotos(location.id));
+        setState(() {
+          _photosFuture = _database.listPhotos(location.id);
+        });
       }
     } catch (error) {
       if (mounted) {
@@ -143,7 +147,11 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
     final movedId = orderedIds.removeAt(currentIndex);
     orderedIds.insert(targetIndex, movedId);
     await _database.reorderPhotos(photo.locationId, orderedIds);
-    if (mounted) setState(() => _photosFuture = _database.listPhotos(photo.locationId));
+    if (mounted) {
+      setState(() {
+        _photosFuture = _database.listPhotos(photo.locationId);
+      });
+    }
   }
 
   Future<void> _deletePhoto(DocumentedPhoto photo) async {
@@ -404,7 +412,9 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                   onChanged: (value) async {
                                     await _database.setPhotoIncludedInReport(photo.id, value ?? false);
-                                    if (mounted) setState(() => _photosFuture = _database.listPhotos(location.id));
+                                    if (mounted) setState(() {
+          _photosFuture = _database.listPhotos(location.id);
+        });
                                   },
                                 ),
                               )),
