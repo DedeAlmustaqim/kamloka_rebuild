@@ -1790,6 +1790,13 @@ String _monthLabel(int month) => const [
   'Des',
 ][month - 1];
 
+String? _firstNonEmpty(List<dynamic> values) {
+  for (final value in values) {
+    if (value is String && value.trim().isNotEmpty) return value.trim();
+  }
+  return null;
+}
+
 String? _nullableText(String value) {
   final trimmed = value.trim();
   return trimmed.isEmpty ? null : trimmed;
