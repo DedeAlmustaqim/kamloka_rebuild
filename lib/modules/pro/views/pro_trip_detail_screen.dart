@@ -537,9 +537,7 @@ class _TripProgressCard extends StatelessWidget {
                 ),
               ),
               Text(
-                singleLocationActivity
-                    ? (hasLocation ? '1 dari 2' : '0 dari 2')
-                    : (hasLocation ? '1 dari 2' : '0 dari 2'),
+                hasLocation ? '1 dari 2' : '0 dari 2',
                 style: const TextStyle(
                   color: ProTheme.brandGreen,
                   fontSize: 12,
