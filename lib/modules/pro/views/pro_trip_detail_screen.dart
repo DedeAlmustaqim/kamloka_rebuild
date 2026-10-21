@@ -112,6 +112,64 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
     }
   }
 
+  Future<void> _previewPhoto(DocumentedPhoto photo) async {
+    final file = File(photo.filePath);
+    if (!await file.exists() || !mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.88),
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(12),
+        child: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                minScale: 1,
+                maxScale: 5,
+                child: Hero(
+                  tag: 'pro-photo-${photo.id}',
+                  child: Image.file(file, fit: BoxFit.contain),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton.filledTonal(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.black.withValues(alpha: 0.55),
+                  foregroundColor: Colors.white,
+                ),
+                icon: const Icon(Icons.close_rounded),
+              ),
+            ),
+            if (photo.caption?.trim().isNotEmpty == true)
+              Positioned(
+                left: 12,
+                right: 12,
+                bottom: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.58),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    photo.caption!.trim(),
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _editCaption(DocumentedPhoto photo) async {
     final result = await showDialog<String>(
       context: context,
@@ -379,7 +437,14 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                           decoration: BoxDecoration(color: ProTheme.surface, borderRadius: BorderRadius.circular(17), border: Border.all(color: ProTheme.border)),
                           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                             Expanded(child: Stack(fit: StackFit.expand, children: [
-                              if (hasFile) Image.file(File(photo.filePath), fit: BoxFit.cover)
+                              if (hasFile)
+                                GestureDetector(
+                                  onTap: () => _previewPhoto(photo),
+                                  child: Hero(
+                                    tag: 'pro-photo-${photo.id}',
+                                    child: Image.file(File(photo.filePath), fit: BoxFit.cover),
+                                  ),
+                                )
                               else const Center(child: Icon(Icons.broken_image_outlined, size: 32, color: ProTheme.secondaryText)),
                               Positioned(left: 8, top: 8, child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
@@ -429,7 +494,11 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                               child: Padding(
                                 padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
                                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                  Text(photo.caption?.trim().isNotEmpty == true ? photo.caption!.trim() : 'Tambah keterangan', maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: photo.caption?.trim().isNotEmpty == true ? ProTheme.text : ProTheme.secondaryText, fontSize: 11, fontWeight: FontWeight.w700)),
+                                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                    Expanded(child: Text(photo.caption?.trim().isNotEmpty == true ? photo.caption!.trim() : 'Tambah keterangan', maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: photo.caption?.trim().isNotEmpty == true ? ProTheme.text : ProTheme.secondaryText, fontSize: 11, fontWeight: FontWeight.w700))),
+                                    const SizedBox(width: 4),
+                                    Icon(Icons.edit_rounded, size: 14, color: ProTheme.brandGreen),
+                                  ]),
                                   const SizedBox(height: 6),
                                   Row(children: [
                                     const Icon(Icons.schedule_rounded, size: 12, color: ProTheme.secondaryText),
