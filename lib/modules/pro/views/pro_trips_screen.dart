@@ -1,4 +1,7 @@
-import 'dart:convert';\n\nimport 'package:flutter/material.dart';\nimport 'package:http/http.dart' as http;
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 import 'package:geolocator/geolocator.dart';
