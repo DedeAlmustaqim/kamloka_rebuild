@@ -70,7 +70,7 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
           officerName: _nullableText(draft.officerName),
           assignmentNumber: _nullableText(draft.assignmentNumber),
           notes: _nullableText(draft.notes),
-          status: 'draft',
+          status: 'single_location',
           createdAt: now,
           updatedAt: now,
         );
@@ -866,6 +866,10 @@ class _TripDraft {
     required this.officerName,
     required this.assignmentNumber,
     required this.notes,
+    required this.locationName,
+    required this.locationAddress,
+    required this.latitude,
+    required this.longitude,
   });
 
   final String title;
@@ -897,7 +901,6 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
   final _locationAddress = TextEditingController();
   final _latitude = TextEditingController();
   final _longitude = TextEditingController();
-  bool _useGps = false;
   bool _isGettingLocation = false;
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now();
@@ -977,7 +980,6 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
       );
       if (!mounted) return;
       setState(() {
-        _useGps = true;
         _latitude.text = position.latitude.toStringAsFixed(6);
         _longitude.text = position.longitude.toStringAsFixed(6);
       });
