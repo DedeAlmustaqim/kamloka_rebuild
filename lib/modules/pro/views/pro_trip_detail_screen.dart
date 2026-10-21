@@ -186,11 +186,13 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
         appBar: AppBar(
           title: const Text('Detail kegiatan'),
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _isAddingLocation ? null : _addLocation,
-          icon: const Icon(Icons.add_location_alt_outlined),
-          label: const Text('Tambah Lokasi'),
-        ),
+        floatingActionButton: widget.trip.status == 'single_location'
+            ? null
+            : FloatingActionButton.extended(
+                onPressed: _isAddingLocation ? null : _addLocation,
+                icon: const Icon(Icons.add_location_alt_outlined),
+                label: const Text('Tambah Lokasi'),
+              ),
         body: FutureBuilder<List<VisitLocation>>(
           future: _locationsFuture,
           builder: (context, snapshot) {
@@ -325,12 +327,13 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _TripProgressCard(
-                  locationCount: locations.length,
-                  onAddLocation: _isAddingLocation ? null : _addLocation,
-                  singleLocationActivity: widget.trip.status == 'single_location',
-                ),
-                const SizedBox(height: 16),
+                if (widget.trip.status != 'single_location') ...[
+                  _TripProgressCard(
+                    locationCount: locations.length,
+                    onAddLocation: _isAddingLocation ? null : _addLocation,
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
@@ -356,12 +359,26 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 26),
-                Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Lokasi kunjungan',
+                if (widget.trip.status == 'single_location') ...[
+                  const SizedBox(height: 22),
+                  if (locations.isNotEmpty)
+                    _SingleLocationCaptureCard(
+                      location: locations.first,
+                      onTap: () async {
+                        await Get.to(
+                          () => ProLocationDetailScreen(
+                            trip: widget.trip,
+                            location: locations.first,
+                            autoTakePhoto: true,
+                          ),
+                        );
+                        if (mounted) setState(_reload);
+                      },
+                    )
+                  else
+                    const Center(child: Text('Lokasi kegiatan tidak ditemukan.')),
+                ] else ...[
+
                         style: TextStyle(
                           color: ProTheme.text,
                           fontSize: 19,
@@ -490,11 +507,88 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                       ),
                     ),
                   ),
+
+                ],
               ],
               ),
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+class _SingleLocationCaptureCard extends StatelessWidget {
+  const _SingleLocationCaptureCard({
+    required this.location,
+    required this.onTap,
+  });
+
+  final VisitLocation location;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: ProTheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: ProTheme.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.location_on_outlined, color: ProTheme.brandGreen),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Lokasi kegiatan',
+                  style: TextStyle(
+                    color: ProTheme.text,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            location.name,
+            style: const TextStyle(
+              color: ProTheme.text,
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          if (location.address?.trim().isNotEmpty == true) ...[
+            const SizedBox(height: 4),
+            Text(
+              location.address!,
+              style: const TextStyle(
+                color: ProTheme.secondaryText,
+                fontSize: 13,
+                height: 1.4,
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: onTap,
+            icon: const Icon(Icons.camera_alt_outlined),
+            label: const Text('Ambil Foto'),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
