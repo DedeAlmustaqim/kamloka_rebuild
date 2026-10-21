@@ -62,6 +62,9 @@ class _CameraPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.sizeOf(context);
+    final isLandscape = screenSize.width > screenSize.height;
+
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -199,7 +202,7 @@ class _CameraPreview extends StatelessWidget {
         Positioned(
           left: 0,
           right: 0,
-          bottom: 182,
+          bottom: isLandscape ? 112 : 182,
           child: IgnorePointer(
             child: Center(
               child: Obx(() {
@@ -233,7 +236,7 @@ class _CameraPreview extends StatelessWidget {
         Positioned(
           left: 14,
           right: 14,
-          bottom: 200,
+          bottom: isLandscape ? 92 : 200,
           child: SafeArea(
             top: false,
             child: Column(
@@ -254,7 +257,7 @@ class _CameraPreview extends StatelessWidget {
                         children: [
                           Image.asset(
                             'assets/images/kamloka_typo_white.png',
-                            width: 132,
+                            width: isLandscape ? 96 : 132,
                             fit: BoxFit.contain,
                           ),
                           const SizedBox(height: 5),
@@ -264,7 +267,7 @@ class _CameraPreview extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: isLandscape ? 3 : 8),
                 Center(
                   child: CollapsibleCameraControlPanel(
                     controller: Get.find<CameraController>(),
@@ -371,7 +374,7 @@ class _BottomScrim extends StatelessWidget {
       child: Align(
         alignment: Alignment.bottomCenter,
         child: Container(
-          height: 190,
+          height: isLandscape ? 120 : 190,
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.bottomCenter,
@@ -567,7 +570,7 @@ class _CameraShutter extends GetView<CameraController> {
         child: Align(
           alignment: Alignment.bottomCenter,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+            padding: EdgeInsets.fromLTRB(20, isLandscape ? 4 : 20, 20, isLandscape ? 8 : 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -598,8 +601,8 @@ class _CameraShutter extends GetView<CameraController> {
                         duration: const Duration(milliseconds: 150),
                         opacity: isBusy ? 0.6 : 1,
                         child: Container(
-                          width: 72,
-                          height: 72,
+                          width: isLandscape ? 58 : 72,
+                          height: isLandscape ? 58 : 72,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.white, width: 3.5),
@@ -625,8 +628,8 @@ class _CameraShutter extends GetView<CameraController> {
                     ),
                     const Spacer(),
                     SizedBox(
-                      width: 54,
-                      height: 54,
+                      width: isLandscape ? 44 : 54,
+                      height: isLandscape ? 44 : 54,
                       child: IconButton(
                         tooltip: 'Pengaturan',
                         onPressed: isBusy
@@ -876,8 +879,8 @@ class _CaptureThumbnail extends GetView<CameraController> {
             ? null
             : () => Get.to(() => PhotoPreviewView(filePath: path)),
         child: Container(
-          width: 54,
-          height: 54,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
             color: Colors.black54,
             borderRadius: BorderRadius.circular(10),
