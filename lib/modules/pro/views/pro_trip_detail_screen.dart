@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:printing/printing.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../location/services/location_service.dart';
@@ -10,11 +9,11 @@ import '../models/documented_photo.dart';
 import '../models/trip.dart';
 import '../models/visit_location.dart';
 import '../services/pro_database_service.dart';
-import '../services/pro_pdf_export_service.dart';
 import '../services/pro_photo_storage_service.dart';
 import '../theme/pro_theme.dart';
 import '../widgets/pro_message_dialog.dart';
 import 'pro_camera_capture_screen.dart';
+import 'pro_pdf_preview_screen.dart';
 
 class ProTripDetailScreen extends StatefulWidget {
   const ProTripDetailScreen({super.key, required this.trip});
@@ -191,23 +190,7 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
   }
 
   Future<void> _exportPdf() async {
-    if (_isExporting) return;
-    setState(() => _isExporting = true);
-    try {
-      final file = await ProPdfExportService(_database).exportTrip(widget.trip);
-      await Printing.sharePdf(bytes: await file.readAsBytes(), filename: file.uri.pathSegments.last);
-    } catch (error) {
-      if (mounted) {
-        await showProMessageDialog(
-          context: context,
-          title: 'PDF belum dapat dibuat',
-          message: error.toString(),
-          type: ProMessageType.error,
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isExporting = false);
-    }
+    await Get.to<void>(() => ProPdfPreviewScreen(trip: widget.trip));
   }
 
   @override
