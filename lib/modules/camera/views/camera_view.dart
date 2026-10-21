@@ -563,6 +563,8 @@ class _CameraShutter extends GetView<CameraController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
+      final isLandscape =
+          MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
       final isBusy = controller.isCapturing.value;
       final error = controller.captureErrorMessage.value;
 
