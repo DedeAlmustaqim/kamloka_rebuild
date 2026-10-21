@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';\n\nimport 'package:flutter/material.dart';\nimport 'package:http/http.dart' as http;
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 import 'package:geolocator/geolocator.dart';
@@ -983,6 +983,64 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
         _latitude.text = position.latitude.toStringAsFixed(6);
         _longitude.text = position.longitude.toStringAsFixed(6);
       });
+
+      // Reverse geocoding is requested only after the user explicitly taps GPS.
+      // Keep coordinates even when the network or geocoding service is unavailable.
+      try {
+        final uri = Uri.https(
+          'nominatim.openstreetmap.org',
+          '/reverse',
+          {
+            'format': 'jsonv2',
+            'lat': position.latitude.toString(),
+            'lon': position.longitude.toString(),
+            'addressdetails': '1',
+            'accept-language': 'id',
+            'zoom': '18',
+          },
+        );
+        final response = await http.get(
+          uri,
+          headers: const {
+            'User-Agent': 'KAMLOKA/1.0 (Kamera Lokasi)',
+            'Accept': 'application/json',
+          },
+        ).timeout(const Duration(seconds: 10));
+
+        if (response.statusCode == 200) {
+          final decoded = jsonDecode(response.body);
+          if (decoded is Map<String, dynamic>) {
+            final address = decoded['address'];
+            final addressParts = address is Map<String, dynamic> ? address : <String, dynamic>{};
+            final placeName = _firstNonEmpty([
+              decoded['name'],
+              addressParts['amenity'],
+              addressParts['building'],
+              addressParts['tourism'],
+              addressParts['shop'],
+              addressParts['office'],
+              addressParts['leisure'],
+              addressParts['road'],
+              addressParts['village'],
+              addressParts['town'],
+              addressParts['city'],
+              addressParts['municipality'],
+              addressParts['county'],
+              addressParts['state'],
+            ]);
+            final displayAddress = (decoded['display_name'] as String?)?.trim();
+            if (!mounted) return;
+            setState(() {
+              if (placeName != null) _locationName.text = placeName;
+              if (displayAddress != null && displayAddress.isNotEmpty) {
+                _locationAddress.text = displayAddress;
+              }
+            });
+          }
+        }
+      } catch (_) {
+        // Geocoding is best-effort; manual name/address and GPS coordinates remain usable.
+      }
     } catch (error) {
       if (mounted) {
         await showProMessageDialog(
