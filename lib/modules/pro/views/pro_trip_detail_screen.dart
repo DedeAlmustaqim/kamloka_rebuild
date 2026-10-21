@@ -506,6 +506,8 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
     ));
   }
 
+}
+
 class _InfoChip extends StatelessWidget {
   const _InfoChip({required this.icon, required this.text});
   final IconData icon;
