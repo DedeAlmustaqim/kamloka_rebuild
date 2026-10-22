@@ -70,9 +70,9 @@ class CameraController extends GetxController {
             .init()
             .timeout(const Duration(seconds: 2))
             .catchError((Object error, StackTrace stack) {
-          debugPrint('[KAMLOKA ORIENTATION] init skipped: $error');
-          return Get.find<DeviceOrientationService>();
-        }),
+              debugPrint('[KAMLOKA ORIENTATION] init skipped: $error');
+              return Get.find<DeviceOrientationService>();
+            }),
       );
 
       final permission = await Permission.camera.request();
@@ -124,24 +124,25 @@ class CameraController extends GetxController {
       // Show the preview as soon as the camera is initialized. Capability
       // queries and location/network work continue in the background.
       isReady.value = true;
-      unawaited(_loadZoomRange(controller).catchError((Object error) {
-        debugPrint('[KAMLOKA ZOOM] range init: $error');
-      }));
-      unawaited(_loadExposureRange(controller).catchError((Object error) {
-        debugPrint('[KAMLOKA EXPOSURE] range init: $error');
-      }));
+      unawaited(
+        _loadZoomRange(controller).catchError((Object error) {
+          debugPrint('[KAMLOKA ZOOM] range init: $error');
+        }),
+      );
+      unawaited(
+        _loadExposureRange(controller).catchError((Object error) {
+          debugPrint('[KAMLOKA EXPOSURE] range init: $error');
+        }),
+      );
       unawaited(Get.find<LocationService>().init());
     } on camera.CameraException catch (error, stack) {
-      debugPrint(
-        '[KAMLOKA CAMERA] ${error.code}: ${error.description}',
-      );
+      debugPrint('[KAMLOKA CAMERA] ${error.code}: ${error.description}');
       debugPrintStack(stackTrace: stack);
       errorMessage.value = error.description ?? error.code;
     } catch (error, stack) {
       debugPrint('[KAMLOKA CAMERA] $error');
       debugPrintStack(stackTrace: stack);
-      errorMessage.value =
-          error.toString().replaceFirst('Exception: ', '');
+      errorMessage.value = error.toString().replaceFirst('Exception: ', '');
     } finally {
       isInitializing.value = false;
     }
@@ -177,17 +178,15 @@ class CameraController extends GetxController {
         await nextController.initialize();
 
         // Kamera depan tidak diasumsikan memiliki flash.
-        final nextFlash = nextDescription.lensDirection ==
-                camera.CameraLensDirection.back
+        final nextFlash =
+            nextDescription.lensDirection == camera.CameraLensDirection.back
             ? flashMode.value
             : camera.FlashMode.off;
 
         try {
           await nextController.setFlashMode(nextFlash);
         } on camera.CameraException catch (error) {
-          debugPrint(
-            '[KAMLOKA FLASH] ${error.code}: ${error.description}',
-          );
+          debugPrint('[KAMLOKA FLASH] ${error.code}: ${error.description}');
           await nextController.setFlashMode(camera.FlashMode.off);
         }
 
@@ -211,25 +210,23 @@ class CameraController extends GetxController {
           error.description ?? 'Kamera tidak dapat diganti.';
       isReady.value = _cameraController?.value.isInitialized ?? false;
     } catch (error) {
-      captureErrorMessage.value =
-          error.toString().replaceFirst('Exception: ', '');
+      captureErrorMessage.value = error.toString().replaceFirst(
+        'Exception: ',
+        '',
+      );
       isReady.value = _cameraController?.value.isInitialized ?? false;
     } finally {
       isSwitchingCamera.value = false;
     }
   }
 
-
-  Future<void> _loadExposureRange(
-    camera.CameraController controller,
-  ) async {
+  Future<void> _loadExposureRange(camera.CameraController controller) async {
     try {
       _minExposure = await controller.getMinExposureOffset();
       _maxExposure = await controller.getMaxExposureOffset();
-      final initial = exposureOffset.value.clamp(
-        _minExposure,
-        _maxExposure,
-      ).toDouble();
+      final initial = exposureOffset.value
+          .clamp(_minExposure, _maxExposure)
+          .toDouble();
       await controller.setExposureOffset(initial);
       exposureOffset.value = initial;
     } on camera.CameraException catch (error) {
@@ -489,12 +486,13 @@ class CameraController extends GetxController {
 
       return watermarked.path;
     } on camera.CameraException catch (error) {
-      captureErrorMessage.value =
-          error.description ?? 'Gagal mengambil foto.';
+      captureErrorMessage.value = error.description ?? 'Gagal mengambil foto.';
       return null;
     } catch (error) {
-      captureErrorMessage.value =
-          error.toString().replaceFirst('Exception: ', '');
+      captureErrorMessage.value = error.toString().replaceFirst(
+        'Exception: ',
+        '',
+      );
       return null;
     } finally {
       isCapturing.value = false;
@@ -551,7 +549,7 @@ class CameraController extends GetxController {
       Get.snackbar(
         'Foto didokumentasikan',
         'Foto tersimpan di album KAMLOKA dan lokasi ${selectedLocation.name}.',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
     } catch (error) {
       if (permanentPath != null) {
