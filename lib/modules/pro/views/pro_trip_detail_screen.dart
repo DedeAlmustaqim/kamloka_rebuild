@@ -1,17 +1,19 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:printing/printing.dart';
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../location/services/location_service.dart';
+import '../models/documented_photo.dart';
 import '../models/trip.dart';
 import '../models/visit_location.dart';
 import '../services/pro_database_service.dart';
-import '../services/pro_pdf_export_service.dart';
 import '../services/pro_photo_storage_service.dart';
 import '../theme/pro_theme.dart';
 import '../widgets/pro_message_dialog.dart';
-import 'pro_location_detail_screen.dart';
+import 'pro_camera_capture_screen.dart';
+import 'pro_pdf_preview_screen.dart';
 
 class ProTripDetailScreen extends StatefulWidget {
   const ProTripDetailScreen({super.key, required this.trip});
@@ -27,8 +29,10 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
   final _photoStorage = Get.find<ProPhotoStorageService>();
   final _uuid = const Uuid();
   late Future<List<VisitLocation>> _locationsFuture;
+  Future<List<DocumentedPhoto>>? _photosFuture;
+  VisitLocation? _location;
+  bool _isTakingPhoto = false;
   bool _isExporting = false;
-  bool _isAddingLocation = false;
 
   @override
   void initState() {
@@ -40,128 +44,57 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
     _locationsFuture = _database.listLocations(widget.trip.id);
   }
 
-  Future<void> _moveLocation(VisitLocation location, int offset) async {
-    final locations = await _database.listLocations(widget.trip.id);
-    final currentIndex = locations.indexWhere((item) => item.id == location.id);
-    final targetIndex = currentIndex + offset;
-    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= locations.length) {
-      return;
-    }
-
-    final orderedIds = locations.map((item) => item.id).toList();
-    final movedId = orderedIds.removeAt(currentIndex);
-    orderedIds.insert(targetIndex, movedId);
-    await _database.reorderLocations(widget.trip.id, orderedIds);
-    if (mounted) setState(_reload);
+  void _loadPhotos(VisitLocation location) {
+    _location = location;
+    _photosFuture = _database.listPhotos(location.id);
   }
 
-  Future<void> _deleteLocation(VisitLocation location) async {
-    final photos = await _database.listPhotos(location.id);
-    final confirmed = await showProConfirmDialog(
-      context: context,
-      title: 'Hapus lokasi kunjungan?',
-      message: photos.isEmpty
-          ? 'Lokasi “${location.name}” akan dihapus dari perjalanan ini.'
-          : 'Lokasi “${location.name}” dan ${photos.length} foto dokumentasi di dalamnya akan dihapus. Salinan foto di galeri tidak ikut dihapus.',
-      confirmText: 'Hapus lokasi',
-      cancelText: 'Batal',
-      type: ProMessageType.error,
-    );
-    if (!mounted || !confirmed) return;
-
+  Future<void> _takePhoto() async {
+    final location = _location;
+    if (_isTakingPhoto || location == null) return;
+    setState(() => _isTakingPhoto = true);
     try {
-      // Remove managed photo files before deleting their database records.
-      for (final photo in photos) {
-        await _photoStorage.deleteManagedPhoto(photo.filePath);
-      }
-      await _database.deleteLocation(location.id);
-      final remaining = await _database.listLocations(widget.trip.id);
-      await _database.reorderLocations(
-        widget.trip.id,
-        remaining.map((item) => item.id).toList(),
-      );
-      if (!mounted) return;
-      setState(_reload);
-      await showProMessageDialog(
-        context: context,
-        title: 'Lokasi berhasil dihapus',
-        message: 'Lokasi dan dokumentasi yang terkait telah dihapus dari perjalanan.',
-        type: ProMessageType.success,
-      );
-    } catch (error) {
-      if (mounted) {
-        await showProMessageDialog(
-          context: context,
-          title: 'Lokasi belum berhasil dihapus',
-          message: error.toString(),
-          type: ProMessageType.error,
-        );
-      }
-    }
-  }
+      final path = await Get.to<String>(() => const ProCameraCaptureScreen());
+      if (path == null || path.isEmpty) return;
 
-
-  Future<void> _exportPdf() async {
-    if (_isExporting) return;
-    setState(() => _isExporting = true);
-    try {
-      final file = await ProPdfExportService(_database).exportTrip(widget.trip);
-      await Printing.sharePdf(
-        bytes: await file.readAsBytes(),
-        filename: file.uri.pathSegments.last,
-      );
-    } catch (error) {
-      if (mounted) {
-        await showProMessageDialog(
-          context: context,
-          title: 'PDF belum dapat dibuat',
-          message: error.toString(),
-          type: ProMessageType.error,
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isExporting = false);
-    }
-  }
-
-  Future<void> _addLocation() async {
-    if (_isAddingLocation) return;
-    setState(() => _isAddingLocation = true);
-
-    try {
+      final photoId = _uuid.v4();
       final locationService = Get.find<LocationService>();
-      final currentPosition = locationService.position.value;
-      final currentAddress = locationService.address.value.trim();
-
-      // The dialog owns its text controllers and disposes them with its State.
-      // This avoids disposing controllers while the dialog route is still closing.
-      final result = await showDialog<_NewLocationInput>(
-        context: context,
-        builder: (_) => _AddLocationDialog(currentAddress: currentAddress),
+      final position = locationService.position.value;
+      final address = locationService.address.value.trim();
+      final existing = await _database.listPhotos(location.id);
+      final permanentPath = await _photoStorage.importProcessedPhoto(
+        sourcePath: path,
+        tripId: widget.trip.id,
+        locationId: location.id,
+        photoId: photoId,
       );
-      if (result == null) return;
 
-      final existing = await _database.listLocations(widget.trip.id);
-      await _database.saveLocation(
-        VisitLocation(
-          id: _uuid.v4(),
-          tripId: widget.trip.id,
-          name: result.name,
-          address: currentAddress.isEmpty ? null : currentAddress,
-          latitude: currentPosition?.latitude,
-          longitude: currentPosition?.longitude,
-          visitedAt: DateTime.now(),
-          notes: _nullableText(result.notes),
+      try {
+        await _database.savePhoto(DocumentedPhoto(
+          id: photoId,
+          locationId: location.id,
+          filePath: permanentPath,
+          capturedAt: DateTime.now(),
+          latitude: position?.latitude,
+          longitude: position?.longitude,
+          address: address.isEmpty ? location.address : address,
           sortOrder: existing.length,
+          includeInReport: true,
           createdAt: DateTime.now(),
-        ),
-      );
+        ));
+      } catch (_) {
+        await _photoStorage.deleteManagedPhoto(permanentPath);
+        rethrow;
+      }
+
       if (mounted) {
-        setState(_reload);
+        setState(() {
+          _photosFuture = _database.listPhotos(location.id);
+        });
         await showProMessageDialog(
           context: context,
-          title: 'Lokasi berhasil ditambahkan',
-          message: 'Lokasi kunjungan siap diisi dengan foto dan catatan dokumentasi.',
+          title: 'Foto berhasil ditambahkan',
+          message: 'Foto tersimpan pada dokumentasi kegiatan ini.',
           type: ProMessageType.success,
         );
       }
@@ -169,665 +102,482 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
       if (mounted) {
         await showProMessageDialog(
           context: context,
-          title: 'Lokasi belum berhasil disimpan',
+          title: 'Gagal menyimpan foto',
           message: error.toString(),
           type: ProMessageType.error,
         );
       }
     } finally {
-      if (mounted) setState(() => _isAddingLocation = false);
+      if (mounted) setState(() => _isTakingPhoto = false);
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return ProTheme.apply(
-      Scaffold(
-        appBar: AppBar(
-          title: const Text('Detail kegiatan'),
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _isAddingLocation ? null : _addLocation,
-          icon: const Icon(Icons.add_location_alt_outlined),
-          label: const Text('Tambah Lokasi'),
-        ),
-        body: FutureBuilder<List<VisitLocation>>(
-          future: _locationsFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(
-                child: Text('Gagal memuat lokasi: ${snapshot.error}'),
-              );
-            }
+  Future<void> _previewPhoto(DocumentedPhoto photo) async {
+    final file = File(photo.filePath);
+    if (!await file.exists() || !mounted) return;
 
-            final locations = snapshot.data ?? const <VisitLocation>[];
-            return RefreshIndicator(
-              onRefresh: () async => setState(_reload),
-              child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(20),
+    await showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.88),
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(12),
+        child: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                minScale: 1,
+                maxScale: 5,
+                child: Hero(
+                  tag: 'pro-photo-${photo.id}',
+                  child: Image.file(file, fit: BoxFit.contain),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton.filledTonal(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.black.withValues(alpha: 0.55),
+                  foregroundColor: Colors.white,
+                ),
+                icon: const Icon(Icons.close_rounded),
+              ),
+            ),
+            if (photo.caption?.trim().isNotEmpty == true)
+              Positioned(
+                left: 12,
+                right: 12,
+                bottom: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: ProTheme.surface,
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: ProTheme.border),
+                    color: Colors.black.withValues(alpha: 0.58),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF2C8),
-                          borderRadius: BorderRadius.circular(9),
-                        ),
-                        child: const Text(
-                          'RINGKASAN PERJALANAN',
-                          style: TextStyle(
-                            color: ProTheme.primaryDark,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.7,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        widget.trip.title,
-                        style: const TextStyle(
-                          color: ProTheme.text,
-                          fontSize: 22,
-                          height: 1.2,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      if (widget.trip.purpose.trim().isNotEmpty &&
-                          widget.trip.purpose.trim() != widget.trip.title.trim()) ...[
-                        Text(
-                          widget.trip.purpose,
-                          style: const TextStyle(
-                            color: ProTheme.secondaryText,
-                            fontSize: 14,
-                            height: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ] else
-                        const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 11,
-                          vertical: 9,
-                        ),
-                        decoration: BoxDecoration(
-                          color: ProTheme.background,
-                          borderRadius: BorderRadius.circular(11),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.calendar_month_outlined,
-                              size: 16,
-                              color: ProTheme.secondaryText,
-                            ),
-                            const SizedBox(width: 7),
-                            Text(
-                              '${_dateLabel(widget.trip.startDate)} – ${_dateLabel(widget.trip.endDate)}',
-                              style: const TextStyle(
-                                color: ProTheme.text,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (widget.trip.assignmentNumber?.isNotEmpty == true) ...[
-                        const SizedBox(height: 14),
-                        const Divider(),
-                        const SizedBox(height: 10),
-                        const Row(
-                          children: [
-                            Icon(
-                              Icons.description_outlined,
-                              size: 17,
-                              color: ProTheme.secondaryText,
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              'Nomor surat tugas',
-                              style: TextStyle(
-                                color: ProTheme.secondaryText,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          widget.trip.assignmentNumber!,
-                          style: const TextStyle(
-                            color: ProTheme.text,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _TripProgressCard(
-                  locationCount: locations.length,
-                  onAddLocation: _isAddingLocation ? null : _addLocation,
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: _isExporting ? null : _exportPdf,
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(0, 54),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                    ),
-                    icon: _isExporting
-                        ? const SizedBox(
-                            width: 19,
-                            height: 19,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.picture_as_pdf_rounded),
-                    label: Text(
-                      _isExporting ? 'Menyiapkan PDF...' : 'Ekspor Dokumentasi PDF',
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 26),
-                Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Lokasi kunjungan',
-                        style: TextStyle(
-                          color: ProTheme.text,
-                          fontSize: 19,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: ProTheme.surface,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: ProTheme.border),
-                      ),
-                      child: Text(
-                        '${locations.length} lokasi',
-                        style: const TextStyle(
-                          color: ProTheme.secondaryText,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                const Text(
-                  'Ketuk lokasi untuk membuka detail, mengambil foto, dan menambahkan catatan.',
-                  style: TextStyle(
-                    color: ProTheme.secondaryText,
-                    fontSize: 12,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                if (locations.isEmpty)
-                  _EmptyLocations(
-                    onAdd: _isAddingLocation ? null : _addLocation,
-                  )
-                else
-                  ...locations.map(
-                    (location) => Card(
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          child: Text('${location.sortOrder + 1}'),
-                        ),
-                        title: Text(location.name),
-                        subtitle: Text(
-                          location.address ?? 'Alamat tidak tersedia',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            PopupMenuButton<String>(
-                              tooltip: 'Atur urutan lokasi',
-                              onSelected: (value) {
-                                if (value == 'up') _moveLocation(location, -1);
-                                if (value == 'down') _moveLocation(location, 1);
-                                if (value == 'delete') _deleteLocation(location);
-                              },
-                              itemBuilder: (_) => [
-                                PopupMenuItem(
-                                  value: 'up',
-                                  enabled: location.sortOrder > 0,
-                                  child: const Row(
-                                    children: [
-                                      Icon(
-                                        Icons.arrow_upward_rounded,
-                                        size: 18,
-                                      ),
-                                      SizedBox(width: 10),
-                                      Text('Pindahkan ke atas'),
-                                    ],
-                                  ),
-                                ),
-                                PopupMenuItem(
-                                  value: 'down',
-                                  enabled:
-                                      location.sortOrder < locations.length - 1,
-                                  child: const Row(
-                                    children: [
-                                      Icon(
-                                        Icons.arrow_downward_rounded,
-                                        size: 18,
-                                      ),
-                                      SizedBox(width: 10),
-                                      Text('Pindahkan ke bawah'),
-                                    ],
-                                  ),
-                                ),
-                                const PopupMenuDivider(),
-                                const PopupMenuItem(
-                                  value: 'delete',
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.delete_outline_rounded,
-                                        color: ProTheme.danger,
-                                        size: 18,
-                                      ),
-                                      SizedBox(width: 10),
-                                      Text('Hapus lokasi'),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                              icon: const Icon(Icons.more_vert_rounded),
-                            ),
-                            const Icon(
-                              Icons.chevron_right_rounded,
-                              color: ProTheme.secondaryText,
-                            ),
-                          ],
-                        ),
-                        onTap: () async {
-                          await Get.to(
-                            () => ProLocationDetailScreen(
-                              trip: widget.trip,
-                              location: location,
-                            ),
-                          );
-                          if (mounted) setState(_reload);
-                        },
-                      ),
-                    ),
-                  ),
-              ],
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class _TripProgressCard extends StatelessWidget {
-  const _TripProgressCard({
-    required this.locationCount,
-    required this.onAddLocation,
-  });
-
-  final int locationCount;
-  final VoidCallback? onAddLocation;
-
-  @override
-  Widget build(BuildContext context) {
-    final hasLocation = locationCount > 0;
-    return Container(
-      padding: const EdgeInsets.all(17),
-      decoration: BoxDecoration(
-        color: ProTheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: ProTheme.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Mulai dokumentasi',
-                  style: TextStyle(
-                    color: ProTheme.text,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
+                  child: Text(
+                    photo.caption!.trim(),
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ),
-              Text(
-                hasLocation ? '1 dari 2' : '0 dari 2',
-                style: const TextStyle(
-                  color: ProTheme.brandGreen,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 5),
-          const Text(
-            'Ikuti langkah sederhana untuk menyusun laporan kegiatan.',
-            style: TextStyle(
-              color: ProTheme.secondaryText,
-              fontSize: 12,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 14),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: LinearProgressIndicator(
-              value: hasLocation ? 0.5 : 0,
-              minHeight: 6,
-              backgroundColor: ProTheme.background,
-              valueColor: const AlwaysStoppedAnimation<Color>(ProTheme.brandGreen),
-            ),
-          ),
-          const SizedBox(height: 15),
-          _ProgressStep(
-            number: '1',
-            title: 'Tambahkan lokasi kunjungan',
-            description: hasLocation
-                ? '$locationCount lokasi sudah ditambahkan.'
-                : 'Simpan tempat yang akan Anda dokumentasikan.',
-            done: hasLocation,
-          ),
-          const SizedBox(height: 13),
-          const _ProgressStep(
-            number: '2',
-            title: 'Ambil foto dan catatan',
-            description: 'Ketuk salah satu lokasi untuk mulai mendokumentasikan.',
-            done: false,
-          ),
-          if (!hasLocation) ...[
-            const SizedBox(height: 15),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: onAddLocation,
-                icon: const Icon(Icons.add_location_alt_rounded),
-                label: const Text('Tambah lokasi pertama'),
-              ),
-            ),
           ],
-        ],
+        ),
       ),
     );
   }
-}
 
-class _ProgressStep extends StatelessWidget {
-  const _ProgressStep({
-    required this.number,
-    required this.title,
-    required this.description,
-    required this.done,
-  });
+  Future<void> _editCaption(DocumentedPhoto photo) async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (_) => _EditCaptionDialog(initialCaption: photo.caption ?? ''),
+    );
+    if (result == null) return;
+    try {
+      await _database.updatePhotoCaption(photo.id, result);
+      final location = _location;
+      if (mounted && location != null) {
+        setState(() {
+          _photosFuture = _database.listPhotos(location.id);
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        await showProMessageDialog(
+          context: context,
+          title: 'Keterangan belum tersimpan',
+          message: error.toString(),
+          type: ProMessageType.error,
+        );
+      }
+    }
+  }
 
-  final String number;
-  final String title;
-  final String description;
-  final bool done;
+  Future<void> _movePhoto(DocumentedPhoto photo, int offset, List<DocumentedPhoto> photos) async {
+    final currentIndex = photos.indexWhere((item) => item.id == photo.id);
+    final targetIndex = currentIndex + offset;
+    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= photos.length) return;
+    final orderedIds = photos.map((item) => item.id).toList();
+    final movedId = orderedIds.removeAt(currentIndex);
+    orderedIds.insert(targetIndex, movedId);
+    await _database.reorderPhotos(photo.locationId, orderedIds);
+    if (mounted) {
+      setState(() {
+        _photosFuture = _database.listPhotos(photo.locationId);
+      });
+    }
+  }
+
+  Future<void> _deletePhoto(DocumentedPhoto photo) async {
+    final confirmed = await showProConfirmDialog(
+      context: context,
+      title: 'Hapus foto dokumentasi?',
+      message: 'Foto dihapus dari dokumentasi kegiatan. Salinan di galeri tidak ikut dihapus.',
+      confirmText: 'Hapus foto',
+      cancelText: 'Batal',
+      type: ProMessageType.error,
+    );
+    if (!confirmed) return;
+    try {
+      await _database.deletePhoto(photo.id);
+      await _photoStorage.deleteManagedPhoto(photo.filePath);
+      final remaining = await _database.listPhotos(photo.locationId);
+      await _database.reorderPhotos(photo.locationId, remaining.map((item) => item.id).toList());
+      if (mounted) {
+        setState(() => _photosFuture = _database.listPhotos(photo.locationId));
+        await showProMessageDialog(
+          context: context,
+          title: 'Foto berhasil dihapus',
+          message: 'Foto dihapus dari dokumentasi kegiatan.',
+          type: ProMessageType.success,
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        await showProMessageDialog(
+          context: context,
+          title: 'Foto belum berhasil dihapus',
+          message: error.toString(),
+          type: ProMessageType.error,
+        );
+      }
+    }
+  }
+
+  Future<void> _exportPdf() async {
+    await Get.to<void>(() => ProPdfPreviewScreen(trip: widget.trip));
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 29,
-          height: 29,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: done ? ProTheme.brandGreen : const Color(0xFFFFF2C8),
-            shape: BoxShape.circle,
+    return ProTheme.apply(Scaffold(
+      appBar: AppBar(
+        title: const Text('Detail kegiatan'),
+        actions: [
+          IconButton(
+            tooltip: 'Ekspor PDF',
+            onPressed: _isExporting ? null : _exportPdf,
+            icon: _isExporting
+                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.ios_share_rounded),
           ),
-          child: done
-              ? const Icon(Icons.check_rounded, color: Colors.white, size: 17)
-              : Text(
-                  number,
-                  style: const TextStyle(
-                    color: ProTheme.primaryDark,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
+          const SizedBox(width: 4),
+        ],
+      ),
+      floatingActionButton: _location == null
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: _isTakingPhoto ? null : _takePhoto,
+              icon: _isTakingPhoto
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Icon(Icons.add_a_photo_outlined),
+              label: Text(_isTakingPhoto ? 'Menyimpan foto...' : 'Ambil Foto'),
+            ),
+      body: FutureBuilder<List<VisitLocation>>(
+        future: _locationsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text('Gagal memuat kegiatan: ${snapshot.error}', textAlign: TextAlign.center),
+            ));
+          }
+          final locations = snapshot.data ?? const <VisitLocation>[];
+          if (locations.isEmpty) {
+            return const Center(child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Text('Lokasi kegiatan belum tersedia. Buat kegiatan baru dengan mengisi lokasi awal.', textAlign: TextAlign.center),
+            ));
+          }
+
+          final location = locations.first;
+          if (_location?.id != location.id) _loadPhotos(location);
+
+          return RefreshIndicator(
+            onRefresh: () async {
+              final refreshedLocations = _database.listLocations(widget.trip.id);
+              final refreshedPhotos = _database.listPhotos(location.id);
+              setState(() {
+                _locationsFuture = refreshedLocations;
+                _photosFuture = refreshedPhotos;
+              });
+              await Future.wait([refreshedLocations, refreshedPhotos]);
+            },
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 112),
+              children: [
+                // Unified compact card for activity, location, and PDF export.
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFF0C5A3E), Color(0xFF174A37)],
+                    ),
+                    borderRadius: BorderRadius.circular(22),
                   ),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Row(children: [
+                      const Icon(Icons.folder_open_rounded, size: 15, color: Color(0xFFE4B957)),
+                      const SizedBox(width: 7),
+                      const Expanded(child: Text('DETAIL KEGIATAN', style: TextStyle(color: Color(0xFFD9E7DF), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.7))),
+                      if (widget.trip.assignmentNumber?.trim().isNotEmpty == true)
+                        Flexible(child: Text(widget.trip.assignmentNumber!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white70, fontSize: 10))),
+                    ]),
+                    const SizedBox(height: 9),
+                    Text(widget.trip.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 19, height: 1.2, fontWeight: FontWeight.w800)),
+                    if (widget.trip.purpose.trim().isNotEmpty && widget.trip.purpose.trim() != widget.trip.title.trim()) ...[
+                      const SizedBox(height: 4),
+                      Text(widget.trip.purpose, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFFD9E7DF), fontSize: 11, height: 1.35)),
+                    ],
+                    const SizedBox(height: 9),
+                    Row(children: [
+                      const Icon(Icons.calendar_month_outlined, size: 14, color: Color(0xFFE4B957)),
+                      const SizedBox(width: 7),
+                      Expanded(child: Text('${_dateLabel(widget.trip.startDate)} – ${_dateLabel(widget.trip.endDate)}', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600))),
+                    ]),
+                    Padding(padding: const EdgeInsets.symmetric(vertical: 11), child: Container(height: 1, color: Colors.white.withValues(alpha: 0.18))),
+                    Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      const Icon(Icons.location_on_rounded, size: 17, color: Color(0xFFE4B957)),
+                      const SizedBox(width: 8),
+                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text(location.name, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 3),
+                        Text(location.address?.trim().isNotEmpty == true ? location.address! : 'Alamat belum tersedia', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFFD9E7DF), fontSize: 11, height: 1.35)),
+                        if (location.latitude != null && location.longitude != null) ...[
+                          const SizedBox(height: 4),
+                          Text('${location.latitude!.toStringAsFixed(6)}, ${location.longitude!.toStringAsFixed(6)}', style: const TextStyle(color: Color(0xFFB9D0C3), fontSize: 9)),
+                        ],
+                      ])),
+                    ]),
+                    const SizedBox(height: 13),
+                    SizedBox(width: double.infinity, child: FilledButton.icon(
+                      onPressed: _isExporting ? null : _exportPdf,
+                      icon: _isExporting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF0C5A3E))) : const Icon(Icons.picture_as_pdf_rounded, size: 18),
+                      label: Text(_isExporting ? 'Menyiapkan PDF...' : 'Ekspor laporan PDF'),
+                      style: FilledButton.styleFrom(foregroundColor: const Color(0xFF0C5A3E), backgroundColor: Colors.white, minimumSize: const Size.fromHeight(44), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13))),
+                    )),
+                  ]),
                 ),
-        ),
-        const SizedBox(width: 11),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: ProTheme.text,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
+                const SizedBox(height: 22),
+
+                Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                  const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('Dokumentasi foto', style: TextStyle(color: ProTheme.text, fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: -0.3)),
+                    SizedBox(height: 3),
+                    Text('Kumpulkan bukti kegiatan di sini', style: TextStyle(color: ProTheme.secondaryText, fontSize: 12)),
+                  ])),
+                  FutureBuilder<List<DocumentedPhoto>>(
+                    future: _photosFuture,
+                    builder: (_, photoSnapshot) {
+                      final count = photoSnapshot.data?.length ?? 0;
+                      final selected = photoSnapshot.data?.where((photo) => photo.includeInReport).length ?? 0;
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                        decoration: BoxDecoration(color: const Color(0xFFE7F2EC), borderRadius: BorderRadius.circular(12)),
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                          Text('$count foto', style: const TextStyle(color: ProTheme.brandGreen, fontSize: 13, fontWeight: FontWeight.w800)),
+                          Text('$selected untuk PDF', style: const TextStyle(color: ProTheme.secondaryText, fontSize: 9)),
+                        ]),
+                      );
+                    },
+                  ),
+                ]),
+                const SizedBox(height: 12),
+                FutureBuilder<List<DocumentedPhoto>>(
+                  future: _photosFuture,
+                  builder: (context, photoSnapshot) {
+                    if (photoSnapshot.connectionState == ConnectionState.waiting) {
+                      return const Padding(padding: EdgeInsets.all(36), child: Center(child: CircularProgressIndicator()));
+                    }
+                    if (photoSnapshot.hasError) return Center(child: Text('Gagal memuat foto: ${photoSnapshot.error}'));
+                    final photos = photoSnapshot.data ?? const <DocumentedPhoto>[];
+                    if (photos.isEmpty) {
+                      return Container(
+                        padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
+                        decoration: BoxDecoration(color: ProTheme.surface, borderRadius: BorderRadius.circular(22), border: Border.all(color: ProTheme.border)),
+                        child: Column(children: [
+                          Container(
+                            width: 68,
+                            height: 68,
+                            decoration: BoxDecoration(color: const Color(0xFFE7F2EC), borderRadius: BorderRadius.circular(22)),
+                            child: const Icon(Icons.add_a_photo_outlined, color: ProTheme.brandGreen, size: 30),
+                          ),
+                          const SizedBox(height: 14),
+                          const Text('Mulai dokumentasi kegiatan', textAlign: TextAlign.center, style: TextStyle(color: ProTheme.text, fontSize: 16, fontWeight: FontWeight.w800)),
+                          const SizedBox(height: 6),
+                          const Text('Ambil foto langsung dari kamera. Foto, keterangan, dan pilihan untuk PDF dikelola dari halaman ini.', textAlign: TextAlign.center, style: TextStyle(color: ProTheme.secondaryText, fontSize: 12, height: 1.5)),
+                          const SizedBox(height: 16),
+                          FilledButton.icon(onPressed: _isTakingPhoto ? null : _takePhoto, icon: const Icon(Icons.camera_alt_outlined), label: const Text('Ambil foto pertama')),
+                        ]),
+                      );
+                    }
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: photos.length,
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: 0.69,
+                      ),
+                      itemBuilder: (context, index) {
+                        final photo = photos[index];
+                        final hasFile = File(photo.filePath).existsSync();
+                        return Container(
+                          clipBehavior: Clip.antiAlias,
+                          decoration: BoxDecoration(color: ProTheme.surface, borderRadius: BorderRadius.circular(17), border: Border.all(color: ProTheme.border)),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                            Expanded(child: Stack(fit: StackFit.expand, children: [
+                              if (hasFile)
+                                GestureDetector(
+                                  onTap: () => _previewPhoto(photo),
+                                  child: Hero(
+                                    tag: 'pro-photo-${photo.id}',
+                                    child: Image.file(File(photo.filePath), fit: BoxFit.cover),
+                                  ),
+                                )
+                              else const Center(child: Icon(Icons.broken_image_outlined, size: 32, color: ProTheme.secondaryText)),
+                              Positioned(left: 8, top: 8, child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                                decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.58), borderRadius: BorderRadius.circular(9)),
+                                child: Text('${index + 1}'.padLeft(2, '0'), style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800)),
+                              )),
+                              Positioned(right: 5, top: 5, child: Material(
+                                color: Colors.white.withValues(alpha: 0.94),
+                                borderRadius: BorderRadius.circular(12),
+                                child: Checkbox(
+                                  value: photo.includeInReport,
+                                  visualDensity: VisualDensity.compact,
+                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  onChanged: (value) async {
+                                    await _database.setPhotoIncludedInReport(photo.id, value ?? false);
+                                    if (mounted) setState(() {
+          _photosFuture = _database.listPhotos(location.id);
+        });
+                                  },
+                                ),
+                              )),
+                              Positioned(right: 5, bottom: 5, child: PopupMenuButton<String>(
+                                tooltip: 'Aksi foto',
+                                iconColor: Colors.white,
+                                color: Colors.white,
+                                onSelected: (value) {
+                                  if (value == 'caption') _editCaption(photo);
+                                  if (value == 'up') _movePhoto(photo, -1, photos);
+                                  if (value == 'down') _movePhoto(photo, 1, photos);
+                                  if (value == 'delete') _deletePhoto(photo);
+                                },
+                                itemBuilder: (_) => [
+                                  const PopupMenuItem(value: 'caption', child: Text('Ubah keterangan')),
+                                  PopupMenuItem(value: 'up', enabled: index > 0, child: const Text('Pindahkan ke kiri/atas')),
+                                  PopupMenuItem(value: 'down', enabled: index < photos.length - 1, child: const Text('Pindahkan ke kanan/bawah')),
+                                  const PopupMenuItem(value: 'delete', child: Text('Hapus foto')),
+                                ],
+                                child: Container(
+                                  padding: const EdgeInsets.all(7),
+                                  decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.48), borderRadius: BorderRadius.circular(11)),
+                                  child: const Icon(Icons.more_horiz_rounded, color: Colors.white, size: 20),
+                                ),
+                              )),
+                            ])),
+                            InkWell(
+                              onTap: () => _editCaption(photo),
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
+                                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                    Expanded(child: Text(photo.caption?.trim().isNotEmpty == true ? photo.caption!.trim() : 'Tambah keterangan', maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: photo.caption?.trim().isNotEmpty == true ? ProTheme.text : ProTheme.secondaryText, fontSize: 11, fontWeight: FontWeight.w700))),
+                                    const SizedBox(width: 4),
+                                    Icon(Icons.edit_rounded, size: 14, color: ProTheme.brandGreen),
+                                  ]),
+                                  const SizedBox(height: 6),
+                                  Row(children: [
+                                    const Icon(Icons.schedule_rounded, size: 12, color: ProTheme.secondaryText),
+                                    const SizedBox(width: 4),
+                                    Expanded(child: Text(photo.capturedAt == null ? 'Waktu tidak tersedia' : _dateTimeLabel(photo.capturedAt!), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: ProTheme.secondaryText, fontSize: 9))),
+                                  ]),
+                                ]),
+                              ),
+                            ),
+                          ]),
+                        );
+                      },
+                    );
+                  },
                 ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                description,
-                style: const TextStyle(
-                  color: ProTheme.secondaryText,
-                  fontSize: 12,
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _EmptyLocations extends StatelessWidget {
-  const _EmptyLocations({required this.onAdd});
-
-  final VoidCallback? onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(22, 26, 22, 24),
-      decoration: BoxDecoration(
-        color: ProTheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: ProTheme.border),
+              ],
+            ),
+          );
+        },
       ),
-      child: Column(
-        children: [
-          Container(
-            width: 66,
-            height: 66,
-            decoration: const BoxDecoration(
-              color: Color(0xFFFFF2C8),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.add_location_alt_outlined,
-              size: 30,
-              color: ProTheme.primaryDark,
-            ),
-          ),
-          const SizedBox(height: 14),
-          const Text(
-            'Belum ada lokasi kunjungan',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: ProTheme.text,
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 7),
-          const Text(
-            'Tambahkan lokasi pertama. Setelah itu, buka lokasi untuk mengambil foto dan menambahkan catatan.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: ProTheme.secondaryText,
-              fontSize: 13,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 16),
-          FilledButton.icon(
-            onPressed: onAdd,
-            icon: const Icon(Icons.add_rounded),
-            label: const Text('Tambah lokasi pertama'),
-          ),
-        ],
-      ),
-    );
+    ));
   }
+
 }
 
-String _dateLabel(DateTime date) =>
-    '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
-
-String? _nullableText(String value) {
-  final trimmed = value.trim();
-  return trimmed.isEmpty ? null : trimmed;
-}
-
-class _NewLocationInput {
-  const _NewLocationInput({required this.name, required this.notes});
-
-  final String name;
-  final String notes;
-}
-
-class _AddLocationDialog extends StatefulWidget {
-  const _AddLocationDialog({required this.currentAddress});
-
-  final String currentAddress;
-
+class _InfoChip extends StatelessWidget {
+  const _InfoChip({required this.icon, required this.text});
+  final IconData icon;
+  final String text;
   @override
-  State<_AddLocationDialog> createState() => _AddLocationDialogState();
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+    decoration: BoxDecoration(color: ProTheme.background, borderRadius: BorderRadius.circular(10)),
+    child: Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(icon, size: 15, color: ProTheme.secondaryText),
+      const SizedBox(width: 6),
+      Flexible(child: Text(text, style: const TextStyle(color: ProTheme.text, fontSize: 12, fontWeight: FontWeight.w600))),
+    ]),
+  );
 }
 
-class _AddLocationDialogState extends State<_AddLocationDialog> {
-  late final TextEditingController _nameController;
-  late final TextEditingController _notesController;
-  String? _nameError;
+class _EditCaptionDialog extends StatefulWidget {
+  const _EditCaptionDialog({required this.initialCaption});
+  final String initialCaption;
+  @override
+  State<_EditCaptionDialog> createState() => _EditCaptionDialogState();
+}
 
+class _EditCaptionDialogState extends State<_EditCaptionDialog> {
+  late final TextEditingController _controller;
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController();
-    _notesController = TextEditingController();
+    _controller = TextEditingController(text: widget.initialCaption);
   }
-
   @override
   void dispose() {
-    _nameController.dispose();
-    _notesController.dispose();
+    _controller.dispose();
     super.dispose();
   }
-
-  void _submit() {
-    final name = _nameController.text.trim();
-    if (name.isEmpty) {
-      setState(() => _nameError = 'Nama lokasi wajib diisi.');
-      return;
-    }
-
-    Navigator.of(
-      context,
-    ).pop(_NewLocationInput(name: name, notes: _notesController.text));
-  }
-
   @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Tambah lokasi kunjungan'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _nameController,
-              autofocus: true,
-              textCapitalization: TextCapitalization.sentences,
-              onChanged: (_) {
-                if (_nameError != null) setState(() => _nameError = null);
-              },
-              decoration: InputDecoration(
-                labelText: 'Nama lokasi *',
-                hintText: 'Contoh: Ruas jalan A, Kantor B',
-                errorText: _nameError,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                widget.currentAddress.isEmpty
-                    ? 'Alamat GPS belum tersedia.'
-                    : widget.currentAddress,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: ProTheme.secondaryText),
-              ),
-            ),
-            TextField(
-              controller: _notesController,
-              maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'Catatan lokasi (opsional)',
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Batal'),
-        ),
-        FilledButton(onPressed: _submit, child: const Text('Simpan')),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Keterangan foto'),
+    content: TextField(
+      controller: _controller,
+      autofocus: true,
+      maxLines: 3,
+      textCapitalization: TextCapitalization.sentences,
+      decoration: const InputDecoration(hintText: 'Contoh: Kondisi objek saat monitoring'),
+    ),
+    actions: [
+      TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Batal')),
+      FilledButton(onPressed: () => Navigator.of(context).pop(_controller.text.trim()), child: const Text('Simpan')),
+    ],
+  );
+}
+
+String _dateLabel(DateTime date) => '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+String _dateTimeLabel(DateTime dateTime) {
+  final local = dateTime.toLocal();
+  return '${_dateLabel(local)} ${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
 }

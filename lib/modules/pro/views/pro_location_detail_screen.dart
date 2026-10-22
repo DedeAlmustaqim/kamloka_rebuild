@@ -19,10 +19,12 @@ class ProLocationDetailScreen extends StatefulWidget {
     super.key,
     required this.trip,
     required this.location,
+    this.autoTakePhoto = false,
   });
 
   final Trip trip;
   final VisitLocation location;
+  final bool autoTakePhoto;
 
   @override
   State<ProLocationDetailScreen> createState() => _ProLocationDetailScreenState();
@@ -39,6 +41,11 @@ class _ProLocationDetailScreenState extends State<ProLocationDetailScreen> {
   void initState() {
     super.initState();
     _reload();
+    if (widget.autoTakePhoto) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _takePhoto();
+      });
+    }
   }
 
   void _reload() {

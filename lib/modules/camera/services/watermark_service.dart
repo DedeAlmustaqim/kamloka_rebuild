@@ -122,7 +122,7 @@ class WatermarkService {
               'sourcePath': source.path,
               'outputPath': outputPath,
               'watermarkBytes': watermarkBytes,
-              'widthRatio': 0.75,
+              'widthRatio': 0.60,
               'bottomMarginRatio': 0.035,
               'jpegQuality': 95,
             });
@@ -182,10 +182,10 @@ class _WatermarkCard extends StatelessWidget {
       color: Colors.transparent,
       child: Container(
         width: WatermarkService._logicalWidth,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
-          color: const Color(0xCC000000),
-          borderRadius: BorderRadius.circular(7),
+          color: const Color(0x99000000),
+          borderRadius: BorderRadius.circular(6),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -194,17 +194,17 @@ class _WatermarkCard extends StatelessWidget {
               children: [
                 Image.asset(
                   "assets/images/kamloka_typo_white.png",
-                  width: 60.0,
+                  width: 44.0,
 
                   fit: BoxFit.fill,
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 1),
                 Text(
                   timeText,
                   maxLines: 1,
                   style: const TextStyle(
                     color: _textColor,
-                    fontSize: 17,
+                    fontSize: 13.5,
                     height: 1.05,
                     fontWeight: FontWeight.w800,
                   ),
@@ -215,28 +215,28 @@ class _WatermarkCard extends StatelessWidget {
                   maxLines: 1,
                   style: const TextStyle(
                     color: _textColor,
-                    fontSize: 11.5,
+                    fontSize: 8,
                     height: 1.15,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 7),
             Expanded(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (details.address.trim().isNotEmpty) ...[
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 2),
                     Text(
                       details.address.trim(),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: _textColor,
-                        fontSize: 10,
+                        fontSize: 8.5,
                         height: 1.15,
                         fontWeight: FontWeight.w500,
                       ),
@@ -249,7 +249,7 @@ class _WatermarkCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: _textColor,
-                      fontSize: 10.5,
+                      fontSize: 9,
                       height: 1.15,
                       fontWeight: FontWeight.w700,
                     ),
@@ -311,9 +311,9 @@ String _compositeWatermark(Map<String, Object> args) {
     throw const FormatException('PNG watermark tidak dapat dibaca.');
   }
 
-  // Ukuran watermark dinormalisasi ke 75% lebar foto, baik portrait maupun
+  // Ukuran watermark dinormalisasi ke 60% lebar foto, baik portrait maupun
   // landscape. PNG dirender pada resolusi tinggi untuk menjaga ketajaman teks.
-  final targetWidth = (photo.width * 0.75).round();
+  final targetWidth = (photo.width * 0.60).round();
   final resizedWatermark = img.copyResize(
     watermark,
     width: targetWidth,

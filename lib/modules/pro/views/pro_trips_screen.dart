@@ -1,8 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../models/trip.dart';
+import '../models/visit_location.dart';
 import '../services/pro_access_service.dart';
 import '../services/pro_database_service.dart';
 import '../services/pro_photo_storage_service.dart';
@@ -20,7 +25,7 @@ class ProTripsScreen extends StatefulWidget {
 class _ProTripsScreenState extends State<ProTripsScreen> {
   final _database = Get.find<ProDatabaseService>();
   final _uuid = const Uuid();
-  late Future<List<Trip>> _tripsFuture;
+  late Future<List<_TripSummary>> _tripsFuture;
   bool _isCreating = false;
   final _searchController = TextEditingController();
   String _tripFilter = 'Semua';
@@ -38,7 +43,18 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
   }
 
   void _reload() {
-    _tripsFuture = _database.listTrips();
+    _tripsFuture = _loadTripSummaries();
+  }
+
+  Future<List<_TripSummary>> _loadTripSummaries() async {
+    final trips = await _database.listTrips();
+    final locationsByTrip = await Future.wait(
+      trips.map((trip) => _database.listLocations(trip.id)),
+    );
+    return [
+      for (var index = 0; index < trips.length; index++)
+        _TripSummary(trip: trips[index], locations: locationsByTrip[index]),
+    ];
   }
 
   Future<void> _createTrip() async {
@@ -58,28 +74,42 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
     setState(() => _isCreating = true);
     try {
       final now = DateTime.now();
-      await _database.saveTrip(
-        Trip(
+      final trip = Trip(
+        id: _uuid.v4(),
+        title: draft.title,
+        // Keep the existing database field populated for backward compatibility.
+        purpose: draft.title,
+        startDate: draft.startDate,
+        endDate: draft.endDate,
+        officerName: _nullableText(draft.officerName),
+        assignmentNumber: _nullableText(draft.assignmentNumber),
+        notes: _nullableText(draft.notes),
+        status: 'single_location',
+        createdAt: now,
+        updatedAt: now,
+      );
+      await _database.saveTripWithInitialLocation(
+        trip,
+        VisitLocation(
           id: _uuid.v4(),
-          title: draft.title,
-          // Keep the existing database field populated for backward compatibility.
-          purpose: draft.title,
-          startDate: draft.startDate,
-          endDate: draft.endDate,
-          officerName: _nullableText(draft.officerName),
-          assignmentNumber: _nullableText(draft.assignmentNumber),
-          notes: _nullableText(draft.notes),
-          status: 'draft',
+          tripId: trip.id,
+          name: draft.locationName,
+          address: _nullableText(draft.locationAddress),
+          latitude: draft.latitude,
+          longitude: draft.longitude,
+          visitedAt: draft.startDate,
+          notes: null,
+          sortOrder: 0,
           createdAt: now,
-          updatedAt: now,
         ),
       );
       if (mounted) {
         setState(_reload);
         await showProMessageDialog(
           context: context,
-          title: 'Perjalanan berhasil dibuat',
-          message: 'Kegiatan siap untuk mulai didokumentasikan.',
+          title: 'Kegiatan berhasil dibuat',
+          message:
+              'Kegiatan dan lokasi awal sudah tersimpan. Anda dapat menambahkan beberapa foto pada lokasi ini.',
           type: ProMessageType.success,
         );
       }
@@ -182,7 +212,7 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
     return ProTheme.apply(
       Scaffold(
         appBar: AppBar(title: const Text('Dokumentasi Lapangan')),
-        body: FutureBuilder<List<Trip>>(
+        body: FutureBuilder<List<_TripSummary>>(
           future: _tripsFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -195,21 +225,31 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
               );
             }
 
-            final trips = snapshot.data ?? const <Trip>[];
+            final summaries = snapshot.data ?? const <_TripSummary>[];
+            final trips = summaries.map((summary) => summary.trip).toList();
+            final summaryByTripId = {
+              for (final summary in summaries) summary.trip.id: summary,
+            };
             final query = _searchController.text.trim().toLowerCase();
-            final visibleTrips = trips.where((trip) {
-              final matchesQuery = trip.title.toLowerCase().contains(query) ||
-                  (trip.assignmentNumber ?? '').toLowerCase().contains(query);
-              final matchesFilter = _tripFilter == 'Semua' ||
-                  (_tripFilter == 'Satu hari'
-                      ? trip.startDate.year == trip.endDate.year &&
-                          trip.startDate.month == trip.endDate.month &&
-                          trip.startDate.day == trip.endDate.day
-                      : trip.startDate.year != trip.endDate.year ||
-                          trip.startDate.month != trip.endDate.month ||
-                          trip.startDate.day != trip.endDate.day);
-              return matchesQuery && matchesFilter;
-            }).toList(growable: false);
+            final visibleTrips = trips
+                .where((trip) {
+                  final matchesQuery =
+                      trip.title.toLowerCase().contains(query) ||
+                      (trip.assignmentNumber ?? '').toLowerCase().contains(
+                        query,
+                      );
+                  final matchesFilter =
+                      _tripFilter == 'Semua' ||
+                      (_tripFilter == 'Satu hari'
+                          ? trip.startDate.year == trip.endDate.year &&
+                                trip.startDate.month == trip.endDate.month &&
+                                trip.startDate.day == trip.endDate.day
+                          : trip.startDate.year != trip.endDate.year ||
+                                trip.startDate.month != trip.endDate.month ||
+                                trip.startDate.day != trip.endDate.day);
+                  return matchesQuery && matchesFilter;
+                })
+                .toList(growable: false);
 
             return RefreshIndicator(
               onRefresh: () async => setState(_reload),
@@ -227,8 +267,8 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
                               'Perjalanan Saya',
                               style: TextStyle(
                                 color: ProTheme.text,
-                                fontSize: 27,
-                                fontWeight: FontWeight.w800,
+                                fontSize: 25,
+                                fontWeight: FontWeight.w700,
                                 height: 1.15,
                               ),
                             ),
@@ -247,11 +287,11 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
                         ),
                       ),
                       Container(
-                        width: 48,
-                        height: 48,
+                        width: 44,
+                        height: 44,
                         decoration: BoxDecoration(
                           color: const Color(0xFFE4F0E9),
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                         child: const Icon(
                           Icons.route_rounded,
@@ -261,146 +301,157 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 22),
-                  Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFF0C5A3E), Color(0xFF174631)],
+                  const SizedBox(height: 20),
+                  if (trips.isNotEmpty) ...[
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: ProTheme.surface,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: ProTheme.border),
                       ),
-                      borderRadius: BorderRadius.circular(22),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.folder_copy_outlined,
-                                color: Colors.white70, size: 20),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${trips.length} kegiatan tersimpan',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.folder_copy_outlined,
+                                color: ProTheme.brandGreen,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 7),
+                              Text(
+                                '${trips.length} kegiatan tersimpan',
+                                style: const TextStyle(
+                                  color: ProTheme.secondaryText,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          const Text(
+                            'Catat kegiatan berikutnya',
+                            style: TextStyle(
+                              color: ProTheme.text,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Buat kegiatan dan simpan lokasi awal untuk dokumentasinya.',
+                            style: TextStyle(
+                              color: ProTheme.secondaryText,
+                              fontSize: 13,
+                              height: 1.45,
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.icon(
+                              onPressed: _isCreating ? null : _createTrip,
+                              icon: _isCreating
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: ProTheme.brandGreen,
+                                      ),
+                                    )
+                                  : const Icon(Icons.add_rounded),
+                              label: Text(
+                                _isCreating
+                                    ? 'Menyimpan...'
+                                    : 'Buat kegiatan baru',
+                              ),
+                              style: FilledButton.styleFrom(
+                                minimumSize: const Size.fromHeight(48),
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Siap turun ke lapangan?',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                  if (trips.isNotEmpty) ...[
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Daftar kegiatan',
+                            style: TextStyle(
+                              color: ProTheme.text,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 5),
-                        const Text(
-                          'Buat kegiatan, tambahkan lokasi, lalu ambil foto dokumentasi.',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                            height: 1.45,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton.icon(
-                            onPressed: _isCreating ? null : _createTrip,
-                            icon: _isCreating
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: ProTheme.brandGreen,
-                                    ),
-                                  )
-                                : const Icon(Icons.add_rounded),
-                            label: Text(_isCreating
-                                ? 'Menyimpan...'
-                                : 'Buat kegiatan baru'),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFFFFE69A),
-                              foregroundColor: ProTheme.text,
-                              minimumSize: const Size.fromHeight(50),
+                          decoration: BoxDecoration(
+                            color: ProTheme.surface,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: ProTheme.border),
+                          ),
+                          child: Text(
+                            '${visibleTrips.length} dari ${trips.length}',
+                            style: const TextStyle(
+                              color: ProTheme.secondaryText,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 26),
-                  Row(
-                    children: [
-                      const Expanded(
-                        child: Text(
-                          'Daftar kegiatan',
-                          style: TextStyle(
-                            color: ProTheme.text,
-                            fontSize: 19,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _searchController,
+                      onChanged: (_) => setState(() {}),
+                      textInputAction: TextInputAction.search,
+                      decoration: InputDecoration(
+                        hintText: 'Cari nama kegiatan atau surat tugas',
+                        prefixIcon: const Icon(Icons.search_rounded),
+                        suffixIcon: _searchController.text.isEmpty
+                            ? null
+                            : IconButton(
+                                tooltip: 'Hapus pencarian',
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() {});
+                                },
+                                icon: const Icon(Icons.close_rounded),
+                              ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: ProTheme.surface,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: ProTheme.border),
-                        ),
-                        child: Text(
-                          '${visibleTrips.length} dari ${trips.length}',
-                          style: const TextStyle(
-                            color: ProTheme.secondaryText,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _searchController,
-                    onChanged: (_) => setState(() {}),
-                    textInputAction: TextInputAction.search,
-                    decoration: InputDecoration(
-                      hintText: 'Cari nama kegiatan atau surat tugas',
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      suffixIcon: _searchController.text.isEmpty
-                          ? null
-                          : IconButton(
-                              tooltip: 'Hapus pencarian',
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() {});
-                              },
-                              icon: const Icon(Icons.close_rounded),
-                            ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      for (final filter in ['Semua', 'Satu hari', 'Lebih dari sehari'])
-                        ChoiceChip(
-                          label: Text(filter),
-                          selected: _tripFilter == filter,
-                          onSelected: (_) => setState(() => _tripFilter = filter),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        for (final filter in [
+                          'Semua',
+                          'Satu hari',
+                          'Lebih dari sehari',
+                        ])
+                          ChoiceChip(
+                            label: Text(filter),
+                            selected: _tripFilter == filter,
+                            onSelected: (_) =>
+                                setState(() => _tripFilter = filter),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                  ],
                   if (trips.isEmpty)
                     _EmptyTrips(onCreate: _createTrip)
                   else if (visibleTrips.isEmpty)
@@ -411,6 +462,12 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
                         padding: const EdgeInsets.only(bottom: 12),
                         child: _TripCard(
                           trip: trip,
+                          primaryLocation:
+                              summaryByTripId[trip.id]?.primaryLocation,
+                          additionalLocationCount:
+                              summaryByTripId[trip.id]
+                                  ?.additionalLocationCount ??
+                              0,
                           onDelete: () => _deleteTrip(trip),
                           onOpen: () async {
                             await Get.to(
@@ -425,7 +482,7 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
                   const SizedBox(height: 10),
                   if (trips.isNotEmpty)
                     const Text(
-                      'Tip: ketuk kartu kegiatan untuk membuka detail dan menambahkan lokasi atau foto.',
+                      'Tip: ketuk kartu kegiatan untuk membuka detail dan melanjutkan dokumentasi foto.',
                       style: TextStyle(
                         color: ProTheme.secondaryText,
                         fontSize: 12,
@@ -442,14 +499,30 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
   }
 }
 
+class _TripSummary {
+  const _TripSummary({required this.trip, required this.locations});
+
+  final Trip trip;
+  final List<VisitLocation> locations;
+
+  VisitLocation? get primaryLocation =>
+      locations.isEmpty ? null : locations.first;
+  int get additionalLocationCount =>
+      locations.length > 1 ? locations.length - 1 : 0;
+}
+
 class _TripCard extends StatelessWidget {
   const _TripCard({
     required this.trip,
+    required this.primaryLocation,
+    required this.additionalLocationCount,
     required this.onOpen,
     required this.onDelete,
   });
 
   final Trip trip;
+  final VisitLocation? primaryLocation;
+  final int additionalLocationCount;
   final VoidCallback onOpen;
   final VoidCallback onDelete;
 
@@ -460,23 +533,10 @@ class _TripCard extends StatelessWidget {
       child: InkWell(
         onTap: onOpen,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 10, 16),
+          padding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF2C8),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.work_outline_rounded,
-                  color: ProTheme.primaryDark,
-                ),
-              ),
-              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -488,7 +548,7 @@ class _TripCard extends StatelessWidget {
                       style: const TextStyle(
                         color: ProTheme.text,
                         fontSize: 15,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 5),
@@ -522,6 +582,11 @@ class _TripCard extends StatelessWidget {
                           ),
                       ],
                     ),
+                    const SizedBox(height: 10),
+                    _LocationSummary(
+                      location: primaryLocation,
+                      additionalLocationCount: additionalLocationCount,
+                    ),
                     const SizedBox(height: 12),
                     Row(
                       children: [
@@ -537,7 +602,7 @@ class _TripCard extends StatelessWidget {
                             style: TextStyle(
                               color: ProTheme.brandGreen,
                               fontSize: 11,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
@@ -593,10 +658,10 @@ class _MetaChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
         color: ProTheme.background,
-        borderRadius: BorderRadius.circular(9),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -616,6 +681,95 @@ class _MetaChip extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _LocationSummary extends StatelessWidget {
+  const _LocationSummary({
+    required this.location,
+    required this.additionalLocationCount,
+  });
+
+  final VisitLocation? location;
+  final int additionalLocationCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final currentLocation = location;
+    if (currentLocation == null) {
+      return const Row(
+        children: [
+          Icon(Icons.place_outlined, size: 16, color: ProTheme.secondaryText),
+          SizedBox(width: 6),
+          Text(
+            'Lokasi belum ditambahkan',
+            style: TextStyle(color: ProTheme.secondaryText, fontSize: 12),
+          ),
+        ],
+      );
+    }
+
+    final address = currentLocation.address?.trim();
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(top: 1),
+          child: Icon(
+            Icons.place_outlined,
+            size: 16,
+            color: ProTheme.secondaryText,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      currentLocation.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: ProTheme.text,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  if (additionalLocationCount > 0) ...[
+                    const SizedBox(width: 6),
+                    Text(
+                      '+$additionalLocationCount lokasi',
+                      style: const TextStyle(
+                        color: ProTheme.secondaryText,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              if (address != null && address.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  address,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: ProTheme.secondaryText,
+                    fontSize: 11,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -783,7 +937,11 @@ class _NoTripResults extends StatelessWidget {
       ),
       child: const Column(
         children: [
-          Icon(Icons.search_off_rounded, size: 34, color: ProTheme.secondaryText),
+          Icon(
+            Icons.search_off_rounded,
+            size: 34,
+            color: ProTheme.secondaryText,
+          ),
           SizedBox(height: 10),
           Text(
             'Kegiatan tidak ditemukan',
@@ -851,6 +1009,10 @@ class _TripDraft {
     required this.officerName,
     required this.assignmentNumber,
     required this.notes,
+    required this.locationName,
+    required this.locationAddress,
+    required this.latitude,
+    required this.longitude,
   });
 
   final String title;
@@ -859,6 +1021,10 @@ class _TripDraft {
   final String officerName;
   final String assignmentNumber;
   final String notes;
+  final String locationName;
+  final String locationAddress;
+  final double? latitude;
+  final double? longitude;
 }
 
 class _CreateTripSheet extends StatefulWidget {
@@ -874,6 +1040,11 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
   final _officer = TextEditingController();
   final _assignment = TextEditingController();
   final _notes = TextEditingController();
+  final _locationName = TextEditingController();
+  final _locationAddress = TextEditingController();
+  final _latitude = TextEditingController();
+  final _longitude = TextEditingController();
+  bool _isGettingLocation = false;
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now();
   bool _showOptional = false;
@@ -884,6 +1055,10 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
     _officer.dispose();
     _assignment.dispose();
     _notes.dispose();
+    _locationName.dispose();
+    _locationAddress.dispose();
+    _latitude.dispose();
+    _longitude.dispose();
     super.dispose();
   }
 
@@ -912,17 +1087,161 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
 
   void _setSchedule(int daysFromToday) {
     final today = DateTime.now();
-    final date = DateTime(today.year, today.month, today.day)
-        .add(Duration(days: daysFromToday));
+    final date = DateTime(
+      today.year,
+      today.month,
+      today.day,
+    ).add(Duration(days: daysFromToday));
     setState(() {
       _startDate = date;
       _endDate = date;
     });
   }
 
+  Future<void> _captureGpsLocation() async {
+    if (_isGettingLocation) return;
+    setState(() => _isGettingLocation = true);
+    try {
+      final enabled = await Geolocator.isLocationServiceEnabled();
+      if (!enabled) {
+        throw Exception('Layanan lokasi/GPS sedang dimatikan.');
+      }
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        throw Exception(
+          permission == LocationPermission.deniedForever
+              ? 'Izin lokasi ditolak permanen. Aktifkan melalui pengaturan aplikasi.'
+              : 'Izin lokasi diperlukan untuk mengambil koordinat.',
+        );
+      }
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 20),
+        ),
+      );
+      if (!mounted) return;
+      setState(() {
+        _latitude.text = position.latitude.toStringAsFixed(6);
+        _longitude.text = position.longitude.toStringAsFixed(6);
+      });
+
+      // Reverse geocoding is requested only after the user explicitly taps GPS.
+      // Keep coordinates even when the network or geocoding service is unavailable.
+      try {
+        final uri = Uri.https('nominatim.openstreetmap.org', '/reverse', {
+          'format': 'jsonv2',
+          'lat': position.latitude.toString(),
+          'lon': position.longitude.toString(),
+          'addressdetails': '1',
+          'accept-language': 'id',
+          'zoom': '18',
+        });
+        final response = await http
+            .get(
+              uri,
+              headers: const {
+                'User-Agent': 'KAMLOKA/1.0 (Kamera Lokasi)',
+                'Accept': 'application/json',
+              },
+            )
+            .timeout(const Duration(seconds: 10));
+
+        if (response.statusCode == 200) {
+          final decoded = jsonDecode(response.body);
+          if (decoded is Map<String, dynamic>) {
+            final address = decoded['address'];
+            final addressParts = address is Map<String, dynamic>
+                ? address
+                : <String, dynamic>{};
+            final placeName = _firstNonEmpty([
+              decoded['name'],
+              addressParts['amenity'],
+              addressParts['building'],
+              addressParts['tourism'],
+              addressParts['shop'],
+              addressParts['office'],
+              addressParts['leisure'],
+              addressParts['road'],
+              addressParts['village'],
+              addressParts['town'],
+              addressParts['city'],
+              addressParts['municipality'],
+              addressParts['county'],
+              addressParts['state'],
+            ]);
+            final displayAddress = (decoded['display_name'] as String?)?.trim();
+            if (!mounted) return;
+            setState(() {
+              if (placeName != null) _locationName.text = placeName;
+              if (displayAddress != null && displayAddress.isNotEmpty) {
+                _locationAddress.text = displayAddress;
+              }
+            });
+          }
+        }
+      } catch (_) {
+        // Geocoding is best-effort; manual name/address and GPS coordinates remain usable.
+      }
+    } catch (error) {
+      if (mounted) {
+        await showProMessageDialog(
+          context: context,
+          title: 'Lokasi belum berhasil diambil',
+          message: error.toString().replaceFirst('Exception: ', ''),
+          type: ProMessageType.error,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isGettingLocation = false);
+    }
+  }
+
   void _submit() {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
+    final latitudeText = _latitude.text.trim();
+    final longitudeText = _longitude.text.trim();
+    final latitude = latitudeText.isEmpty
+        ? null
+        : double.tryParse(latitudeText);
+    final longitude = longitudeText.isEmpty
+        ? null
+        : double.tryParse(longitudeText);
+    if ((latitudeText.isNotEmpty && latitude == null) ||
+        (longitudeText.isNotEmpty && longitude == null) ||
+        ((latitude == null) != (longitude == null))) {
+      showProMessageDialog(
+        context: context,
+        title: 'Koordinat belum valid',
+        message:
+            'Isi latitude dan longitude dengan angka yang valid, atau kosongkan keduanya.',
+        type: ProMessageType.error,
+      );
+      return;
+    }
+    if (latitude != null && (latitude < -90 || latitude > 90)) {
+      showProMessageDialog(
+        context: context,
+        title: 'Latitude di luar batas',
+        message: 'Periksa kembali nilai latitude.',
+        type: ProMessageType.error,
+      );
+      return;
+    }
+    if (longitude != null && (longitude < -180 || longitude > 180)) {
+      showProMessageDialog(
+        context: context,
+        title: 'Longitude di luar batas',
+        message: 'Periksa kembali nilai longitude.',
+        type: ProMessageType.error,
+      );
+      return;
+    }
     Navigator.of(context).pop(
       _TripDraft(
         title: _title.text.trim(),
@@ -931,13 +1250,18 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
         officerName: _officer.text,
         assignmentNumber: _assignment.text,
         notes: _notes.text,
+        locationName: _locationName.text.trim(),
+        locationAddress: _locationAddress.text,
+        latitude: latitude,
+        longitude: longitude,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isToday = _isSameDay(_startDate, DateTime.now()) &&
+    final isToday =
+        _isSameDay(_startDate, DateTime.now()) &&
         _isSameDay(_endDate, DateTime.now());
     final tomorrow = DateTime.now().add(const Duration(days: 1));
     final isTomorrow =
@@ -1029,7 +1353,7 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                     maxLength: 100,
                     decoration: const InputDecoration(
                       labelText: 'Nama kegiatan',
-                      hintText: 'Contoh: Monitoring lokasi pembangunan',
+                      hintText: 'Masukkan nama kegiatan',
                       helperText: 'Gunakan nama yang mudah dikenali.',
                       prefixIcon: Icon(Icons.work_outline_rounded),
                       counterText: '',
@@ -1047,8 +1371,134 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                   const SizedBox(height: 24),
                   const _FormSectionLabel(
                     number: '02',
+                    title: 'Lokasi kegiatan',
+                    subtitle: 'Tentukan lokasi secara manual atau melalui GPS.',
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _locationName,
+                    textCapitalization: TextCapitalization.sentences,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(
+                      labelText: 'Nama lokasi',
+                      hintText: 'Masukkan nama lokasi',
+                      prefixIcon: Icon(Icons.place_outlined),
+                    ),
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Nama lokasi wajib diisi.'
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _locationAddress,
+                    textCapitalization: TextCapitalization.sentences,
+                    textInputAction: TextInputAction.next,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      labelText: 'Alamat lokasi',
+                      hintText: 'Masukkan alamat lokasi',
+                      prefixIcon: Icon(Icons.location_on_outlined),
+                      alignLabelWithHint: true,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: ProTheme.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: ProTheme.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                'Koordinat lokasi',
+                                style: TextStyle(
+                                  color: ProTheme.text,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            TextButton.icon(
+                              onPressed: _isGettingLocation
+                                  ? null
+                                  : _captureGpsLocation,
+                              icon: _isGettingLocation
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.my_location_rounded,
+                                      size: 18,
+                                    ),
+                              label: Text(
+                                _isGettingLocation
+                                    ? 'Mengambil...'
+                                    : 'Ambil Lokasi Saya',
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _latitude,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                      signed: true,
+                                    ),
+                                decoration: const InputDecoration(
+                                  labelText: 'Latitude',
+                                  hintText: 'Masukkan latitude',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: TextFormField(
+                                controller: _longitude,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                      signed: true,
+                                    ),
+                                decoration: const InputDecoration(
+                                  labelText: 'Longitude',
+                                  hintText: 'Masukkan longitude',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Koordinat bersifat opsional. GPS hanya diakses saat tombol ditekan.',
+                          style: TextStyle(
+                            color: ProTheme.secondaryText,
+                            fontSize: 12,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const _FormSectionLabel(
+                    number: '03',
                     title: 'Jadwal kegiatan',
-                    subtitle: 'Pilih jadwal cepat atau tentukan tanggal sendiri.',
+                    subtitle:
+                        'Pilih jadwal cepat atau tentukan tanggal sendiri.',
                   ),
                   const SizedBox(height: 12),
                   Wrap(
@@ -1092,10 +1542,7 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                         ),
                         Padding(
                           padding: const EdgeInsets.only(left: 42),
-                          child: Divider(
-                            height: 1,
-                            color: ProTheme.border,
-                          ),
+                          child: Divider(height: 1, color: ProTheme.border),
                         ),
                         _DateRow(
                           label: 'Tanggal selesai',
@@ -1137,8 +1584,9 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                     child: Column(
                       children: [
                         ListTile(
-                          contentPadding:
-                              const EdgeInsets.symmetric(horizontal: 14),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                          ),
                           leading: Container(
                             width: 38,
                             height: 38,
@@ -1174,9 +1622,8 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                                 : Icons.expand_more_rounded,
                             color: ProTheme.secondaryText,
                           ),
-                          onTap: () => setState(
-                            () => _showOptional = !_showOptional,
-                          ),
+                          onTap: () =>
+                              setState(() => _showOptional = !_showOptional),
                         ),
                         if (_showOptional) ...[
                           Divider(height: 1, color: ProTheme.border),
@@ -1186,14 +1633,14 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                               children: [
                                 TextFormField(
                                   controller: _officer,
-                                  textCapitalization:
-                                      TextCapitalization.words,
+                                  textCapitalization: TextCapitalization.words,
                                   textInputAction: TextInputAction.next,
                                   decoration: const InputDecoration(
                                     labelText: 'Nama pelaksana',
                                     hintText: 'Nama petugas atau tim',
-                                    prefixIcon:
-                                        Icon(Icons.person_outline_rounded),
+                                    prefixIcon: Icon(
+                                      Icons.person_outline_rounded,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 12),
@@ -1204,9 +1651,10 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                                   textInputAction: TextInputAction.next,
                                   decoration: const InputDecoration(
                                     labelText: 'Nomor surat tugas',
-                                    hintText: 'Contoh: 800/123/2026',
-                                    prefixIcon:
-                                        Icon(Icons.description_outlined),
+                                    hintText: 'Masukkan nomor surat tugas',
+                                    prefixIcon: Icon(
+                                      Icons.description_outlined,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 12),
@@ -1218,7 +1666,8 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                                   minLines: 2,
                                   decoration: const InputDecoration(
                                     labelText: 'Catatan umum',
-                                    hintText: 'Tambahkan informasi bila perlu',
+                                    hintText:
+                                        'Tambahkan catatan bila diperlukan',
                                     prefixIcon: Icon(Icons.notes_rounded),
                                     alignLabelWithHint: true,
                                   ),
@@ -1352,12 +1801,8 @@ class _SchedulePresetChip extends StatelessWidget {
       ),
       backgroundColor: ProTheme.surface,
       selectedColor: const Color(0xFFE4F0E9),
-      side: BorderSide(
-        color: selected ? ProTheme.brandGreen : ProTheme.border,
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      side: BorderSide(color: selected ? ProTheme.brandGreen : ProTheme.border),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     );
   }
 }
@@ -1511,6 +1956,13 @@ String _monthLabel(int month) => const [
   'Nov',
   'Des',
 ][month - 1];
+
+String? _firstNonEmpty(List<dynamic> values) {
+  for (final value in values) {
+    if (value is String && value.trim().isNotEmpty) return value.trim();
+  }
+  return null;
+}
 
 String? _nullableText(String value) {
   final trimmed = value.trim();

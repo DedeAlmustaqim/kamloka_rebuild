@@ -98,6 +98,19 @@ class ProDatabaseService extends GetxService {
     return _database!;
   }
 
+  /// Saves a new activity and its initial location atomically.
+  /// Existing tables and records remain unchanged for backward compatibility.
+  Future<void> saveTripWithInitialLocation(
+    Trip trip,
+    VisitLocation location,
+  ) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.insert('trips', trip.toMap());
+      await txn.insert('visit_locations', location.toMap());
+    });
+  }
+
   Future<void> saveTrip(Trip trip) async {
     final db = await database;
     final values = trip.toMap();
