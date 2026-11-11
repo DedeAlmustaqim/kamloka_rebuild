@@ -402,7 +402,7 @@ class _FieldDocumentationButton extends StatelessWidget {
           width: 64,
           height: 64,
           decoration: const BoxDecoration(
-            color: Color(0xFFFFF2C8),
+            color: Color(0xFFECECEA),
             shape: BoxShape.circle,
           ),
           child: const Icon(
@@ -506,7 +506,7 @@ class _FieldDocumentationButton extends StatelessWidget {
               SizedBox(width: 8),
               DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Color(0xFFE4B957),
+                  color: Color(0xFFE5E5E3),
                   borderRadius: BorderRadius.all(Radius.circular(6)),
                 ),
                 child: Padding(
@@ -1154,8 +1154,8 @@ class _DocumentationLocationSheet extends StatelessWidget {
                           child: ListTile(
                             leading: CircleAvatar(
                               backgroundColor: selected
-                                  ? const Color(0xFFC7E5CF)
-                                  : const Color(0xFFFFF2C8),
+                                  ? const Color(0xFFE4E4E4)
+                                  : const Color(0xFFECECEA),
                               child: Icon(
                                 Icons.location_on_outlined,
                                 color: selected
