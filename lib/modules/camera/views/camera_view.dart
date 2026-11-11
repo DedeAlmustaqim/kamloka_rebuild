@@ -199,7 +199,7 @@ class _CameraPreview extends StatelessWidget {
         Positioned(
           left: 0,
           right: 0,
-          bottom: 182,
+          top: 84,
           child: IgnorePointer(
             child: Center(
               child: Obx(() {
@@ -233,7 +233,7 @@ class _CameraPreview extends StatelessWidget {
         Positioned(
           left: 14,
           right: 14,
-          bottom: 200,
+          bottom: 116,
           child: SafeArea(
             top: false,
             child: Column(
@@ -371,7 +371,7 @@ class _BottomScrim extends StatelessWidget {
       child: Align(
         alignment: Alignment.bottomCenter,
         child: Container(
-          height: 190,
+          height: 250,
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.bottomCenter,
