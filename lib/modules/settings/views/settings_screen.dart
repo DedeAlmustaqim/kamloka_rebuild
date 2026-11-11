@@ -158,7 +158,7 @@ class SettingsScreen extends StatelessWidget {
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFFFFE69A), Color(0xFFFFF2C8)],
+                    colors: [Color(0xFFE5E5E3), Color(0xFFECECEA)],
                   ),
                   border: Border.all(color: ProTheme.border),
                 ),
@@ -347,10 +347,10 @@ class _KamlokaProScreenState extends State<KamlokaProScreen> {
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFFFFE69A), Color(0xFFFFF6D9)],
+                    colors: [Color(0xFFE5E5E3), Color(0xFFF5F5F3)],
                   ),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: const Color(0xFFEAD28B)),
+                  border: Border.all(color: const Color(0xFFE1E1E1)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -521,7 +521,7 @@ class _KamlokaProScreenState extends State<KamlokaProScreen> {
                             width: 42,
                             height: 42,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFF2C8),
+                              color: const Color(0xFFECECEA),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(
