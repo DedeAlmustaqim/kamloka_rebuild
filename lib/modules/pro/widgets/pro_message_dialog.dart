@@ -31,7 +31,7 @@ Future<void> showProMessageDialog({
     ProMessageType.info => (
         Icons.info_rounded,
         ProTheme.brandGreen,
-        const Color(0xFFE7F2EC),
+        const Color(0xFFEAEAEA),
       ),
   };
 
@@ -126,7 +126,7 @@ Future<bool> showProConfirmDialog({
     ProMessageType.info => (
         Icons.info_rounded,
         ProTheme.brandGreen,
-        const Color(0xFFE7F2EC),
+        const Color(0xFFEAEAEA),
       ),
   };
 
