@@ -225,7 +225,7 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFF2C8),
+                          color: const Color(0xFFECECEA),
                           borderRadius: BorderRadius.circular(9),
                         ),
                         child: const Text(
@@ -618,7 +618,7 @@ class _ProgressStep extends StatelessWidget {
           height: 29,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: done ? ProTheme.brandGreen : const Color(0xFFFFF2C8),
+            color: done ? ProTheme.brandGreen : const Color(0xFFECECEA),
             shape: BoxShape.circle,
           ),
           child: done
@@ -682,7 +682,7 @@ class _EmptyLocations extends StatelessWidget {
             width: 66,
             height: 66,
             decoration: const BoxDecoration(
-              color: Color(0xFFFFF2C8),
+              color: Color(0xFFECECEA),
               shape: BoxShape.circle,
             ),
             child: const Icon(
