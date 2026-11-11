@@ -306,7 +306,7 @@ class _ProLocationDetailScreenState extends State<ProLocationDetailScreen> {
                         width: 62,
                         height: 62,
                         decoration: const BoxDecoration(
-                          color: Color(0xFFFFF2C8),
+                          color: Color(0xFFECECEA),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
