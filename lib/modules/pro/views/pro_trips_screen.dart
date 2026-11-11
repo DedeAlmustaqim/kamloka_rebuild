@@ -327,7 +327,7 @@ class _ProTripsScreenState extends State<ProTripsScreen> {
                                 ? 'Menyimpan...'
                                 : 'Buat kegiatan baru'),
                             style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFFFFE69A),
+                              backgroundColor: const Color(0xFFE5E5E3),
                               foregroundColor: ProTheme.text,
                               minimumSize: const Size.fromHeight(50),
                             ),
@@ -468,7 +468,7 @@ class _TripCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFF2C8),
+                  color: const Color(0xFFECECEA),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(
