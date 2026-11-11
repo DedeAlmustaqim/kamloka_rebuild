@@ -23,7 +23,7 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
     return Obx(() {
       final expanded = c.isControlPanelExpanded.value;
       final toggle = Material(
-        color: Colors.black.withValues(alpha: 0.38),
+        color: Colors.black.withValues(alpha: 0.58),
         shape: const CircleBorder(
           side: BorderSide(color: Colors.white54, width: 1),
         ),
@@ -57,7 +57,7 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.black.withValues(alpha: 0.38),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white24),
+            border: Border.all(color: Colors.white30),
           ),
           child: _toolbar(),
         );
