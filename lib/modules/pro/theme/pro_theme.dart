@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Shared visual system for KAMLOKA Pro's field-documentation workflow.
+/// Shared editorial monochrome visual system for all KAMLOKA modules.
 /// The camera itself deliberately keeps its immersive dark presentation.
 abstract final class ProTheme {
-  static const Color background = Color(0xFFF5F6F3);
+  static const Color background = Color(0xFFF4F4F2);
   static const Color surface = Color(0xFFFFFFFF);
-  /// Brand color for primary actions and interactive states.
-  static const Color brandGreen = Color(0xFF0C5A3E);
-  /// Gold is reserved for KAMLOKA Pro highlights and premium states.
-  static const Color primary = Color(0xFFE4B957);
-  static const Color primaryDark = Color(0xFF6A5200);
-  static const Color text = Color(0xFF202522);
-  static const Color secondaryText = Color(0xFF68716B);
-  static const Color border = Color(0xFFE2E6E0);
-  static const Color green = Color(0xFF23764A);
+  /// Neutral brand color for primary actions and interactive states.
+  static const Color brandGreen = Color(0xFF171717);
+  /// Premium states use restrained neutral contrast, not decorative gold.
+  static const Color primary = Color(0xFFD8D8D8);
+  static const Color primaryDark = Color(0xFF171717);
+  static const Color text = Color(0xFF171717);
+  static const Color secondaryText = Color(0xFF737373);
+  static const Color border = Color(0xFFE4E4E4);
+  static const Color green = Color(0xFF4A4A4A);
   static const Color danger = Color(0xFFB3261E);
 
   static ThemeData get light {
@@ -24,8 +24,8 @@ abstract final class ProTheme {
       surface: surface,
       primary: brandGreen,
       onPrimary: Colors.white,
-      secondary: primary,
-      onSecondary: const Color(0xFF292B25),
+      secondary: const Color(0xFF737373),
+      onSecondary: Colors.white,
       error: danger,
     );
 
@@ -64,7 +64,7 @@ abstract final class ProTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFFFAFBF8),
+        fillColor: const Color(0xFFFAFAF9),
         labelStyle: const TextStyle(color: secondaryText, fontSize: 13),
         floatingLabelStyle: const TextStyle(
           color: brandGreen,
@@ -151,8 +151,8 @@ abstract final class ProTheme {
         elevation: 2,
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: const Color(0xFFF0F1EC),
-        selectedColor: const Color(0xFFFFE69A),
+        backgroundColor: const Color(0xFFECECEA),
+        selectedColor: const Color(0xFFE5E5E3),
         labelStyle: const TextStyle(color: text, fontWeight: FontWeight.w600),
         side: const BorderSide(color: border),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
