@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:share_plus/share_plus.dart';
 
-
 class PhotoPreviewView extends StatelessWidget {
   const PhotoPreviewView({
     super.key,
@@ -40,9 +39,12 @@ class PhotoPreviewView extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        icon: const Icon(Icons.delete_outline_rounded, size: 32),
+        icon: const Icon(Icons.delete_outline_rounded, size: 30),
         title: const Text('Hapus foto?'),
-        content: const Text('Foto ini akan dihapus dari penyimpanan aplikasi. Jika sudah tersimpan di galeri, salinan galeri tidak ikut dihapus.'),
+        content: const Text(
+          'Foto ini akan dihapus dari penyimpanan aplikasi. '
+          'Jika sudah tersimpan di galeri, salinan galeri tidak ikut dihapus.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -50,8 +52,11 @@ class PhotoPreviewView extends StatelessWidget {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Hapus'),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF292929),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Hapus foto'),
           ),
         ],
       ),
@@ -79,7 +84,7 @@ class PhotoPreviewView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF090909),
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -101,34 +106,61 @@ class PhotoPreviewView extends StatelessWidget {
               ),
             ),
           ),
+          const IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0x99000000),
+                    Colors.transparent,
+                    Colors.transparent,
+                    Color(0xB3000000),
+                  ],
+                  stops: [0, 0.22, 0.68, 1],
+                ),
+              ),
+            ),
+          ),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+              padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   _CircleAction(
-                    icon: Icons.close_rounded,
-                    tooltip: 'Tutup',
+                    icon: Icons.arrow_back_rounded,
+                    tooltip: 'Kembali',
                     onPressed: Get.back,
                   ),
                   const Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(top: 14),
-                      child: Text(
-                        'FOTO',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.5,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'KAMLOKA',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 2.2,
+                          ),
                         ),
-                      ),
+                        SizedBox(height: 3),
+                        Text(
+                          'PHOTO PREVIEW',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 10,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   _CircleAction(
-                    icon: Icons.share_outlined,
+                    icon: Icons.ios_share_rounded,
                     tooltip: 'Bagikan foto',
                     onPressed: () => _sharePhoto(context),
                   ),
@@ -140,12 +172,12 @@ class PhotoPreviewView extends StatelessWidget {
             child: Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
                 child: Row(
                   children: [
                     Expanded(
                       child: _BottomAction(
-                        icon: Icons.ios_share_rounded,
+                        icon: Icons.share_outlined,
                         label: 'Bagikan',
                         onPressed: () => _sharePhoto(context),
                       ),
@@ -184,12 +216,14 @@ class _CircleAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.black54,
-      shape: const CircleBorder(side: BorderSide(color: Colors.white24)),
+      color: Colors.black.withValues(alpha: 0.42),
+      shape: const CircleBorder(
+        side: BorderSide(color: Colors.white30, width: 1),
+      ),
       child: IconButton(
         onPressed: onPressed,
         tooltip: tooltip,
-        icon: Icon(icon, color: Colors.white),
+        icon: Icon(icon, color: Colors.white, size: 20),
       ),
     );
   }
@@ -210,15 +244,24 @@ class _BottomAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FilledButton.tonalIcon(
+    return OutlinedButton.icon(
       onPressed: onPressed,
-      style: FilledButton.styleFrom(
-        backgroundColor: destructive ? Colors.red.withValues(alpha: 0.18) : Colors.white.withValues(alpha: 0.16),
-        foregroundColor: destructive ? Colors.red.shade100 : Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 8),
+      icon: Icon(icon, size: 18),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: destructive ? Colors.white : Colors.black,
+        backgroundColor: destructive
+            ? Colors.black.withValues(alpha: 0.58)
+            : Colors.white,
+        side: BorderSide(
+          color: destructive ? Colors.white54 : Colors.white,
+        ),
+        minimumSize: const Size.fromHeight(50),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+        textStyle: const TextStyle(fontWeight: FontWeight.w700),
       ),
-      icon: Icon(icon, size: 19),
-      label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
     );
   }
 }
