@@ -461,10 +461,10 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                                   onChanged: (value) async {
                                     await _database.setPhotoIncludedInReport(photo.id, value ?? false);
                                     if (mounted) {
-                                    setState(() {
-                                      _photosFuture = _database.listPhotos(location.id);
-                                    });
-                                  }
+                                      setState(() {
+                                        _photosFuture = _database.listPhotos(location.id);
+                                      });
+                                    }
                                   },
                                 ),
                               )),
