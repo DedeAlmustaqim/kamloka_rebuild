@@ -1342,9 +1342,9 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                   ),
                   const SizedBox(height: 24),
                   const AppSectionHeading(
-                    number: '01',
+                    index: '01',
                     title: 'Informasi kegiatan',
-                    subtitle: 'Nama kegiatan wajib diisi.',
+                    description: 'Nama kegiatan wajib diisi.',
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -1372,9 +1372,9 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                   ),
                   const SizedBox(height: 24),
                   const AppSectionHeading(
-                    number: '02',
+                    index: '02',
                     title: 'Lokasi kegiatan',
-                    subtitle: 'Tentukan lokasi secara manual atau melalui GPS.',
+                    description: 'Tentukan lokasi secara manual atau melalui GPS.',
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -1497,9 +1497,9 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                   ),
                   const SizedBox(height: 24),
                   const AppSectionHeading(
-                    number: '03',
+                    index: '03',
                     title: 'Jadwal kegiatan',
-                    subtitle:
+                    description:
                         'Pilih jadwal cepat atau tentukan tanggal sendiri.',
                   ),
                   const SizedBox(height: 12),
