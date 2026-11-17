@@ -1276,7 +1276,7 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
         child: SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+            padding: const EdgeInsets.fromLTRB(22, 8, 22, 24),
             child: Form(
               key: _formKey,
               child: Column(
@@ -1294,51 +1294,36 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE4F0E9),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: const Icon(
-                          Icons.add_task_rounded,
-                          color: ProTheme.brandGreen,
-                          size: 25,
-                        ),
-                      ),
-                      const SizedBox(width: 13),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Buat kegiatan baru',
-                              style: TextStyle(
-                                color: ProTheme.text,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800,
-                                height: 1.2,
-                              ),
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              'Mulai dengan nama dan jadwal kegiatan. Informasi lainnya bisa diisi nanti.',
-                              style: TextStyle(
-                                color: ProTheme.secondaryText,
-                                fontSize: 13,
-                                height: 1.45,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  const Text(
+                    'KEGIATAN BARU  /  DOKUMENTASI',
+                    style: TextStyle(
+                      color: ProTheme.brandGreen,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.1,
+                    ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Mulai dokumentasi\nkegiatan Anda.',
+                    style: TextStyle(
+                      color: ProTheme.text,
+                      fontSize: 27,
+                      fontWeight: FontWeight.w800,
+                      height: 1.12,
+                      letterSpacing: -0.7,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Isi informasi utama dan lokasi awal. Detail lainnya dapat dilengkapi nanti.',
+                    style: TextStyle(
+                      color: ProTheme.secondaryText,
+                      fontSize: 13,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
                   const _FormSectionLabel(
                     number: '01',
                     title: 'Informasi kegiatan',
@@ -1685,13 +1670,13 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                     icon: const Icon(Icons.check_circle_outline_rounded),
                     label: const Text('Simpan kegiatan'),
                     style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(52),
+                      minimumSize: const Size.fromHeight(56),
                       textStyle: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(14),
                       ),
                     ),
                   ),
@@ -1726,24 +1711,19 @@ class _FormSectionLabel extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 30,
-          height: 30,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: const Color(0xFFE4F0E9),
-            borderRadius: BorderRadius.circular(10),
-          ),
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
           child: Text(
             number,
             style: const TextStyle(
               color: ProTheme.brandGreen,
               fontSize: 12,
               fontWeight: FontWeight.w800,
+              letterSpacing: 0.5,
             ),
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1752,17 +1732,18 @@ class _FormSectionLabel extends StatelessWidget {
                 title,
                 style: const TextStyle(
                   color: ProTheme.text,
-                  fontSize: 15,
+                  fontSize: 16,
                   fontWeight: FontWeight.w800,
+                  letterSpacing: -0.2,
                 ),
               ),
-              const SizedBox(height: 3),
+              const SizedBox(height: 4),
               Text(
                 subtitle,
                 style: const TextStyle(
                   color: ProTheme.secondaryText,
                   fontSize: 12,
-                  height: 1.4,
+                  height: 1.45,
                 ),
               ),
             ],
