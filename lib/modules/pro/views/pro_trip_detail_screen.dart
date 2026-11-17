@@ -32,7 +32,7 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
   Future<List<DocumentedPhoto>>? _photosFuture;
   VisitLocation? _location;
   bool _isTakingPhoto = false;
-  bool _isExporting = false;
+  final bool _isExporting = false;
 
   @override
   void initState() {
@@ -460,9 +460,11 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
                                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                   onChanged: (value) async {
                                     await _database.setPhotoIncludedInReport(photo.id, value ?? false);
-                                    if (mounted) setState(() {
-          _photosFuture = _database.listPhotos(location.id);
-        });
+                                    if (mounted) {
+                                    setState(() {
+                                      _photosFuture = _database.listPhotos(location.id);
+                                    });
+                                  }
                                   },
                                 ),
                               )),
@@ -522,22 +524,6 @@ class _ProTripDetailScreenState extends State<ProTripDetailScreen> {
     ));
   }
 
-}
-
-class _InfoChip extends StatelessWidget {
-  const _InfoChip({required this.icon, required this.text});
-  final IconData icon;
-  final String text;
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-    decoration: BoxDecoration(color: ProTheme.background, borderRadius: BorderRadius.circular(10)),
-    child: Row(mainAxisSize: MainAxisSize.min, children: [
-      Icon(icon, size: 15, color: ProTheme.secondaryText),
-      const SizedBox(width: 6),
-      Flexible(child: Text(text, style: const TextStyle(color: ProTheme.text, fontSize: 12, fontWeight: FontWeight.w600))),
-    ]),
-  );
 }
 
 class _EditCaptionDialog extends StatefulWidget {

@@ -1881,54 +1881,6 @@ bool _isSameDay(DateTime first, DateTime second) =>
     first.month == second.month &&
     first.day == second.day;
 
-class _DateButton extends StatelessWidget {
-  const _DateButton({
-    required this.label,
-    required this.date,
-    required this.onTap,
-  });
-
-  final String label;
-  final DateTime date;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: onTap,
-      style: OutlinedButton.styleFrom(
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(color: ProTheme.secondaryText, fontSize: 12),
-          ),
-          const SizedBox(height: 5),
-          Row(
-            children: [
-              const Icon(Icons.calendar_month_outlined, size: 16),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  _dateLabel(date),
-                  style: const TextStyle(
-                    color: ProTheme.text,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 String _dateLabel(DateTime date) =>
     '${date.day.toString().padLeft(2, '0')} ${_monthLabel(date.month)} ${date.year}';
 
