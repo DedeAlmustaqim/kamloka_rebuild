@@ -23,22 +23,21 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
     return Obx(() {
       final expanded = c.isControlPanelExpanded.value;
       final toggle = Material(
-        color: Colors.black.withValues(alpha: 0.38),
+        color: Colors.black.withValues(alpha: 0.48),
         shape: const CircleBorder(
-          side: BorderSide(color: Colors.white54, width: 1),
+          side: BorderSide(color: Colors.white70, width: 1),
         ),
         clipBehavior: Clip.antiAlias,
         child: IconButton(
           tooltip: expanded ? 'Tutup kontrol kamera' : 'Buka kontrol kamera',
-          visualDensity: VisualDensity.compact,
-          constraints: const BoxConstraints.tightFor(width: 42, height: 42),
+          constraints: const BoxConstraints.tightFor(width: 48, height: 48),
           onPressed: c.isCapturing.value || c.isCountingDown
               ? null
               : c.isControlPanelExpanded.toggle,
           icon: Icon(
             expanded ? Icons.keyboard_arrow_down_rounded : Icons.tune_rounded,
             color: Colors.white,
-            size: 22,
+            size: 23,
           ),
         ),
       );
@@ -52,12 +51,12 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
       if (panelOnly) {
         if (!expanded) return const SizedBox.shrink();
         return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.38),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white24),
+            color: Colors.black.withValues(alpha: 0.58),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white30),
           ),
           child: _toolbar(),
         );
@@ -188,54 +187,61 @@ class CollapsibleCameraControlPanel extends StatelessWidget {
 
     return Opacity(
       opacity: disabled ? 0.45 : 1,
-      child: GestureDetector(
-        onTap: disabled ? null : onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: active
-                      ? Colors.white.withValues(alpha: 0.18)
-                      : Colors.black.withValues(alpha: 0.18),
-                  shape: BoxShape.circle,
-                  border: Border.all(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: disabled ? null : onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 3),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
                     color: active
-                        ? Colors.white70
-                        : Colors.white.withValues(alpha: 0.30),
+                        ? Colors.white.withValues(alpha: 0.24)
+                        : Colors.white.withValues(alpha: 0.10),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: active ? Colors.white : Colors.white54,
+                      width: active ? 1.4 : 1,
+                    ),
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 21),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    height: 1.1,
+                    fontWeight: FontWeight.w600,
+                    shadows: [Shadow(color: Colors.black87, blurRadius: 3)],
                   ),
                 ),
-                child: Icon(icon, color: Colors.white, size: 20),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 8,
-                  fontWeight: FontWeight.w500,
-                  shadows: [Shadow(color: Colors.black87, blurRadius: 3)],
+                const SizedBox(height: 2),
+                Text(
+                  state,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: active ? Colors.white : Colors.white70,
+                    fontSize: 10,
+                    height: 1.1,
+                    fontWeight: FontWeight.w800,
+                    shadows: const [
+                      Shadow(color: Colors.black87, blurRadius: 3),
+                    ],
+                  ),
                 ),
-              ),
-              Text(
-                state,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700,
-                  shadows: [Shadow(color: Colors.black87, blurRadius: 3)],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
