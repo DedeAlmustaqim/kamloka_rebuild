@@ -6,8 +6,8 @@ import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 import 'package:geolocator/geolocator.dart';
 
-import '../../core/widgets/app_primary_button.dart';
-import '../../core/widgets/app_section_heading.dart';
+import '../../../core/widgets/app_primary_button.dart';
+import '../../../core/widgets/app_section_heading.dart';
 import '../models/trip.dart';
 import '../models/visit_location.dart';
 import '../services/pro_access_service.dart';
