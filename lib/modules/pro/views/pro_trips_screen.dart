@@ -6,6 +6,8 @@ import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../../core/widgets/app_primary_button.dart';
+import '../../core/widgets/app_section_heading.dart';
 import '../models/trip.dart';
 import '../models/visit_location.dart';
 import '../services/pro_access_service.dart';
@@ -1339,7 +1341,7 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  const _FormSectionLabel(
+                  const AppSectionHeading(
                     number: '01',
                     title: 'Informasi kegiatan',
                     subtitle: 'Nama kegiatan wajib diisi.',
@@ -1369,7 +1371,7 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                     },
                   ),
                   const SizedBox(height: 24),
-                  const _FormSectionLabel(
+                  const AppSectionHeading(
                     number: '02',
                     title: 'Lokasi kegiatan',
                     subtitle: 'Tentukan lokasi secara manual atau melalui GPS.',
@@ -1494,7 +1496,7 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const _FormSectionLabel(
+                  const AppSectionHeading(
                     number: '03',
                     title: 'Jadwal kegiatan',
                     subtitle:
@@ -1680,20 +1682,10 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
                     ),
                   ),
                   const SizedBox(height: 22),
-                  FilledButton.icon(
+                  AppPrimaryButton(
+                    label: 'Simpan kegiatan',
+                    icon: Icons.check_circle_outline_rounded,
                     onPressed: _submit,
-                    icon: const Icon(Icons.check_circle_outline_rounded),
-                    label: const Text('Simpan kegiatan'),
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(52),
-                      textStyle: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                    ),
                   ),
                   const SizedBox(height: 4),
                   TextButton(
@@ -1706,69 +1698,6 @@ class _CreateTripSheetState extends State<_CreateTripSheet> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _FormSectionLabel extends StatelessWidget {
-  const _FormSectionLabel({
-    required this.number,
-    required this.title,
-    required this.subtitle,
-  });
-
-  final String number;
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 30,
-          height: 30,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: const Color(0xFFE4F0E9),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Text(
-            number,
-            style: const TextStyle(
-              color: ProTheme.brandGreen,
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: ProTheme.text,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  color: ProTheme.secondaryText,
-                  fontSize: 12,
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }
