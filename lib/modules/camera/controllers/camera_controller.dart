@@ -73,7 +73,7 @@ class CameraController extends GetxController {
       } on TimeoutException {
         debugPrint(
           '[KAMLOKA ORIENTATION] initial reading timed out; '
-          'capture will retry before taking a photo.',
+          'the sensor listener may still complete in the background.',
         );
       } catch (error, stack) {
         debugPrint('[KAMLOKA ORIENTATION] init failed: $error');
@@ -432,10 +432,16 @@ class CameraController extends GetxController {
 
     try {
       await _runCountdown();
-      final capturedAt = DateTime.now();
-      final physicalOrientation =
-          Get.find<DeviceOrientationService>().orientation.value;
 
+      // Never capture using a stale default orientation. If the initial sensor
+      // read did not finish during camera startup, wait for it here.
+      final orientationService = Get.find<DeviceOrientationService>();
+      await orientationService
+          .init()
+          .timeout(const Duration(seconds: 2));
+      final physicalOrientation = orientationService.orientation.value;
+
+      final capturedAt = DateTime.now();
       final file = await _captureService.capture(
         cameraController,
         physicalOrientation: physicalOrientation,
