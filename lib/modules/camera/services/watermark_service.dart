@@ -177,10 +177,10 @@ class _WatermarkCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final time = details.capturedAt;
     final timeText =
-        '\${time.hour.toString().padLeft(2, '0')}:'
-        '\${time.minute.toString().padLeft(2, '0')}:'
-        '\${time.second.toString().padLeft(2, '0')}';
-    final dateText = '\${time.day} \${_monthName(time.month)} \${time.year}';
+        '${time.hour.toString().padLeft(2, '0')}:'
+        '${time.minute.toString().padLeft(2, '0')}:'
+        '${time.second.toString().padLeft(2, '0')}';
+    final dateText = '${time.day} ${_monthName(time.month)} ${time.year}';
     final address = details.address.trim();
     final coordinates = details.coordinates.trim();
 
@@ -324,7 +324,7 @@ class _WatermarkCard extends StatelessWidget {
                 Expanded(
                   child: _WatermarkMetric(
                     label: 'AKURASI',
-                    value: '\${details.accuracy} m',
+                    value: '${details.accuracy} m',
                   ),
                 ),
                 Container(
@@ -336,7 +336,7 @@ class _WatermarkCard extends StatelessWidget {
                 Expanded(
                   child: _WatermarkMetric(
                     label: 'ELEVASI',
-                    value: '\${details.altitude} m',
+                    value: '${details.altitude} m',
                   ),
                 ),
               ],
@@ -380,7 +380,7 @@ class _WatermarkMetric extends StatelessWidget {
     return Row(
       children: [
         Text(
-          '\$label  ',
+          '$label  ',
           style: const TextStyle(
             color: _WatermarkCard._mutedColor,
             fontSize: 6.5,
