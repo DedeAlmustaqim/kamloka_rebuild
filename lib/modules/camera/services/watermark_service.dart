@@ -170,106 +170,176 @@ class _WatermarkCard extends StatelessWidget {
   final WatermarkDetails details;
 
   static const _textColor = Colors.white;
+  static const _mutedColor = Color(0xFFD0D8D2);
+  static const _accentColor = Color(0xFFB8DCC5);
 
   @override
   Widget build(BuildContext context) {
     final time = details.capturedAt;
     final timeText =
-        '${time.hour.toString().padLeft(2, '0')}:'
-        '${time.minute.toString().padLeft(2, '0')}:'
-        '${time.second.toString().padLeft(2, '0')}';
-    final dateText = '${time.day} ${_monthName(time.month)} ${time.year}';
+        '\${time.hour.toString().padLeft(2, '0')}:'
+        '\${time.minute.toString().padLeft(2, '0')}:'
+        '\${time.second.toString().padLeft(2, '0')}';
+    final dateText = '\${time.day} \${_monthName(time.month)} \${time.year}';
+    final address = details.address.trim();
+    final coordinates = details.coordinates.trim();
 
     return Material(
       color: Colors.transparent,
       child: Container(
         width: WatermarkService._logicalWidth,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
         decoration: BoxDecoration(
-          color: const Color(0x99000000),
-          borderRadius: BorderRadius.circular(6),
+          color: const Color(0xD9000000),
+          borderRadius: BorderRadius.circular(9),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.20)),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Image.asset(
-                  "assets/images/kamloka_typo_white.png",
-                  width: 44.0,
-
-                  fit: BoxFit.fill,
+                  'assets/images/kamloka_typo_white.png',
+                  width: 66,
+                  height: 21,
+                  fit: BoxFit.contain,
                 ),
-                const SizedBox(height: 1),
-                Text(
-                  timeText,
-                  maxLines: 1,
-                  style: const TextStyle(
-                    color: _textColor,
-                    fontSize: 13.5,
-                    height: 1.05,
-                    fontWeight: FontWeight.w800,
+                const SizedBox(width: 7),
+                const Expanded(
+                  child: Text(
+                    'KAMERA LOKASI',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: _mutedColor,
+                      fontSize: 7,
+                      height: 1.1,
+                      letterSpacing: 1.15,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 2),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _accentColor.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(
+                      color: _accentColor.withValues(alpha: 0.48),
+                    ),
+                  ),
+                  child: const Text(
+                    'GEO TAG',
+                    style: TextStyle(
+                      color: _accentColor,
+                      fontSize: 7,
+                      height: 1,
+                      letterSpacing: 0.65,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 7),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
                 Text(
-                  dateText,
-                  maxLines: 1,
+                  timeText,
                   style: const TextStyle(
                     color: _textColor,
-                    fontSize: 8,
-                    height: 1.15,
+                    fontSize: 21,
+                    height: 1,
+                    letterSpacing: -0.35,
+                    fontWeight: FontWeight.w800,
+                    fontFeatures: [ui.FontFeature.tabularFigures()],
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  dateText,
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    color: _mutedColor,
+                    fontSize: 8.5,
+                    height: 1.2,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
-            const SizedBox(width: 7),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 7),
+            Container(height: 0.7, color: Colors.white.withValues(alpha: 0.25)),
+            const SizedBox(height: 7),
+            if (address.isNotEmpty) ...[
+              Text(
+                address,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: _textColor,
+                  fontSize: 10,
+                  height: 1.2,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+            ],
+            if (coordinates.isNotEmpty)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  if (details.address.trim().isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      details.address.trim(),
-                      maxLines: 2,
+                  const Icon(
+                    Icons.location_on_outlined,
+                    color: _accentColor,
+                    size: 11,
+                  ),
+                  const SizedBox(width: 3),
+                  Expanded(
+                    child: Text(
+                      coordinates,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: _textColor,
+                        color: _mutedColor,
                         fontSize: 8.5,
-                        height: 1.15,
-                        fontWeight: FontWeight.w500,
+                        height: 1.1,
+                        fontWeight: FontWeight.w600,
+                        fontFeatures: [ui.FontFeature.tabularFigures()],
                       ),
-                    ),
-                  ],
-                  const SizedBox(height: 3),
-                  Text(
-                    details.coordinates,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: _textColor,
-                      fontSize: 9,
-                      height: 1.15,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Akurasi ${details.accuracy} m  •  Alt ${details.altitude} m',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: _textColor,
-                      fontSize: 9.5,
-                      height: 1.15,
-                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
+            const SizedBox(height: 7),
+            Row(
+              children: [
+                Expanded(
+                  child: _WatermarkMetric(
+                    label: 'AKURASI',
+                    value: '\${details.accuracy} m',
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  height: 17,
+                  color: Colors.white.withValues(alpha: 0.22),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _WatermarkMetric(
+                    label: 'ELEVASI',
+                    value: '\${details.altitude} m',
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -293,6 +363,48 @@ class _WatermarkCard extends StatelessWidget {
       'Des',
     ];
     return months[month - 1];
+  }
+}
+
+class _WatermarkMetric extends StatelessWidget {
+  const _WatermarkMetric({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          '\$label  ',
+          style: const TextStyle(
+            color: _WatermarkCard._mutedColor,
+            fontSize: 6.5,
+            height: 1.1,
+            letterSpacing: 0.55,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: _WatermarkCard._textColor,
+              fontSize: 8.5,
+              height: 1.1,
+              fontWeight: FontWeight.w700,
+              fontFeatures: [ui.FontFeature.tabularFigures()],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 
