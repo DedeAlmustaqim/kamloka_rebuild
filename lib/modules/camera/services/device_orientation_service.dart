@@ -7,22 +7,38 @@ class DeviceOrientationService extends GetxService {
   final orientation = NativeDeviceOrientation.portraitUp.obs;
 
   StreamSubscription<NativeDeviceOrientation>? _subscription;
+  Future<DeviceOrientationService>? _initFuture;
+  bool _hasInitialReading = false;
 
-  Future<DeviceOrientationService> init() async {
-    if (_subscription != null) return this;
+  Future<DeviceOrientationService> init() {
+    if (_hasInitialReading) return Future.value(this);
+    return _initFuture ??= _initialize();
+  }
 
-    final communicator = NativeDeviceOrientationCommunicator();
+  Future<DeviceOrientationService> _initialize() async {
+    try {
+      final communicator = NativeDeviceOrientationCommunicator();
 
-    orientation.value = await communicator.orientation(useSensor: true);
-    _subscription = communicator
-        .onOrientationChanged(useSensor: true)
-        .listen((value) {
-      if (value == NativeDeviceOrientation.unknown) return;
+      final initialOrientation = await communicator.orientation(
+        useSensor: true,
+      );
+      if (initialOrientation != NativeDeviceOrientation.unknown) {
+        orientation.value = initialOrientation;
+      }
+      _hasInitialReading = true;
 
-      orientation.value = value;
-    });
+      _subscription = communicator
+          .onOrientationChanged(useSensor: true)
+          .listen((value) {
+        if (value == NativeDeviceOrientation.unknown) return;
+        orientation.value = value;
+      });
 
-    return this;
+      return this;
+    } catch (_) {
+      _initFuture = null;
+      rethrow;
+    }
   }
 
   bool get isPortrait =>
