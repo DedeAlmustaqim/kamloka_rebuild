@@ -124,7 +124,7 @@ class WatermarkService {
               'sourcePath': source.path,
               'outputPath': outputPath,
               'watermarkBytes': watermarkBytes,
-              'widthRatio': 0.60,
+              'widthRatio': 0.72,
               'bottomMarginRatio': 0.035,
               'jpegQuality': 95,
             });
@@ -188,7 +188,7 @@ class _WatermarkCard extends StatelessWidget {
       color: Colors.transparent,
       child: Container(
         width: WatermarkService._logicalWidth,
-        padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
+        padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
         decoration: BoxDecoration(
           color: const Color(0xD9000000),
           borderRadius: BorderRadius.circular(9),
@@ -247,7 +247,7 @@ class _WatermarkCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -275,13 +275,13 @@ class _WatermarkCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Container(height: 0.7, color: Colors.white.withValues(alpha: 0.25)),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             if (address.isNotEmpty) ...[
               Text(
                 address,
-                maxLines: 2,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: _textColor,
@@ -290,7 +290,7 @@ class _WatermarkCard extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 3),
+              const SizedBox(height: 2),
             ],
             if (coordinates.isNotEmpty)
               Row(
@@ -318,7 +318,7 @@ class _WatermarkCard extends StatelessWidget {
                   ),
                 ],
               ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Row(
               children: [
                 Expanded(
