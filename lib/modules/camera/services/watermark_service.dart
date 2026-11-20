@@ -188,157 +188,100 @@ class _WatermarkCard extends StatelessWidget {
       color: Colors.transparent,
       child: Container(
         width: WatermarkService._logicalWidth,
-        padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
         decoration: BoxDecoration(
           color: const Color(0xD9000000),
-          borderRadius: BorderRadius.circular(9),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.20)),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Row 1: compact identity, capture time and date.
             Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Image.asset(
                   'assets/images/kamloka_typo_white.png',
-                  width: 56,
-                  height: 18,
+                  width: 43,
+                  height: 14,
                   fit: BoxFit.contain,
                 ),
-                const SizedBox(width: 5),
-                const Expanded(
-                  child: Text(
-                    'KAMERA LOKASI',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: _mutedColor,
-                      fontSize: 7,
-                      height: 1.1,
-                      letterSpacing: 1.15,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _accentColor.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(
-                      color: _accentColor.withValues(alpha: 0.48),
-                    ),
-                  ),
-                  child: const Text(
-                    'GEO TAG',
-                    style: TextStyle(
-                      color: _accentColor,
-                      fontSize: 7,
-                      height: 1,
-                      letterSpacing: 0.65,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 3),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
+                const Spacer(),
                 Text(
                   timeText,
                   style: const TextStyle(
                     color: _textColor,
-                    fontSize: 18,
+                    fontSize: 14,
                     height: 1,
-                    letterSpacing: -0.35,
+                    letterSpacing: -0.2,
                     fontWeight: FontWeight.w800,
                     fontFeatures: [ui.FontFeature.tabularFigures()],
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 7),
                 Text(
                   dateText,
-                  textAlign: TextAlign.right,
                   style: const TextStyle(
                     color: _mutedColor,
-                    fontSize: 8,
-                    height: 1.1,
+                    fontSize: 7.5,
+                    height: 1,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 3),
-            Container(height: 0.7, color: Colors.white.withValues(alpha: 0.25)),
-            const SizedBox(height: 3),
-            if (address.isNotEmpty) ...[
-              Text(
-                address,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: _textColor,
-                  fontSize: 9.5,
-                  height: 1.15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 2),
-            ],
-            if (coordinates.isNotEmpty)
+            const SizedBox(height: 4),
+            // Row 2: location address, limited to a single line.
+            if (address.isNotEmpty)
               Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Icon(
                     Icons.location_on_outlined,
                     color: _accentColor,
-                    size: 11,
+                    size: 10,
                   ),
                   const SizedBox(width: 3),
                   Expanded(
+                    child: Text(
+                      address,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: _textColor,
+                        fontSize: 8.5,
+                        height: 1.05,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            const SizedBox(height: 4),
+            // Row 3: coordinates and field metadata share one baseline.
+            Row(
+              children: [
+                if (coordinates.isNotEmpty) ...[
+                  Expanded(
+                    flex: 5,
                     child: Text(
                       coordinates,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: _mutedColor,
-                        fontSize: 8,
-                        height: 1.05,
+                        fontSize: 7,
+                        height: 1,
                         fontWeight: FontWeight.w600,
                         fontFeatures: [ui.FontFeature.tabularFigures()],
                       ),
                     ),
                   ),
+                  const SizedBox(width: 6),
                 ],
-              ),
-            const SizedBox(height: 3),
-            Row(
-              children: [
-                Expanded(
-                  child: _WatermarkMetric(
-                    label: 'AKURASI',
-                    value: '${details.accuracy} m',
-                  ),
-                ),
-                Container(
-                  width: 1,
-                  height: 14,
-                  color: Colors.white.withValues(alpha: 0.22),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _WatermarkMetric(
-                    label: 'ELEVASI',
-                    value: '${details.altitude} m',
-                  ),
-                ),
+                _CompactMetric(label: 'AKURASI', value: '${details.accuracy} m'),
+                const SizedBox(width: 7),
+                _CompactMetric(label: 'ELEVASI', value: '${details.altitude} m'),
               ],
             ),
           ],
@@ -349,28 +292,15 @@ class _WatermarkCard extends StatelessWidget {
 
   static String _monthName(int month) {
     const months = <String>[
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'Mei',
-      'Jun',
-      'Jul',
-      'Agu',
-      'Sep',
-      'Okt',
-      'Nov',
-      'Des',
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
     ];
     return months[month - 1];
   }
 }
 
-class _WatermarkMetric extends StatelessWidget {
-  const _WatermarkMetric({
-    required this.label,
-    required this.value,
-  });
+class _CompactMetric extends StatelessWidget {
+  const _CompactMetric({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -378,29 +308,26 @@ class _WatermarkMetric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          '$label  ',
+          '$label ',
           style: const TextStyle(
             color: _WatermarkCard._mutedColor,
-            fontSize: 6.5,
-            height: 1.1,
-            letterSpacing: 0.55,
+            fontSize: 5.5,
+            height: 1,
+            letterSpacing: 0.2,
             fontWeight: FontWeight.w700,
           ),
         ),
-        Expanded(
-          child: Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: _WatermarkCard._textColor,
-              fontSize: 8,
-              height: 1.05,
-              fontWeight: FontWeight.w700,
-              fontFeatures: [ui.FontFeature.tabularFigures()],
-            ),
+        Text(
+          value,
+          style: const TextStyle(
+            color: _WatermarkCard._textColor,
+            fontSize: 7,
+            height: 1,
+            fontWeight: FontWeight.w700,
+            fontFeatures: [ui.FontFeature.tabularFigures()],
           ),
         ),
       ],
