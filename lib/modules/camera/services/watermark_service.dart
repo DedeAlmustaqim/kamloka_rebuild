@@ -190,7 +190,7 @@ class _WatermarkCard extends StatelessWidget {
         width: WatermarkService._logicalWidth,
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
         decoration: BoxDecoration(
-          color: const Color(0xD9000000),
+          color: const Color(0xB8000000),
           borderRadius: BorderRadius.circular(6),
           border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
         ),
