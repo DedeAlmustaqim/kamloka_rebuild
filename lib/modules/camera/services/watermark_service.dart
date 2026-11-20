@@ -9,6 +9,8 @@ import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
 
+import 'watermark_placement.dart';
+
 /// Data yang dicetak ke watermark pada saat foto diambil.
 class WatermarkDetails {
   const WatermarkDetails({
@@ -311,24 +313,26 @@ String _compositeWatermark(Map<String, Object> args) {
     throw const FormatException('PNG watermark tidak dapat dibaca.');
   }
 
-  // Ukuran watermark dinormalisasi ke 60% lebar foto, baik portrait maupun
-  // landscape. PNG dirender pada resolusi tinggi untuk menjaga ketajaman teks.
-  final targetWidth = (photo.width * 0.60).round();
+  // Keep watermark geometry independent from lens direction and orientation.
+  // This is shared with unit tests for portrait and landscape dimensions.
+  final placement = WatermarkPlacement.calculate(
+    photoWidth: photo.width,
+    photoHeight: photo.height,
+    watermarkWidth: watermark.width,
+    watermarkHeight: watermark.height,
+  );
   final resizedWatermark = img.copyResize(
     watermark,
-    width: targetWidth,
+    width: placement.width,
+    height: placement.height,
     interpolation: img.Interpolation.linear,
   );
-
-  final horizontal = ((photo.width - resizedWatermark.width) / 2).round();
-  final bottomMargin = (photo.height * 0.035).round();
-  final vertical = photo.height - resizedWatermark.height - bottomMargin;
 
   img.compositeImage(
     photo,
     resizedWatermark,
-    dstX: horizontal < 0 ? 0 : horizontal,
-    dstY: vertical < 0 ? 0 : vertical,
+    dstX: placement.left,
+    dstY: placement.top,
   );
 
   File(
