@@ -198,6 +198,11 @@ class CameraController extends GetxController {
         }
 
         focusPoint.value = null;
+
+        // Exposure compensation is camera-specific. Do not carry a negative
+        // value from the previous lens (for example, rear camera) to this one.
+        exposureOffset.value = 0.0;
+
         await _loadZoomRange(nextController);
         await _loadExposureRange(nextController);
         isReady.value = true;
