@@ -9,6 +9,7 @@ class ImageOrientationService {
   Future<camera.XFile> normalize(
     camera.XFile source, {
     required NativeDeviceOrientation physicalOrientation,
+    required camera.CameraLensDirection lensDirection,
   }) async {
     final inputPath = source.path;
     final inputFile = File(inputPath);
@@ -22,10 +23,24 @@ class ImageOrientationService {
     // The app UI is portrait-locked, so EXIF/display orientation cannot be
     // trusted for landscape captures. Physical sensor orientation is the
     // source of truth for the captured pixels.
-    final normalized = _rotateForPhysicalOrientation(
+    var normalized = _rotateForPhysicalOrientation(
       decoded,
       physicalOrientation,
     );
+
+    // On the tested device, the front camera produces landscape pixels
+    // upside down after the physical-orientation correction above. Keep this
+    // correction isolated to the front lens so the rear-camera pipeline is
+    // byte-for-byte unchanged in its rotation decisions.
+    final isLandscape =
+        physicalOrientation == NativeDeviceOrientation.landscapeLeft ||
+        physicalOrientation == NativeDeviceOrientation.landscapeRight;
+    if (lensDirection == camera.CameraLensDirection.front && isLandscape) {
+      normalized = img.copyRotate(normalized, angle: 180);
+      debugPrint(
+        '[KAMLOKA ORIENTATION] applied front-camera landscape 180-degree correction',
+      );
+    }
     final outputPath = _outputPath(inputPath);
     final outputBytes = img.encodeJpg(normalized, quality: 100);
 
