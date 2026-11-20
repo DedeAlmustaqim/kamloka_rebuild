@@ -63,17 +63,22 @@ class CameraController extends GetxController {
     errorMessage.value = '';
 
     try {
-      // Sensor orientation is helpful for capture processing, but must not
-      // block opening the camera preview.
-      unawaited(
-        Get.find<DeviceOrientationService>()
+      // Read the physical device orientation before enabling capture.
+      // The UI is portrait-locked, so this sensor reading is needed later
+      // when normalizing the captured image.
+      try {
+        await Get.find<DeviceOrientationService>()
             .init()
-            .timeout(const Duration(seconds: 2))
-            .catchError((Object error, StackTrace stack) {
-              debugPrint('[KAMLOKA ORIENTATION] init skipped: $error');
-              return Get.find<DeviceOrientationService>();
-            }),
-      );
+            .timeout(const Duration(seconds: 2));
+      } on TimeoutException {
+        debugPrint(
+          '[KAMLOKA ORIENTATION] initial reading timed out; '
+          'capture will retry before taking a photo.',
+        );
+      } catch (error, stack) {
+        debugPrint('[KAMLOKA ORIENTATION] init failed: $error');
+        debugPrintStack(stackTrace: stack);
+      }
 
       final permission = await Permission.camera.request();
 
