@@ -275,9 +275,9 @@ class _WatermarkCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 7),
+            const SizedBox(height: 4),
             Container(height: 0.7, color: Colors.white.withValues(alpha: 0.25)),
-            const SizedBox(height: 7),
+            const SizedBox(height: 4),
             if (address.isNotEmpty) ...[
               Text(
                 address,
@@ -318,7 +318,7 @@ class _WatermarkCard extends StatelessWidget {
                   ),
                 ],
               ),
-            const SizedBox(height: 7),
+            const SizedBox(height: 4),
             Row(
               children: [
                 Expanded(
