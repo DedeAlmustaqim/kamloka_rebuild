@@ -188,7 +188,7 @@ class _WatermarkCard extends StatelessWidget {
       color: Colors.transparent,
       child: Container(
         width: WatermarkService._logicalWidth,
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
         decoration: BoxDecoration(
           color: const Color(0xD9000000),
           borderRadius: BorderRadius.circular(9),
@@ -203,11 +203,11 @@ class _WatermarkCard extends StatelessWidget {
               children: [
                 Image.asset(
                   'assets/images/kamloka_typo_white.png',
-                  width: 66,
-                  height: 21,
+                  width: 56,
+                  height: 18,
                   fit: BoxFit.contain,
                 ),
-                const SizedBox(width: 7),
+                const SizedBox(width: 5),
                 const Expanded(
                   child: Text(
                     'KAMERA LOKASI',
@@ -225,7 +225,7 @@ class _WatermarkCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 6,
-                    vertical: 3,
+                    vertical: 2,
                   ),
                   decoration: BoxDecoration(
                     color: _accentColor.withValues(alpha: 0.16),
@@ -247,7 +247,7 @@ class _WatermarkCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 7),
+            const SizedBox(height: 4),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -255,7 +255,7 @@ class _WatermarkCard extends StatelessWidget {
                   timeText,
                   style: const TextStyle(
                     color: _textColor,
-                    fontSize: 21,
+                    fontSize: 18,
                     height: 1,
                     letterSpacing: -0.35,
                     fontWeight: FontWeight.w800,
@@ -268,8 +268,8 @@ class _WatermarkCard extends StatelessWidget {
                   textAlign: TextAlign.right,
                   style: const TextStyle(
                     color: _mutedColor,
-                    fontSize: 8.5,
-                    height: 1.2,
+                    fontSize: 8,
+                    height: 1.1,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -285,12 +285,12 @@ class _WatermarkCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: _textColor,
-                  fontSize: 10,
-                  height: 1.2,
+                  fontSize: 9.5,
+                  height: 1.15,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 3),
             ],
             if (coordinates.isNotEmpty)
               Row(
@@ -309,8 +309,8 @@ class _WatermarkCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: _mutedColor,
-                        fontSize: 8.5,
-                        height: 1.1,
+                        fontSize: 8,
+                        height: 1.05,
                         fontWeight: FontWeight.w600,
                         fontFeatures: [ui.FontFeature.tabularFigures()],
                       ),
@@ -329,7 +329,7 @@ class _WatermarkCard extends StatelessWidget {
                 ),
                 Container(
                   width: 1,
-                  height: 17,
+                  height: 14,
                   color: Colors.white.withValues(alpha: 0.22),
                 ),
                 const SizedBox(width: 10),
@@ -396,8 +396,8 @@ class _WatermarkMetric extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               color: _WatermarkCard._textColor,
-              fontSize: 8.5,
-              height: 1.1,
+              fontSize: 8,
+              height: 1.05,
               fontWeight: FontWeight.w700,
               fontFeatures: [ui.FontFeature.tabularFigures()],
             ),
