@@ -46,6 +46,7 @@ class CaptureService {
           await _orientationService.normalize(
         file,
         physicalOrientation: physicalOrientation,
+        lensDirection: controller.description.lensDirection,
       );
 
       debugPrint(
